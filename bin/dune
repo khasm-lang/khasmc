@@ -1,0 +1,4 @@
+(executable
+ (public_name khasmc)
+ (name main)
+ (libraries khasmc))
