@@ -2,3 +2,5 @@
  (public_name khasmc)
  (name main)
  (libraries khasmc))
+(ocamllex lexer)
+(menhir (modules parser))
