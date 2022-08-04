@@ -14,7 +14,7 @@
 (package
  (name khasmc)
  (synopsis "Compiler for khasm programming language")
- (depends ocaml dune)
+ (depends ocaml dune fmt)
  (tags
   ("compiler" "khasm" "programming language")))
 

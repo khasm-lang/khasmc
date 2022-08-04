@@ -1,10 +1,12 @@
-type loc = Lexing.position
+type ident = string
+
 type binop =
   | BinOpPlus
   | BinOpMinus
   | BinOpMul
 
 type unop =
+  | Many of unop list
   | UnOpRef
   | UnOpDeref
   | UnOpPos
@@ -18,33 +20,36 @@ type const =
   | Int of string
   | Float of string
   | String of string
-  | Ident of string
+  | Id of ident
 
 type expr =
+  | Paren of expr
   | Base of const
-  | UnOp of unop * expr
+  | UnOp of unop list * expr
   | BinOp of expr * binop * expr
-  | FuncCall of expr * expr
-
-type if_t =
-  Cond of expr * Body of block
-
-type while_t =
-  Cond of expr * Body of block
+  | FuncCall of expr * expr list
 
 
 type block =
   | Many of block list
-  | AssignBlock of Ident * block
-  | Assign of Ident * expr
-  | Typesig of Ident * typeSig
+  | AssignBlock of ident * block
+  | Assign of ident * expr
+  | Typesig of ident * typeSig
   | If of if_t
   | While of while_t
+  | Return of expr
+
+and if_t = expr * block
+
+and while_t = expr * block
 
 
 type toplevel =
-  | AssignBlock of Ident * block
-  | Assign of Ident * expr
-  | Typesig of Ident * typeSig
+  | AssignBlock of ident * block
+  | Assign of ident * expr
+  | Typesig of ident * typeSig
 
 type program = Prog of toplevel list
+(* Local Variables: *)
+(* caml-annot-dir: "_build/default/bin/.main.eobjs/byte" *)
+(* End: *)

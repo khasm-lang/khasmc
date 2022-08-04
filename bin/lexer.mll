@@ -1,7 +1,7 @@
 {
-  open Core
+
   open Lexing
-  open Parsing
+  open Parser
   exception SyntaxError of string
   exception NotImpl of string
 
@@ -29,13 +29,13 @@ let COMMENT = "(*" any "*)"
 
 let STRING = '\"' any '\"' 
 
-rule read_token = parse
+rule token = parse
      | "(" {LPAREN}
      | ")" {RPAREN}
-     | "{" {LBRACK}
-     | "}" {RBRACK}
-     | "[" {LBRACE}
-     | "]" {RBRACE}
+     | "{" {LBRACE}
+     | "}" {RBRACE}
+     | "[" {LBRACK}
+     | "]" {RBRACK}
      | "True" {TRUE}
      | "False" {FALSE}
      | "\\" {BSLASH}
@@ -45,21 +45,24 @@ rule read_token = parse
      | "#" {HASH}
      | "!" {BANG}
      | "," {COMMA}
+     | ">" {GT}
+     | "<" {LT}
+     | "=" {EQ}
      | "@" {AT}
      | "+" {ADD}
      | "-" {SUB}
      | "." {DOT}
      | "|" {STRAIGHT (* unlike me *)}
-     | "*" {MULT}
+     | "*" {MUL}
      | ":" {COLON}
      | ";" {SEMICOLON}
      | "if"	{KW_IF}
      | "while" 	{KW_WHILE}
      | "for" 	{KW_FOR}
      | "return" {KW_RETURN}
-     | COMMENT { }
-     | WHITESPACE { }
-     | NEWLINE { next_line lexbuf; read_token lexbuf}
+     | COMMENT { token lexbuf }
+     | WHITESPACE { token lexbuf}
+     | NEWLINE { next_line lexbuf; token lexbuf}
      | INT { T_INT (Lexing.lexeme lexbuf) }
      | FLOAT { T_FLOAT (Lexing.lexeme lexbuf)}
      | STRING {raise (NotImpl ("Strings are not implemented"))}
