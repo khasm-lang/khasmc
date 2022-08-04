@@ -6,6 +6,7 @@ tags: ["compiler" "khasm" "programming language"]
 depends: [
   "ocaml"
   "dune" {>= "3.3"}
+  "fmt"
   "odoc" {with-doc}
 ]
 build: [

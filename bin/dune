@@ -1,6 +1,9 @@
 (executable
  (public_name khasmc)
  (name main)
- (libraries khasmc))
+ (libraries khasmc fmt core)
+ (flags (-annot)))
 (ocamllex lexer)
-(menhir (modules parser))
+(menhir
+ (modules parser)
+ (flags --explain))
