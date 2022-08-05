@@ -4,6 +4,7 @@ type binop =
   | BinOpPlus
   | BinOpMinus
   | BinOpMul
+  | BinOpDiv
 
 type unop =
   | Many of unop list
@@ -13,6 +14,7 @@ type unop =
   | UnOpNeg
 
 type typeSig =
+  | Ptr of int * string
   | Base of string
   | Arrow of typeSig * typeSig
 
@@ -21,6 +23,8 @@ type const =
   | Float of string
   | String of string
   | Id of ident
+  | True
+  | False
 
 type expr =
   | Paren of expr

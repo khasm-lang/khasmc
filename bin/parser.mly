@@ -64,6 +64,7 @@
 %%
 
 typesig:
+  | c=list(AT); base=T_IDENT {Ptr(List.length c, base)}
   | base=T_IDENT {Base(base)}
   | ty1=typesig; SUB; GT; ty2=typesig {Arrow(ty1, ty2)}
 (* str -> str *)
@@ -74,6 +75,8 @@ const:
   | c=T_FLOAT {Float(c)}
   | c=T_STRING {String(c)}
   | c=T_IDENT {Id(c)}
+  | TRUE {True}
+  | FALSE {False}
 
 unop:
   | AT  {UnOpDeref}
@@ -85,6 +88,7 @@ binop:
   | ADD {BinOpPlus}
   | SUB {BinOpMinus}
   | MUL {BinOpMul}
+  | SLASH {BinOpDiv}
 
 func:
   | c=T_IDENT {Base(Id(c))}

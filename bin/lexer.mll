@@ -54,12 +54,15 @@ rule token = parse
      | "." {DOT}
      | "|" {STRAIGHT (* unlike me *)}
      | "*" {MUL}
+     | "/" {SLASH}
      | ":" {COLON}
      | ";" {SEMICOLON}
      | "if"	{KW_IF}
      | "while" 	{KW_WHILE}
      | "for" 	{KW_FOR}
      | "return" {KW_RETURN}
+     | "true"   {TRUE}
+     | "false"  {FALSE}
      | COMMENT { token lexbuf }
      | WHITESPACE { token lexbuf}
      | NEWLINE { next_line lexbuf; token lexbuf}
