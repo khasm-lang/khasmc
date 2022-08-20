@@ -1,28 +1,39 @@
-
 open Ast
 
-type context_var = {
+(* Represents a single type *)
+type var_t = {
     id : string;
-    typesig : typeSig;
-    scope : int;
+    ts : typeSig
   }
 
+
+(* represents a single context - if & while blocks
+ inherit ts, vars & args from their parent *)
 type context = {
-    parent: context option;
-    vars: context_var list;
+    parent : context option;
+    inherit_ctx : bool;
+    ts : typeSig option;
+    vars : var_t list;
+    args : var_t list;
   }
 
+let addVar ctx var =
+  {ctx with
+    vars = var :: ctx.vars}
 
-let addVar ctx ctxvar = {
-    ctx with
-    vars = ctxvar :: ctx.vars 
-  }
+let rec findVarCtx varlist id =
+  match varlist with
+  | [] -> raise Not_found
+  | x :: xs ->
+     if x.id = id then
+       x
+     else
+       findVarCtx xs id
 
-let findVar ctx id =
-  begin
-    try 
-      let id = List.find (fun v -> v.id = id) ctx.vars in
-      Some(id)
-    with Not_found -> None
-  end
-
+let rec findVar ctx id =
+  try
+    Some(findVarCtx ctx.vars id)
+  with Not_found ->
+    match ctx.parent with
+    | None -> None
+    | Some (x) -> findVar x id
