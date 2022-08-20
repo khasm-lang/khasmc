@@ -27,7 +27,19 @@ let rec typeSigEq t1 t2 =
      typeSigEq t11 t21 && typeSigEq t12 t22
   | _, _ -> false
 
-                        
+let typeSigLeft ts : typeSig option =
+  match ts with
+  | Ptr (_, _) -> None
+  | Base (_) -> None
+  | Arrow (x, _) -> Some(x)
+
+
+let typeSigRight ts : typeSig option =
+  match ts with
+  | Ptr (_, _) -> None
+  | Base (_) -> None
+  | Arrow (_, y) -> Some(y)
+
 type const =
   | Int of string
   | Float of string
@@ -46,8 +58,8 @@ type expr =
 
 type block =
   | Many of block list
-  | AssignBlock of ident * block
-  | Assign of ident * expr
+  | AssignBlock of ident * ident list * block
+  | Assign of ident * ident list * expr
   | Typesig of ident * typeSig
   | If of if_t
   | While of while_t
@@ -59,8 +71,8 @@ and while_t = expr * block
 
 
 type toplevel =
-  | AssignBlock of ident * block
-  | Assign of ident * expr
+  | AssignBlock of ident * ident list * block
+  | Assign of ident * ident list * expr
   | Typesig of ident * typeSig
 
 type program = Prog of toplevel list

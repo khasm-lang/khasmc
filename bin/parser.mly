@@ -108,9 +108,11 @@ expr:
 
 
 blocksub:
-  | id=T_IDENT; EQ; ex=expr; SEMICOLON {Assign(id, ex)}
+  | id=T_IDENT; args=list(T_IDENT); EQ; ex=expr; SEMICOLON
+    {Assign(id, args, ex)}
      (* x = 1 + 1; *)
-  | id=T_IDENT; EQ; LBRACE; bl=block; RBRACE {AssignBlock(id, bl)}
+  | id=T_IDENT; args=list(T_IDENT); EQ; LBRACE; bl=block; RBRACE
+    {AssignBlock(id, args, bl)}
      (* x = { return 1; }*)
   | id=T_IDENT; COLON; ty=typesig; SEMICOLON {Typesig(id, ty)}
      (* x : int -> int *)
@@ -124,8 +126,10 @@ block:
   | many = list(blocksub) {Many(many)}
 
 toplevel:
-  | id=T_IDENT; EQ; ex=expr; SEMICOLON {Assign(id, ex)}
-  | id=T_IDENT; EQ; LBRACE; bl=block; RBRACE {AssignBlock(id, bl)}
+  | id=T_IDENT; args=list(T_IDENT); EQ; ex=expr; SEMICOLON
+    {Assign(id, args, ex)}
+  | id=T_IDENT; args=list(T_IDENT); EQ; LBRACE; bl=block; RBRACE
+    {AssignBlock(id, args, bl)}
   | id=T_IDENT; COLON; ty=typesig; SEMICOLON {Typesig(id, ty)}
 
 

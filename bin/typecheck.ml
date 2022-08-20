@@ -1,35 +1,64 @@
 open Ast
 open Kenv
-
-let rec do_all f a =
-  match a with
-  | [] -> ()
-  | x :: xs -> f x; do_all f xs
+open Print_ast
+let rec do_all f a = List.iter
 
 let varNotFound ctx i =
   print_endline ("Variable " ^ i ^ " not found")
 
-let rec typecheckToplevel ast ctx sco =
-  match ast with
-  | Typesig (i, t) ->
-     let var = {id = i; typesig = t; scope=sco} in
-     addVar ctx var
-  | AssignBlock (i, b) ->
-     begin
-       try
-         let var = findVar ctx i in
-         let possible = typecheckBlockReturns b ctx sco in
-         List.iter (String.equals var.typesig)  
-       with Not_found -> varNotFound ctx i 
-     end
-  | Assign (i, e) -> ()
-let rec typecheckProgram ast ctx sco =
-  match ast with
-  | [] -> ()
+let rec getArgs args (ts:typeSig) =
+  match args with
+  | [] -> []
   | (x :: xs) ->
-     let newctx = typecheckToplevel x ctx sco in
-     typecheckProgram xs newctx sco
+     match typeSigLeft ts with
+     | None -> print_endline "Malformed typesig";
+               printTypesig ts;
+               exit 1
+     | Some(tl) ->
+        begin
+          match typeSigRight ts with
+          | None -> print_endline "Malformed typesig";
+                    printTypesig ts;
+                    exit 1
+          | Some(tr) ->
+             {id=x; ts=tl} :: getArgs xs tr
+        end
 
+
+let typecheckAssign ast ctx =
+  match ast with
+  | Assign (i, args, e) ->
+     begin
+       match findVar ctx i with
+       | None -> varNotFound i; exit 1
+       | Some (x) ->
+          let newctx = {parent=Some(ctx);inherit_ctx=true;
+                        ts=Some(x.ts);vars=[];args=getArgs args x.ts} in
+          typecheckExpr e newctx
+     end
+  | AssignBlock (i, args, b) ->
+     addArgs args ctx;
+     typecheckBlock b
+
+  
+
+let typecheckToplevel ast ctx =
+  let newctx =
+    match ctx with
+    | None -> {parent=None; inherit_ctx=false;
+               ts=None; vars=[]; args=[]}
+    | Some (x) -> x
+  in
+  begin
+    match ast with
+    | [] -> ()
+    | (x :: xs) ->
+       begin
+         match x with
+         | Typesig (i, t) -> addVar newctx {id=i; ts=t;}
+         | _ -> typecheckAssign x newctx
+       end;
+       typecheckToplevel xs newctx
+  end
 let typecheckAst ast =
-  let ctx = {parent = None; vars = []} in
-  typecheckProgram ast ctx 0
+  typecheckToplevel ast None

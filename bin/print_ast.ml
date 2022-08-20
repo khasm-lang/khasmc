@@ -80,6 +80,11 @@ let rec printTypesig (t:typeSig) (i:int) =
       end
   end
 
+let rec printArgs ind args =
+  match args with
+  | [] -> ()
+  | (x :: xs) ->  print_string (" (" ^ x ^ ")");
+                  printArgs ind xs
      
 
 let rec printExpr ind ast =
@@ -121,13 +126,15 @@ let rec printBlock ind ast =
     pI "(block" (ind - 1);
     match ast with
     | Many b -> do_all (printBlock (ind + 2)) b
-    | AssignBlock (i, b) -> begin
+    | AssignBlock (i, args, b) -> begin
         pI ("(assign" ^ i) ind;
+        printArgs (ind + 1) args;
         printBlock (ind + 1) b;
         print_string ")"
       end
-    | Assign (i, e)-> begin
+    | Assign (i, args, e)-> begin
         pI ("(assign " ^ i) ind;
+        printArgs (ind + 1) args;
         printExpr (ind + 1) e;
         print_string ")"
       end
@@ -160,13 +167,15 @@ let printToplevel ind ast =
   begin
   pI "(toplevel " ind;
   match ast with
-  | AssignBlock (i, b) -> begin
+  | AssignBlock (i, a, b) -> begin
       pI ("(assign " ^ i) ind;
+      printArgs (ind + 1) a;
       printBlock (ind + 1) b;
       print_string ")"
     end
-  | Assign (i, e)-> begin
+  | Assign (i, a, e)-> begin
       pI ("(assign " ^ i) ind;
+      printArgs (ind + 1) a;
       printExpr (ind + 1) e;
       print_string ")"
     end
