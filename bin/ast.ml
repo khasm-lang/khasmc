@@ -1,3 +1,5 @@
+
+
 type ident = string
 
 type binop =
@@ -7,7 +9,6 @@ type binop =
   | BinOpDiv
 
 type unop =
-  | Many of unop list
   | UnOpRef
   | UnOpDeref
   | UnOpPos
@@ -15,14 +16,14 @@ type unop =
 
 type typeSig =
   | Ptr of int * string
-  | Base of string
+  | TSBase of string
   | Arrow of typeSig * typeSig
 
 let rec typeSigEq t1 t2 =
   match t1, t2 with
   | Ptr (i1, s1), Ptr (i2, s2) ->
      (i1 = i2) && (s1 = s2)
-  | Base (b1), Base (b2) -> b1 = b2
+  | TSBase (b1), TSBase (b2) -> b1 = b2
   | Arrow (t11, t12), Arrow (t21, t22) ->
      typeSigEq t11 t21 && typeSigEq t12 t22
   | _, _ -> false
@@ -30,15 +31,18 @@ let rec typeSigEq t1 t2 =
 let typeSigLeft ts : typeSig option =
   match ts with
   | Ptr (_, _) -> None
-  | Base (_) -> None
+  | TSBase (_) -> None
   | Arrow (x, _) -> Some(x)
 
 
 let typeSigRight ts : typeSig option =
   match ts with
   | Ptr (_, _) -> None
-  | Base (_) -> None
+  | TSBase (_) -> None
   | Arrow (_, y) -> Some(y)
+
+
+
 
 type const =
   | Int of string
