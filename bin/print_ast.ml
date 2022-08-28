@@ -42,9 +42,6 @@ let string_of_const b =
 let rec printUnOp (i:int) (u:unop) =
   begin
     match u with
-    | Many (a) -> begin
-        do_all (printUnOp (i + 1)) a
-      end
     | UnOpRef -> print_string " (ref)"
     | UnOpDeref -> print_string " (deref)"
     | UnOpPos -> print_string " (pos)"
@@ -70,7 +67,7 @@ let rec printTypesig (t:typeSig) (i:int) =
         loop (print_string "@") l;
         print_string (a ^ ") ")
       end
-    | Base (a) -> print_string (" (" ^ a ^ ")")
+    | TSBase (a) -> print_string (" (" ^ a ^ ")")
     | Arrow (l, r) -> begin
         pI "(typesig" i;
         printTypesig l (i + 1);
