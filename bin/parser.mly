@@ -63,6 +63,7 @@
 %%
 
 typesig:
+  | LPAREN x=typesig RPAREN {x}
   | c=list(AT); base=T_IDENT {Ptr(List.length c, base)}
   | base=T_IDENT {TSBase(base)}
   | ty1=typesig; SUB; GT; ty2=typesig {Arrow(ty1, ty2)}

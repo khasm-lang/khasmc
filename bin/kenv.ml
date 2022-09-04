@@ -6,7 +6,12 @@ type var_t = {
     ts : typeSig
   }
 
+open Print_ast
 
+let print_var_t t =
+  Printf.printf "%s " t.id;
+  printTypesig (t.ts) 0;
+  Printf.printf "\n"
 (* represents a single context - if & while blocks
  inherit ts, vars & args from their parent *)
 type context = {
@@ -34,6 +39,9 @@ let rec findVar ctx id =
   try
     Some(findVarCtx ctx.vars id)
   with Not_found ->
-    match ctx.parent with
-    | None -> None
-    | Some (x) -> findVar x id
+        try
+          Some(findVarCtx ctx.args id)
+        with Not_found ->
+              match ctx.parent with
+              | None -> None
+              | Some (x) -> findVar x id
