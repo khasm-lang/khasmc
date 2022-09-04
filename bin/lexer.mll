@@ -4,6 +4,7 @@
   open Parser
   exception SyntaxError of string
   exception NotImpl of string
+  exception EOF of string
 
 
   let next_line lexbuf =
@@ -27,7 +28,8 @@ let WHITESPACE = [' ' '\t']+
 let NEWLINE = '\n' | '\r' | "\r\n"
 let COMMENT = "(*" any "*)"
 
-let STRING = '\"' any '\"' 
+
+
 
 rule token = parse
      | "(" {LPAREN}
@@ -68,8 +70,17 @@ rule token = parse
      | NEWLINE { next_line lexbuf; token lexbuf}
      | INT { T_INT (Lexing.lexeme lexbuf) }
      | FLOAT { T_FLOAT (Lexing.lexeme lexbuf)}
-     | STRING {raise (NotImpl ("Strings are not implemented"))}
+     | '"' {let buffer = Buffer.create 20 in T_STRING(stringl buffer lexbuf)}
      | IDENT { T_IDENT (Lexing.lexeme lexbuf)}
      | eof {EOF}
      | _ {raise (SyntaxError ("Lexer - Illegal Character: " ^ Lexing.lexeme lexbuf))}
 
+and stringl buffer = parse
+ | '"' { Buffer.contents buffer }	
+ | "\\t" { Buffer.add_char buffer '\t'; stringl buffer lexbuf }
+ | "\\n" { Buffer.add_char buffer '\n'; stringl buffer lexbuf }	
+ | "\\n" { Buffer.add_char buffer '\n'; stringl buffer lexbuf }	
+ | '\\' '"' { Buffer.add_char buffer '"'; stringl buffer lexbuf }	
+ | '\\' '\\' { Buffer.add_char buffer '\\'; stringl buffer lexbuf }
+ | eof { raise End_of_file }
+ | _ as char { Buffer.add_char buffer char; stringl buffer lexbuf }	

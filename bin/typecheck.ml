@@ -1,7 +1,7 @@
 open Ast
 open Kenv
 open Print_ast
-let rec do_all = List.iter
+let do_all = List.iter
 
 let varNotFound i =
   print_endline ("Variable " ^ i ^ " not found")
@@ -15,8 +15,16 @@ let wrongType t1 t2 ctx =
 let rec getLastTs t args =
   match args with
   | [] ->
-     print_endline "UNREACHABLE getLastTs empty list";
-     exit 1
+     begin
+       match t with
+       | Arrow(_, _) ->
+          begin
+            print_endline "Malgormed typesig for no args";
+            printTypesig t 0;
+            exit 1
+          end
+       | _ -> t
+     end
   | [x] ->
      begin
        match typeSigRight t with
@@ -316,7 +324,72 @@ and typecheckExpr ast ctx =
   | BinOp (e1, b, e2) -> typecheckBinOp b e1 e2 ctx
   | FuncCall (e, el) -> typecheckFuncCall e el ctx
 
-let typecheckAssign ast ctx =
+and checkAll f l =
+  match l with
+  | [] -> ()
+  | x :: xs ->
+     begin
+       if f x != true then
+         begin
+           print_endline "return type doesn't match";
+           printTypesig x 0;
+           exit 1
+         end
+     end;
+     checkAll f xs
+
+and typecheckBlock block ctx =
+  match block with
+  | Many ([]) -> print_endline "BAD"; exit 1
+  | Many ([x]) -> typecheckBlock x ctx
+  | Many (x :: xs) ->
+     begin
+       match x with
+       | Typesig (i, t) ->
+          begin
+            let newerctx = addVar ctx {id=i; ts=t;} in
+            typecheckBlock (Many(xs)) newerctx
+          end
+       | _ ->
+          typecheckBlock x ctx @ (typecheckBlock (Many(xs)) ctx)
+     end
+  | AssignBlock (i, args, b) ->
+     ignore (typecheckAssign (AssignBlock(i,args,b)) ctx); []
+  | Assign (i, a, b) ->
+     ignore (typecheckAssign (Assign(i,a,b)) ctx); []
+  | Typesig (i, t) ->
+     begin
+       print_endline "UNREACHABLE TYPECHECKBLOCK";
+       exit 1
+     end
+  | If (e, b) ->
+     ignore (typecheckExpr e ctx);
+     let newctx = {
+         parent=Some(ctx);
+         inherit_ctx=true;
+         ts=None;vars=[];
+         args=
+           match ctx.parent with
+           | Some(x) -> x.args
+           | None -> print_endline "i made a fucky wucky if this shows up"; exit 1
+       } in
+     typecheckBlock b newctx
+  | While (e, b) ->
+     ignore (typecheckExpr e ctx);
+     let newctx = {
+         parent=Some(ctx);
+         inherit_ctx=true;
+         ts=None;vars=[];
+         args=
+           match ctx.parent with
+           | Some(x) -> x.args
+           | None -> print_endline "i made a fucky wucky if this shows up"; exit 1
+       } in
+     typecheckBlock b newctx
+  | Return (e) ->
+     [typecheckExpr e ctx]
+
+and typecheckAssign ast ctx =
   match ast with
   | Assign (i, args, e) ->
      begin
@@ -339,8 +412,19 @@ let typecheckAssign ast ctx =
      end; ()
   | AssignBlock (i, args, b) ->
      begin
-       print_endline "NOTIMPL";
-       exit 1
+       match findVar ctx i with
+       | None -> varNotFound i; exit 1
+       | Some (x) ->
+          let newctx = {
+              parent=Some(ctx);
+              inherit_ctx=true;
+              ts=Some(x.ts);vars=[];
+              args=getArgs args x.ts
+            } in
+          let listOfExpr = typecheckBlock b newctx in
+          begin
+            checkAll (typeSigEq (getLastTs x.ts args)) listOfExpr;
+          end
      end
   | _ ->
      begin
