@@ -34,7 +34,7 @@ let string_of_const b =
   match b with
   | Int    (i) -> i
   | Float  (f) -> f
-  | String (s) -> s
+  | String (s) -> "\"" ^ s ^ "\""
   | Id     (i) -> i
   | True -> "True"
   | False -> "False"

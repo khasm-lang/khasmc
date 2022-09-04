@@ -1,12 +1,7 @@
 open Ast
-open Parser
 open Print_ast
 open Typecheck
-
-let rec do_all f lst =
-  match lst with
-  | [] -> ()
-  | x :: xs -> f x; do_all f xs
+open Opt
 
 let parseToAst filename =
   let file = open_in filename in
@@ -22,15 +17,17 @@ let _ =
       print_endline "USAGE: ./khasmc <file>";
       exit 1
     end;
-  let list = Array.to_list Sys.argv in
-  let files = List.tl list in
-  let programs = List.map parseToAst files in
-  let toplevelslist =
-    List.map (fun y -> match y with
-    | Prog x -> x) programs 
-  in
+  let t = Unix.gettimeofday() in
   begin
+    let list = Array.to_list Sys.argv in
+    let files = List.tl list in
+    let programs = List.map parseToAst files in
+    let toplevelslist =
+      List.map (fun y -> match y with
+                         | Prog x -> x) programs 
+    in
     List.iter (typecheckAst) toplevelslist;
-    do_all printAst programs
-  end
-
+    let opt = optToplevelList toplevelslist in
+    List.iter (List.iter (printToplevel 0)) opt
+  end;
+  Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t)
