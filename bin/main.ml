@@ -1,4 +1,4 @@
-
+open Ast
 open Parser
 open Print_ast
 open Typecheck
@@ -25,6 +25,12 @@ let _ =
   let list = Array.to_list Sys.argv in
   let files = List.tl list in
   let programs = List.map parseToAst files in
-  do_all typecheckAst programs;
-  do_all printAst programs
+  let toplevelslist =
+    List.map (fun y -> match y with
+    | Prog x -> x) programs 
+  in
+  begin
+    List.iter (typecheckAst) toplevelslist;
+    do_all printAst programs
+  end
 

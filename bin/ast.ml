@@ -1,5 +1,3 @@
-
-
 type ident = string
 
 type binop =

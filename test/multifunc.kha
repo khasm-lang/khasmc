@@ -1,0 +1,10 @@
+add1 : i32 -> i32;
+add1 x = x + 1;
+
+
+apply : (i32 -> i32) -> i32 -> i32;
+
+apply x y = x y;
+
+main : i32 -> i32;
+main y = apply add1 y;

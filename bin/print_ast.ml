@@ -67,9 +67,9 @@ let rec printTypesig (t:typeSig) (i:int) =
         loop (print_string "@") l;
         print_string (a ^ ") ")
       end
-    | TSBase (a) -> print_string (" (" ^ a ^ ")")
+    | TSBase (a) -> print_string ("(" ^ a ^ ")")
     | Arrow (l, r) -> begin
-        pI "(typesig" i;
+        pI "(typesig " i;
         printTypesig l (i + 1);
         print_string " -> ";
         printTypesig r (i + 1);
@@ -89,7 +89,7 @@ let rec printExpr ind ast =
     pI "(expr" ind;
     match ast with
     | Paren (e) -> begin
-        pI "(paren " (ind + 1);
+        pI "(paren" (ind + 1);
         printExpr (ind + 2) e;
         print_string ")"
       end
@@ -177,7 +177,7 @@ let printToplevel ind ast =
       print_string ")"
     end
   | Typesig (i, t) -> begin
-      pI ("typedec " ^ i) ind;
+      pI ("(typedec " ^ i) ind;
       printTypesig t (ind + 1);
       print_string ")"
     end

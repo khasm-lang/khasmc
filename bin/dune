@@ -2,7 +2,9 @@
  (public_name khasmc)
  (name main)
  (libraries khasmc fmt core)
- (flags (-annot)))
+ (modes byte exe)
+ (flags (:standard -warn-error -A -g))
+ (ocamlopt_flags (-g)))
 (ocamllex lexer)
 (menhir
  (modules parser)
