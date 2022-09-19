@@ -19,9 +19,14 @@
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
 let INT = (digit)+
-let all = (alpha |digit|'_'|'\'')
-let IDENT = (alpha) (all)*
+
+let start = ['a'-'z' 'A'-'Z' '_' '\'']
+let all = ['a'-'z' 'A'-'Z' '_' '\'' '0'-'9']
+
+let IDENT = start all* ((start all* | ':' ':' | '.' | '-' '>' )* start all *)? 
+
 let any = (_)*
+
 
 let FLOAT = digit+'.'digit+ 
 let WHITESPACE = [' ' '\t']+

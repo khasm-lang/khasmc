@@ -1,7 +1,8 @@
-open Ast
 open Print_ast
 open Typecheck
 open Opt
+open Codegen
+
 
 let parseToAst filename =
   let file = open_in filename in
@@ -21,13 +22,15 @@ let _ =
   begin
     let list = Array.to_list Sys.argv in
     let files = List.tl list in
-    let programs = List.map parseToAst files in
-    let toplevelslist =
-      List.map (fun y -> match y with
-                         | Prog x -> x) programs 
-    in
-    List.iter (typecheckAst) toplevelslist;
-    let opt = optToplevelList toplevelslist in
-    List.iter (List.iter (printToplevel 0)) opt
+    begin
+      let programs = List.map parseToAst files in
+      begin
+        List.iter (typecheckAst) programs;
+        let opt = List.map (optProgram) programs in
+        let code = codegenProgramList files programs in
+        List.iter (printAst) opt;
+        List.iter print_endline code
+      end
+    end
   end;
   Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t)

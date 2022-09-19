@@ -68,3 +68,7 @@ let rec optToplevelList l =
   | [] -> []
   | x :: xs ->
      optToplevel x :: optToplevelList xs
+
+let rec optProgram l =
+  match l with
+  | Prog(x) -> Prog (optToplevel x)

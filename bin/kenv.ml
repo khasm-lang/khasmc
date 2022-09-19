@@ -12,6 +12,10 @@ let print_var_t t =
   Printf.printf "%s " t.id;
   printTypesig (t.ts) 0;
   Printf.printf "\n"
+
+let print_var_t_list l = List.iter print_var_t l
+
+
 (* represents a single context - if & while blocks
  inherit ts, vars & args from their parent *)
 type context = {
