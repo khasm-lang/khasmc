@@ -3,8 +3,8 @@
  (name main)
  (libraries khasmc fmt core)
  (modes byte exe)
- (flags (:standard -warn-error -A -g))
- (ocamlopt_flags (-g)))
+ (flags (:standard -warn-error -A -g -annot))
+ (ocamlopt_flags (-g -annot)))
 (ocamllex lexer)
 (menhir
  (modules parser)

@@ -14,8 +14,8 @@ let wrongType t1 t2 ctx =
 
 let rec getLastTs t args =
   match args with
-  | [] ->
-     begin
+  | [] -> t
+(*     begin
        match t with
        | Arrow(_, _) ->
           begin
@@ -24,7 +24,7 @@ let rec getLastTs t args =
             exit 1
           end
        | _ -> t
-     end
+     end *)
   | [x] ->
      begin
        match typeSigRight t with
@@ -461,6 +461,10 @@ let rec typecheckToplevel ast ctx =
        end;
   end;
   ()
+
 let typecheckAst ast =
-  typecheckToplevel ast None;
+  begin
+    match ast with
+    | Prog(x) -> typecheckToplevel x None;
+  end;
   Printf.printf "\ntypechecking: ✓\n"
