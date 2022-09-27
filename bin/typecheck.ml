@@ -371,7 +371,7 @@ and typecheckBlock block ctx =
          args=
            match ctx.parent with
            | Some(x) -> x.args
-           | None -> print_endline "i made a fucky wucky if this shows up"; exit 1
+           | None -> print_endline "i messed up if this shows up"; exit 1
        } in
      typecheckBlock b newctx
   | While (e, b) ->
@@ -383,7 +383,7 @@ and typecheckBlock block ctx =
          args=
            match ctx.parent with
            | Some(x) -> x.args
-           | None -> print_endline "i made a fucky wucky if this shows up"; exit 1
+           | None -> print_endline "i messed up if this shows up"; exit 1
        } in
      typecheckBlock b newctx
   | Return (e) ->
