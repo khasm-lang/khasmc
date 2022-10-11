@@ -1,0 +1,7 @@
+nomangle test : i32 -> i32;
+
+test x = x * 2;
+
+main : i32;
+
+main = test 5;
