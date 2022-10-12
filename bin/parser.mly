@@ -32,6 +32,10 @@
 %token COLON
 %token SEMICOLON
 %token EOF
+%token TS_TO
+
+%token NOMANGLE
+%token INLINE
 
 %token LBRACE
 %token RBRACE
@@ -50,13 +54,12 @@
 %type<Ast.block>   block
 %type<Ast.const>   const
 %type<Ast.unop>    unop
-%type<Ast.unop list> list(unop)
 %type<Ast.binop>   binop
 %type<Ast.expr> func
 %type<Ast.expr> parenexpr
 
 
-
+%right TS_TO
 
 %start program
 
@@ -64,9 +67,9 @@
 
 typesig:
   | LPAREN x=typesig RPAREN {x}
-  | c=list(AT); base=T_IDENT {Ptr(List.length c, base)}
+  | c=nonempty_list(AT); base=T_IDENT {Ptr(List.length c, base)}
   | base=T_IDENT {TSBase(base)}
-  | ty1=typesig; SUB; GT; ty2=typesig {Arrow(ty1, ty2)}
+  | ty1=typesig; TS_TO; ty2=typesig {Arrow(ty1, ty2)}
 (* str -> str *)
 
 
@@ -102,10 +105,13 @@ parenexpr:
 expr:
   | LPAREN; e=expr; RPAREN {Paren(e)}
   | c=const {Base(c)}
-  | LPAREN; u=list(unop); ex=expr; RPAREN {UnOp(u, ex)}
+  | LPAREN; u=nonempty_list(unop); ex=expr; RPAREN {UnOp(u, ex)}
   | ex1=parenexpr; b=binop; ex2=parenexpr {BinOp(ex1, b, ex2)}
   | ex1=func ex2=nonempty_list(parenexpr) {FuncCall(ex1, ex2)} 
 
+dec:
+    | NOMANGLE {NoMangle(true)}
+    | INLINE {Inline(true)}
 
 blocksub:
   | id=T_IDENT; args=list(T_IDENT); EQ; ex=expr; SEMICOLON
@@ -114,7 +120,8 @@ blocksub:
   | id=T_IDENT; args=list(T_IDENT); EQ; LBRACE; bl=block; RBRACE
     {AssignBlock(id, args, bl)}
      (* x = { return 1; }*)
-  | id=T_IDENT; COLON; ty=typesig; SEMICOLON {Typesig(id, ty)}
+  | id=T_IDENT; COLON; ty=typesig; SEMICOLON {Typesig(id, ty, d)}
+  | id=T_IDENT; STRAIGHT; d=list(dec); COLON; ty=typesig; SEMICOLON {Typesig(id, ty, d)}
      (* x : int -> int *)
   | KW_IF; ex=expr; LBRACE; bl=block; RBRACE {If(ex, bl)}
      (* if x = 1 {do thing}*)
@@ -131,6 +138,7 @@ toplevel:
   | id=T_IDENT; args=list(T_IDENT); EQ; LBRACE; bl=block; RBRACE
     {AssignBlock(id, args, bl)}
   | id=T_IDENT; COLON; ty=typesig; SEMICOLON {Typesig(id, ty)}
+  | id=T_IDENT; STRAIGHT; d=list(dec); COLON; ty=typesig; SEMICOLON {Typesig(id, ty, d)}
 
 
 program:
