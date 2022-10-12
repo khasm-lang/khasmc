@@ -8,4 +8,4 @@
 (ocamllex lexer)
 (menhir
  (modules parser)
- (flags --explain))
+ (flags --exn-carries-state))

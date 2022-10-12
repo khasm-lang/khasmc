@@ -1,0 +1,62 @@
+type token =
+    T_STRING of string
+  | T_INT of string
+  | T_IDENT of string
+  | T_FLOAT of string
+  | TS_TO
+  | TRUE
+  | SUB
+  | STRAIGHT
+  | SLASH
+  | SEMICOLON
+  | RPAREN
+  | RBRACK
+  | RBRACE
+  | QMARK
+  | PERCENT
+  | NOMANGLE
+  | MUL
+  | LT
+  | LPAREN
+  | LBRACK
+  | LBRACE
+  | KW_WHILE
+  | KW_RETURN
+  | KW_IF
+  | KW_FOR
+  | INLINE
+  | IGNORE
+  | HASH
+  | GT
+  | FALSE
+  | EQ
+  | EOF
+  | DOT
+  | COMMA
+  | COLON
+  | BSLASH
+  | BANG
+  | AT
+  | AND
+  | ADD
+val menhir_begin_marker : int
+val xv_unop : Ast.unop
+val xv_typesig : Ast.typeSig
+val xv_toplevel : Ast.toplevel
+val xv_program : Ast.program
+val xv_parenexpr : Ast.expr
+val xv_nonempty_list_unop_ : Ast.unop list
+val xv_nonempty_list_parenexpr_ : Ast.expr list
+val xv_nonempty_list_dec_ : Ast.attr list
+val xv_nonempty_list_AT_ : unit list
+val xv_list_toplevel_ : Ast.toplevel list
+val xv_list_blocksub_ : Ast.block list
+val xv_list_T_IDENT_ : string list
+val xv_func : Ast.expr
+val xv_expr : Ast.expr
+val xv_dec : Ast.attr
+val xv_const : Ast.const
+val xv_blocksub : Ast.block
+val xv_block : Ast.block
+val xv_binop : Ast.binop
+val menhir_end_marker : int
