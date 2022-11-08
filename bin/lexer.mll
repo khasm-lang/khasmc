@@ -65,14 +65,18 @@ rule token = parse
      | ":" {COLON}
      | ";" {SEMICOLON}
      | "if"	{KW_IF}
+     | "else"   {KW_ELSE}
      | "while" 	{KW_WHILE}
      | "for" 	{KW_FOR}
-     | "return" {KW_RETURN}
+     | "let"    {KW_LET}
+     | "in"     {KW_IN}
      | "true"   {TRUE}
      | "false"  {FALSE}
      | "nomangle" {NOMANGLE}
      | "inline" {INLINE}
      | "ignore" {IGNORE}
+     | "forall" {FORALL}
+     | "∀" {FORALL}
      | "->" {TS_TO}
      | COMMENT { token lexbuf }
      | WHITESPACE { token lexbuf}

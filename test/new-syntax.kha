@@ -1,0 +1,8 @@
+id : forall a, a -> a.
+id x = x.
+
+test : i32.
+
+test = let x = 10 in
+       let y = 12 in
+       x + y.
