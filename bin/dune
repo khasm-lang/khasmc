@@ -1,8 +1,9 @@
 (executable
  (public_name khasmc)
  (name main)
- (libraries khasmc fmt core)
+ (libraries khasmc fmt core yojson ppx_deriving_yojson.runtime)
  (modes byte exe)
+ (preprocess (pps ppx_deriving.show ppx_deriving.make))
  (flags (:standard -warn-error -A -g -annot))
  (ocamlopt_flags (-g -annot)))
 (ocamllex lexer)

@@ -26,14 +26,18 @@
 %token EQ
 %token QMARK
 %token KW_IF
+%token KW_ELSE
 %token KW_WHILE
 %token KW_FOR
 %token KW_RETURN
+%token KW_IN
+%token KW_LET
 %token COLON
 %token SEMICOLON
 %token EOF
 %token TS_TO
 %token IGNORE
+%token FORALL
 
 %token NOMANGLE
 %token INLINE
@@ -45,20 +49,22 @@
 %token LPAREN
 %token RPAREN
 
+%type<Ast.typesig> typesig
+%type<Ast.typesig> typesig_i
+%type<Ast.ktype> ktype
+%type<Ast.kident list> nonempty_list(T_IDENT)
 %type<Ast.program> program
+%type<Ast.kass> assign
+%type<Ast.kbase> base
+%type<Ast.binop> binop
+%type<Ast.kexpr> expr
+%type<Ast.kexpr> fexpr
+%type<Ast.kident list> list(T_IDENT)
+%type<Ast.kexpr list> nonempty_list(parenexpr)
+%type<Ast.toplevel list> nonempty_list(toplevel)
+%type<Ast.kexpr> parenexpr
+%type<Ast.tdecl> tdecl
 %type<Ast.toplevel> toplevel
-%type<Ast.toplevel list> list(toplevel)
-%type<Ast.typeSig> typesig
-%type<Ast.expr>    expr
-%type<Ast.block>   blocksub
-%type<Ast.block list> list(blocksub)
-%type<Ast.block>   block
-%type<Ast.const>   const
-%type<Ast.unop>    unop
-%type<Ast.binop>   binop
-%type<Ast.expr> func
-%type<Ast.expr> parenexpr
-
 
 %right TS_TO
 
@@ -66,82 +72,54 @@
 
 %%
 
+ktype:
+  | t = T_IDENT {KTypeBasic(t)}
+
+typesig_i:
+  | k = ktype {TSBase(k)}
+  | a = typesig_i; TS_TO; b = typesig_i {TSMap(a, b)}
+  | LPAREN; t = typesig; RPAREN; {t}
+
 typesig:
-  | LPAREN x=typesig RPAREN {x}
-  | c=nonempty_list(AT); base=T_IDENT {Ptr(List.length c, base)}
-  | base=T_IDENT {TSBase(base)}
-  | ty1=typesig; TS_TO; ty2=typesig {Arrow(ty1, ty2)}
-(* str -> str *)
+  | t = typesig_i {t}
+  | FORALL; f = nonempty_list(T_IDENT); COMMA; a = typesig_i
+    {TSForall(f, a)}
 
-
-const:
-  | c=T_INT {Int(c)}
-  | c=T_FLOAT {Float(c)}
-  | c=T_STRING {String(c)}
-  | c=T_IDENT {Id(c)}
-  | TRUE {True}
-  | FALSE {False}
-
-unop:
-  | AT  {UnOpDeref}
-  | AND {UnOpRef}
-  | ADD {UnOpPos}
-  | SUB {UnOpNeg}
+base:
+  | t = T_IDENT {Ident(t)}
+  | t = T_INT   {Int(t)}
+  | t = T_FLOAT {Float(t)}
+  | t = T_STRING {Str(t)}
 
 binop:
-  | ADD {BinOpPlus}
-  | SUB {BinOpMinus}
-  | MUL {BinOpMul}
-  | SLASH {BinOpDiv}
-
-func:
-  | c=T_IDENT {Base(Id(c))}
-  | LPAREN e=expr RPAREN {Paren(e)}
+  | ADD {ADD}
 
 parenexpr:
-  | c=const {Base(c)}
-  | LPAREN e=expr RPAREN {Paren(e)}
+  | b = base {Base(b)}
+  | LPAREN; e = expr RPAREN {e}
 
+fexpr:
+  | LPAREN; e = expr; RPAREN {e}
+  | t = T_IDENT {Base(Ident(t))}
 
 expr:
-  | LPAREN; e=expr; RPAREN {Paren(e)}
-  | c=const {Base(c)}
-  | LPAREN; u=nonempty_list(unop); ex=expr; RPAREN {UnOp(u, ex)}
-  | ex1=parenexpr; b=binop; ex2=parenexpr {BinOp(ex1, b, ex2)}
-  | ex1=func ex2=nonempty_list(parenexpr) {FuncCall(ex1, ex2)} 
+  | a = parenexpr {a}
+  | a = parenexpr; o = binop; b = parenexpr {BinOp(a, o, b)}
+  | f = fexpr; args = nonempty_list(parenexpr) {FCall(f, args)}
+  | KW_LET; a = T_IDENT; EQ; e1 = expr; KW_IN; e2 = expr
+    {LetIn(a, e1, e2)}
+  | KW_IF e1 = expr LBRACE e2 = expr RBRACE KW_ELSE LBRACE e3 = expr RBRACE
+    {IfElse(e1, e2, e3)}
 
-dec:
-    | NOMANGLE {NoMangle(true)}
-    | INLINE {Inline(true)}
+tdecl:
+  | a = T_IDENT; COLON; t = typesig DOT {TDecl(a, t)}
 
-blocksub:
-  | id=T_IDENT; args=list(T_IDENT); EQ; ex=expr; SEMICOLON
-    {Assign(id, args, ex)}
-     (* x = 1 + 1; *)
-  | id=T_IDENT; args=list(T_IDENT); EQ; LBRACE; bl=block; RBRACE
-    {AssignBlock(id, args, bl)}
-     (* x = { return 1; }*)
-  | id=T_IDENT; COLON; ty=typesig; SEMICOLON {Typesig(id, ty, [])}
-  | id=T_IDENT; STRAIGHT; d=nonempty_list(dec); COLON; ty=typesig; SEMICOLON {Typesig(id, ty, d)}
-     (* x : int -> int *)
-  | KW_IF; ex=expr; LBRACE; bl=block; RBRACE {If(ex, bl)}
-     (* if x = 1 {do thing}*)
-  | KW_WHILE; ex=expr; LBRACE; bl=block; RBRACE {While(ex, bl)}
-     (* while x == 1 {do thing} *)
-  | KW_RETURN; ex=expr; SEMICOLON {Return(ex)}
-  | IGNORE; ex=expr; SEMICOLON {Ignore(ex)}
-
-block:
-  | many = list(blocksub) {Many(many)}
+assign:
+  | a = T_IDENT; args = list(T_IDENT); EQ; e = expr; DOT {KAss(a, args, e)}
 
 toplevel:
-  | id=T_IDENT; args=list(T_IDENT); EQ; ex=expr; SEMICOLON
-    {Assign(id, args, ex)}
-  | id=T_IDENT; args=list(T_IDENT); EQ; LBRACE; bl=block; RBRACE
-    {AssignBlock(id, args, bl)}
-  | id=T_IDENT; COLON; ty=typesig; SEMICOLON {Typesig(id, ty, [])}
-  | id=T_IDENT; STRAIGHT; d=nonempty_list(dec); COLON; ty=typesig; SEMICOLON {Typesig(id, ty, d)}
-
+  | a = assign {TopAssign(a)}
+  | t = tdecl  {TopTDecl(t)}
 
 program:
-  | top=list(toplevel) EOF {Prog(top)}
+  | a = nonempty_list(toplevel); EOF {Program(a)}

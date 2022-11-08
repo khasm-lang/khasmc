@@ -1,87 +1,53 @@
-type ident = string
-
-type binop =
-  | BinOpPlus
-  | BinOpMinus
-  | BinOpMul
-  | BinOpDiv
-
-type unop =
-  | UnOpRef
-  | UnOpDeref
-  | UnOpPos
-  | UnOpNeg
-
-type typeSig =
-  | Ptr of int * string
-  | TSBase of string
-  | Arrow of typeSig * typeSig
-
-let rec typeSigEq t1 t2 =
-  match t1, t2 with
-  | Ptr (i1, s1), Ptr (i2, s2) ->
-     (i1 = i2) && (s1 = s2)
-  | TSBase (b1), TSBase (b2) -> b1 = b2
-  | Arrow (t11, t12), Arrow (t21, t22) ->
-     typeSigEq t11 t21 && typeSigEq t12 t22
-  | _, _ -> false
-
-let typeSigLeft ts : typeSig option =
-  match ts with
-  | Ptr (_, _) -> None
-  | TSBase (_) -> None
-  | Arrow (x, _) -> Some(x)
 
 
-let typeSigRight ts : typeSig option =
-  match ts with
-  | Ptr (_, _) -> None
-  | TSBase (_) -> None
-  | Arrow (_, y) -> Some(y)
+type ktype =
+  | KTypeBasic of string
+[@@deriving show {with_path = false}]
+
+type typesig =
+  | TSBase of ktype
+  | TSMap of typesig * typesig
+  | TSForall of string list * typesig
+[@@deriving show {with_path = false}]
+
+type kident = string
+[@@deriving show {with_path = false}]
 
 
+type tdecl =
+  | TDecl of kident * typesig
+[@@deriving show {with_path = false}]
 
 
-type const =
+type kbase =
+  | Ident of kident
   | Int of string
   | Float of string
-  | String of string
-  | Id of ident
-  | True
-  | False
+  | Str of string
+[@@deriving show {with_path = false}]
 
-type expr =
-  | Paren of expr
-  | Base of const
-  | UnOp of unop list * expr
-  | BinOp of expr * binop * expr
-  | FuncCall of expr * expr list
 
-type attr =
-  | NoMangle of bool
-  | Inline of bool
+type binop = | ADD
+[@@deriving show {with_path = false}]
 
-type block =
-  | Many of block list
-  | AssignBlock of ident * ident list * block
-  | Assign of ident * ident list * expr
-  | Typesig of ident * typeSig * attr list
-  | If of if_t
-  | While of while_t
-  | Return of expr
-  | Ignore of expr
 
-and if_t = expr * block
+type kexpr =
+  | Base of kbase
+  | Paren of kexpr
+  | FCall of kexpr * kexpr list
+  | BinOp of kexpr * binop * kexpr
+  | LetIn of kident * kexpr * kexpr
+  | IfElse of kexpr * kexpr * kexpr
+[@@deriving show {with_path = false}]
 
-and while_t = expr * block
-
+type kass =
+  | KAss of kident * kident list *  kexpr
+[@@deriving show {with_path = false}]
 
 type toplevel =
-  | AssignBlock of ident * ident list * block
-  | Assign of ident * ident list * expr
-  | Typesig of ident * typeSig * attr list
+  | TopAssign of kass
+  | TopTDecl of tdecl
+[@@deriving show {with_path = false}]
 
-type program = Prog of toplevel list
-(* Local Variables: *)
-(* caml-annot-dir: "_build/default/bin/.main.eobjs/byte" *)
-(* End: *)
+type program = | Program of toplevel list
+[@@deriving show {with_path = false}]
