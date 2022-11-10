@@ -1,3 +1,12 @@
+
+open Lexing
+
+let print_error_position lexbuf =
+  let pos = lexbuf.lex_curr_p in
+  Fmt.str "Line: %d, Position: %d" pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
+
+
+
 let parseToAst filename =
   let file = open_in filename in
   let lexbuf = Lexing.from_channel file in
@@ -5,13 +14,14 @@ let parseToAst filename =
     let result = Parser.program Lexer.token lexbuf in
     close_in file;
     result
-  with Parser.Error(x) ->
-        begin
-          print_string "failed in state: ";
-          print_string (string_of_int x);
-          print_endline "";
-          exit 1
-        end
+  with
+  | Parser.Error(x) ->
+     let error_msg = Fmt.str "%s: syntax error in state %d@." (print_error_position lexbuf) x in
+     print_endline ("Parse error: " ^ error_msg);
+     exit 1
+
+
+
 
 let _ =
   let argc = Array.length Sys.argv in
@@ -20,6 +30,7 @@ let _ =
       print_endline "USAGE: ./khasmc <file>";
       exit 1
     end;
+  print_endline "";
   let t = Unix.gettimeofday() in
   begin
     let list = Array.to_list Sys.argv in

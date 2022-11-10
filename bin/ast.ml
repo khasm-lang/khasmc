@@ -1,5 +1,3 @@
-
-
 type ktype =
   | KTypeBasic of string
 [@@deriving show {with_path = false}]
@@ -24,30 +22,36 @@ type kbase =
   | Int of string
   | Float of string
   | Str of string
+  | Tuple of kexpr list
 [@@deriving show {with_path = false}]
 
 
-type binop = | ADD
+and unop = string
+[@@deriving show {with_path = false}]
+
+and binop = string
 [@@deriving show {with_path = false}]
 
 
-type kexpr =
+and kexpr =
   | Base of kbase
   | Paren of kexpr
   | FCall of kexpr * kexpr list
+  | UnOp of unop * kexpr
   | BinOp of kexpr * binop * kexpr
-  | LetIn of kident * kexpr * kexpr
+  | LetIn of kident * kident list * kexpr * kexpr
   | IfElse of kexpr * kexpr * kexpr
+  | Join of kexpr * kexpr (* expr1; expr2; expr3*)
 [@@deriving show {with_path = false}]
 
-type kass =
+and kass =
   | KAss of kident * kident list *  kexpr
 [@@deriving show {with_path = false}]
 
-type toplevel =
+and toplevel =
   | TopAssign of kass
   | TopTDecl of tdecl
 [@@deriving show {with_path = false}]
 
-type program = | Program of toplevel list
+and program = | Program of toplevel list
 [@@deriving show {with_path = false}]

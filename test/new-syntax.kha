@@ -1,8 +1,6 @@
-id : forall a, a -> a.
-id x = x.
+let apply f x = f x
 
-test : i32.
-
-test = let x = 10 in
-       let y = 12 in
-       x + y.
+let test =
+    let add10 x = x + 10 in
+    let y = 10 in
+    apply add10 y
