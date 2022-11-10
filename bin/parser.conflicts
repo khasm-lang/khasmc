@@ -1,0 +1,175 @@
+
+** Conflict (shift/reduce) in state 100.
+** Tokens involved: SUB_OP SEMICOLON POW_OP PIP_OP MUL_OP MOD_OP LT_OP GT_OP EQ_OP DOL_OP DIV_OP COL_OP CAR_OP AT_OP AND_OP ADD_OP
+** The following explanations concentrate on token SUB_OP.
+** This state is reached from program after reading:
+
+LET T_IDENT list(T_IDENT) EQ TILDE_OP expr
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+nonempty_list(toplevel) EOF 
+toplevel 
+assign 
+LET T_IDENT list(T_IDENT) EQ expr 
+                             expr1 
+                             (?)
+
+** In state 100, looking ahead at SUB_OP, reducing production
+** expr1 -> TILDE_OP expr
+** is permitted because of the following sub-derivation:
+
+expr2 
+expr3 
+expr4 
+expr5 
+expr SUB_OP expr // lookahead token appears
+expr1 // lookahead token is inherited
+TILDE_OP expr . 
+
+** In state 100, looking ahead at SUB_OP, shifting is permitted
+** because of the following sub-derivation:
+
+TILDE_OP expr 
+         expr1 
+         expr2 
+         expr3 
+         expr4 
+         expr5 
+         expr . SUB_OP expr 
+
+** Conflict (shift/reduce) in state 95.
+** Token involved: RPAREN
+** This state is reached from program after reading:
+
+LET T_IDENT list(T_IDENT) EQ LPAREN expr
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+nonempty_list(toplevel) EOF 
+toplevel 
+assign 
+LET T_IDENT list(T_IDENT) EQ expr 
+                             expr1 
+                             expr2 
+                             (?)
+
+** In state 95, looking ahead at RPAREN, shifting is permitted
+** because of the following sub-derivation:
+
+fexpr nonempty_list(parenexpr) 
+LPAREN expr . RPAREN 
+
+** In state 95, looking ahead at RPAREN, reducing production
+** separated_nonempty_list(COMMA,expr) -> expr
+** is permitted because of the following sub-derivation:
+
+expr3 
+expr4 
+expr5 
+expr6 
+expr7 
+expr8 
+expr9 
+LPAREN separated_nonempty_list(COMMA,expr) RPAREN // lookahead token appears
+       expr . 
+
+** Conflict (shift/reduce) in state 92.
+** Tokens involved: SUB_OP SEMICOLON POW_OP PIP_OP MUL_OP MOD_OP LT_OP GT_OP EQ_OP DOL_OP DIV_OP COL_OP CAR_OP AT_OP AND_OP ADD_OP
+** The following explanations concentrate on token SUB_OP.
+** This state is reached from program after reading:
+
+LET T_IDENT list(T_IDENT) EQ IF expr THEN expr ELSE expr
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+nonempty_list(toplevel) EOF 
+toplevel 
+assign 
+LET T_IDENT list(T_IDENT) EQ expr 
+                             expr1 
+                             expr2 
+                             expr3 
+                             expr4 
+                             expr5 
+                             (?)
+
+** In state 92, looking ahead at SUB_OP, reducing production
+** expr10 -> IF expr THEN expr ELSE expr
+** is permitted because of the following sub-derivation:
+
+expr SUB_OP expr // lookahead token appears
+expr1 // lookahead token is inherited
+expr2 // lookahead token is inherited
+expr3 // lookahead token is inherited
+expr4 // lookahead token is inherited
+expr5 // lookahead token is inherited
+expr6 // lookahead token is inherited
+expr7 // lookahead token is inherited
+expr8 // lookahead token is inherited
+expr9 // lookahead token is inherited
+expr10 // lookahead token is inherited
+IF expr THEN expr ELSE expr . 
+
+** In state 92, looking ahead at SUB_OP, shifting is permitted
+** because of the following sub-derivation:
+
+expr6 
+expr7 
+expr8 
+expr9 
+expr10 
+IF expr THEN expr ELSE expr 
+                       expr1 
+                       expr2 
+                       expr3 
+                       expr4 
+                       expr5 
+                       expr . SUB_OP expr 
+
+** Conflict (shift/reduce) in state 87.
+** Tokens involved: SUB_OP SEMICOLON POW_OP PIP_OP MUL_OP MOD_OP LT_OP GT_OP EQ_OP DOL_OP DIV_OP COL_OP CAR_OP AT_OP AND_OP ADD_OP
+** The following explanations concentrate on token SUB_OP.
+** This state is reached from program after reading:
+
+LET T_IDENT list(T_IDENT) EQ BANG_OP expr
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+program 
+nonempty_list(toplevel) EOF 
+toplevel 
+assign 
+LET T_IDENT list(T_IDENT) EQ expr 
+                             expr1 
+                             (?)
+
+** In state 87, looking ahead at SUB_OP, reducing production
+** expr1 -> BANG_OP expr
+** is permitted because of the following sub-derivation:
+
+expr2 
+expr3 
+expr4 
+expr5 
+expr SUB_OP expr // lookahead token appears
+expr1 // lookahead token is inherited
+BANG_OP expr . 
+
+** In state 87, looking ahead at SUB_OP, shifting is permitted
+** because of the following sub-derivation:
+
+BANG_OP expr 
+        expr1 
+        expr2 
+        expr3 
+        expr4 
+        expr5 
+        expr . SUB_OP expr 
