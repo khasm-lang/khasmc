@@ -108,6 +108,7 @@
 %left ADD_OP SUB_OP
 %left MUL_OP DIV_OP MOD_OP
 %right POW_OP
+%nonassoc TILDE_OP BANG_OP
 
 %start program
 
