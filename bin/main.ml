@@ -1,5 +1,7 @@
 
 open Lexing
+open Ast
+
 
 let print_error_position lexbuf =
   let pos = lexbuf.lex_curr_p in
@@ -40,14 +42,9 @@ let _ =
     List.iter print_endline as_str
   end;
   Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t);
-  let test = Typecheck_env.unify
-               (
-                 TSForall(
-                     ["'b"],
-                     (TSBase(KTypeBasic("'a")))
-                   )
-               )
-               (TSMap(TSBase(KTypeBasic("a")),TSBase(KTypeBasic("a"))))
-               (Typecheck_env.new_unity None)
-  in 
-  print_endline (Typecheck_env.show_unity test)
+  let ts1 = TSForall(
+                ["'a"],
+                (TSMap(TSBase(KTypeBasic("'a")), TSBase(KTypeBasic("'a"))))
+              ) in
+  let ts2 = (TSMap(TSBase(KTypeBasic("a")),TSBase(KTypeBasic("b")))) in 
+  Typecheck.typecheck_failure "dunno" ts1 ts2

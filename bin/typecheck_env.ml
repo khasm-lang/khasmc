@@ -50,7 +50,7 @@ let add_to_unity s t un =
     | Some(al) ->
        List.iter
          (fun x ->
-           if (snd x) = t then () else raise (UnifyFailure "binding already present"))
+           if (snd x) = t then () else raise (UnifyFailure ("binding already present for tsvar " ^ s)))
          al;
     | None -> ()
   end;
