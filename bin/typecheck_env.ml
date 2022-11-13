@@ -1,125 +1,86 @@
 open Ast
+exception Impossible of string
 
-let print_int x = print_endline (string_of_int x)
+type func = {
+    qual_name   : string;
+    tsigs : typesig list;
+  }
 
-let print_bool x = print_endline (string_of_bool x)
+type env = {
+    prefix : string;
+    parent : env option;
+    binds : func list;
+  }
 
-let rec uniq x =
-  let rec uniq_help l n =
-    match l with
-    | [] -> []
-    | h :: t -> if n = h then uniq_help t n else h::(uniq_help t n) in
-  match x with
-  | [] -> []
-  | h::t -> h::(uniq_help (uniq t) h)
+let qual_name name fname = fname ^ "." ^ name
 
-type unity = {
-    parent : unity option;
-    join : (string * typesig) list;
-    foralls : string list;
-  } [@@deriving show {with_path = false}]
+let new_env pre = {parent = None; binds = []; prefix = pre}
 
-let new_unity p = 
-  {parent = p; join = []; foralls = [];}
-
-let add_forall strl un =
-  {un with foralls = uniq (strl @ un.foralls)}
-
-let rec is_forall str un =
-  match List.filter (fun x -> x = str) un.foralls with
-  | _x :: _xs -> true
-  | [] ->
-     match un.parent with
-     | None -> false
-     | Some(x) -> is_forall str x
-
-let rec find_alias_in_unity str un =
-  match List.filter (fun x -> (fst x) = str) un.join with
-  | x :: xs -> Some(x :: xs)
-  | [] ->
-     match un.parent with
-     | None -> None
-     | Some(x) -> find_alias_in_unity str x
-
-exception UnifyFailure of string
-
-let add_to_unity s t un =
-  let already = find_alias_in_unity s un in
-  begin
-    match already with
-    | Some(al) ->
-       List.iter
-         (fun x ->
-           if (snd x) = t then () else raise (UnifyFailure ("binding already present for tsvar " ^ s)))
-         al;
-    | None -> ()
-  end;
-  {un with join = (s, t) :: un.join;}
-
-let combine unb una =
-  {una with join = uniq (una.join @ unb.join); foralls = uniq (una.foralls @ unb.foralls)}
+let new_func prefix name =
+  {qual_name = prefix ^ name; tsigs = []}
 
 
-
-let rec unify_base (x: ktype) (y: ktype) ctx =
-  match (x, y) with
-  | (KTypeBasic(a), KTypeBasic(b)) ->
-     begin
-       if is_forall a ctx then
-         combine (add_to_unity a (TSBase(KTypeBasic(b))) ctx) ctx
-       else
-         if a = b then ctx else raise (UnifyFailure ("incompat types: " ^ a ^ " " ^ b))
-     end
-  | (KTypeApp(a1, a2), KTypeApp(b1, b2)) ->
-     begin
-       let more1 = unify a1 b1 ctx in
-       if a2 = b2 then
-         combine more1 ctx
-       else
-         raise (UnifyFailure ("incompat types: " ^ a2 ^ " " ^ b2))
-     end
-  | (KTypeBasic(a), KTypeApp(b1, b2)) ->
-     begin
-       if is_forall a ctx then
-         combine (add_to_unity a (TSBase(KTypeApp(b1, b2))) ctx) ctx
-       else
-         raise (UnifyFailure ("incompatible types"))
-     end
-  | (KTypeApp(_a1, _a2), KTypeBasic(_b)) ->
-     raise (UnifyFailure("Cannot unify application of typecon with base type"))
-
-
-and unify x y ctx =
-  match (x, y) with
-  | (TSBase(a), TSBase(b)) -> combine (unify_base a b ctx) ctx
-  | (TSMap(a1, a2), TSMap(b1, b2)) -> 
-     begin
-       let temp = combine (unify a1 b1 ctx) ctx in
-       combine (unify a2 b2 temp) temp
-     end
-  | (TSForall(fa, ta), TSForall(_fb, tb)) ->
-     begin
-       let newctx = add_forall fa ctx in
-       combine (unify ta tb newctx) ctx
-     end
-  | (TSTuple(a), TSTuple(b)) ->
-     combine (unify_tuples a b ctx) ctx
-  | (TSForall(f, t), _) ->
-     begin
-       let newctx = add_forall f ctx in
-       combine (unify t y newctx) ctx
-     end
-  | (TSBase(KTypeBasic(a)), _) ->
-     if is_forall a ctx then
-       combine (add_to_unity a y ctx) ctx
+let rec find_func_in_env name env =
+  match List.filter (fun x -> x.qual_name = name) env.binds with
+  | x :: xs ->
+     if xs <> [] then
+       raise (Impossible "Multiple funcs returned find_func_in_env")
      else
-       raise (UnifyFailure "cannot unify base and non-base w/o polymorhpism")
-  | (_, _) -> raise (UnifyFailure "invalid unification")
+       Some(x)
+  | [] ->
+     match env.parent with
+     | Some(y) -> find_func_in_env name y
+     | None -> None
 
-and unify_tuples x y ctx =
-  match (x, y) with
-  | (b :: bs, c :: cs) ->
-     let newctx = unify b c ctx in
-     combine (unify_tuples bs cs newctx) ctx
-  | ([], []) -> ctx
-  | (_, _) -> raise (UnifyFailure "unequal tuple lengths")
+let add_func_to_env name env =
+  match find_func_in_env name env with
+  | Some(_) -> env
+  | None -> {env with binds = {qual_name = name; tsigs = []} :: env.binds}
+
+let add_tsig_to_func name tsig env =
+  match find_func_in_env name env with
+  | Some(ne) ->
+     begin
+       let without = List.filter (fun x -> x.qual_name <> name) env.binds in
+       let new_func = {ne with tsigs = tsig :: ne.tsigs} in
+       {env with binds = new_func :: without}
+     end
+  | None -> raise Not_found
+
+(*
+  TODO:
+  this currently does not support stuff like
+  (∀a, (∀a, a -> a) -> a)
+  where inner a and outer a should be different typevars.
+  FIX:
+  add a step before typechecking where all typevars are fixed to be
+  their own thing, just using like, counting upwards in letters
+ *)
+
+let rec ts_get_left ts =
+  match ts with
+  | TSBase(_) -> raise Not_found
+  | TSMap(a, _) -> a
+  | TSForall(sl, t) ->
+     begin
+       match ts_get_left t with
+       | TSForall(nl, a) -> TSForall(nl @ sl, a)
+       | x -> TSForall(sl, x)
+     end
+  | TSTuple(_) -> raise Not_found
+
+let rec ts_get_right ts =
+  match ts with
+  | TSBase(_) -> raise Not_found
+  | TSMap(_, a) -> a
+  | TSForall(sl, t) ->
+     begin
+       match ts_get_right t with
+       | TSForall(nl, a) -> TSForall(nl @ sl, a)
+       | x -> TSForall(sl, x)
+     end
+  | TSTuple(_) -> raise Not_found
+
+
+let add_assign_to_env ts args env =
+  env

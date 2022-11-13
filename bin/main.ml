@@ -1,8 +1,8 @@
 
 open Lexing
 open Ast
-
-
+open Typecheck
+open Typecheck_env
 let print_error_position lexbuf =
   let pos = lexbuf.lex_curr_p in
   Fmt.str "Line: %d, Position: %d" pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
@@ -23,8 +23,6 @@ let parseToAst filename =
      exit 1
 
 
-
-
 let _ =
   let argc = Array.length Sys.argv in
   if argc < 2 then
@@ -38,13 +36,9 @@ let _ =
     let list = Array.to_list Sys.argv in
     let files = List.tl list in
     let programs = List.map parseToAst files in
-    let as_str = List.map Ast.show_program programs in
-    List.iter print_endline as_str
+    let as_str = List.map show_program programs in
+    List.iter print_endline as_str;
+    ignore (typecheck_program (List.hd programs) (List.hd files) (new_env (List.hd files)));
+    ()
   end;
-  Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t);
-  let ts1 = TSForall(
-                ["'a"],
-                (TSMap(TSBase(KTypeBasic("'a")), TSBase(KTypeBasic("'a"))))
-              ) in
-  let ts2 = (TSMap(TSBase(KTypeBasic("a")),TSBase(KTypeBasic("b")))) in 
-  Typecheck.typecheck_failure "dunno" ts1 ts2
+  Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t)
