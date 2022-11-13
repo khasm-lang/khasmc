@@ -1,0 +1,24 @@
+
+(Program
+   [(TopTDecl
+       ("test",
+        (TSMap ((TSBase (KTypeBasic "int")), (TSBase (KTypeBasic "int"))))));
+     (TopAssign
+        (KAss ("test", ["x"],
+           (BinOp ((Base (Ident "x")), "+", (Base (Ident "x")))))));
+     (TopTDecl
+        ("example",
+         (TSMap ((TSBase (KTypeBasic "bool")),
+            (TSMap ((TSBase (KTypeBasic "int")),
+               (TSMap ((TSBase (KTypeBasic "int")),
+                  (TSBase (KTypeBasic "int"))))
+               ))
+            ))));
+     (TopAssign
+        (KAss ("example", ["cond"; "x"; "y"],
+           (IfElse ((Base (Ident "cond")), (Base (Ident "x")),
+              (Base (Ident "y"))))
+           )))
+     ])
+
+khasmc done in 0.000084s

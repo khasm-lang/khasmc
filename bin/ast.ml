@@ -14,8 +14,7 @@ type kident = string
 [@@deriving show {with_path = false}]
 
 
-type tdecl =
-  | TDecl of kident * typesig
+type tdecl = kident * typesig
 [@@deriving show {with_path = false}]
 
 

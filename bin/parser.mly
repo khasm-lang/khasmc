@@ -214,7 +214,7 @@ expr12:
 
 tdecl:
   | SIG; a = T_IDENT; e=EQ_OP; t = typesig
-    {TDecl(a, t)}
+    {(a, t)}
 
 assign:
   | LET; a = T_IDENT; args = list(T_IDENT); eq=EQ_OP; e = expr

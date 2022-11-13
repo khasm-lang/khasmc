@@ -1,5 +1,0 @@
-console.log | nomangle : str -> i32;
-
-main : i32;
-
-main = console.log "Hello, world!";
