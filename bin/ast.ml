@@ -1,12 +1,14 @@
 type ktype =
   | KTypeBasic of string
-[@@deriving show {with_path = false}]
+  | KTypeApp of typesig * string
+[@@deriving show {with_path = false}, eq]
 
-type typesig =
+and typesig =
   | TSBase of ktype
   | TSMap of typesig * typesig
   | TSForall of string list * typesig
-[@@deriving show {with_path = false}]
+  | TSTuple of typesig list
+[@@deriving show {with_path = false}, eq]
 
 type kident = string
 [@@deriving show {with_path = false}]
