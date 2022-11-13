@@ -1,6 +1,5 @@
 %{
     open Ast
-    exception Parse_error of string
 %}
 
 %token <string> T_IDENT
@@ -110,17 +109,26 @@
 %right POW_OP
 %nonassoc TILDE_OP BANG_OP
 
+%right KTYPE
+
 %start program
 
 %%
 
 ktype:
   | t = T_IDENT {KTypeBasic(t)}
+  | a = ktype; b = T_IDENT {KTypeApp(TSBase(a), b)}
+  | LPAREN; a = typesig; RPAREN; b = T_IDENT
+    {KTypeApp(a, b)}
+  | LPAREN; t = separated_nonempty_list(COMMA, typesig); RPAREN; b = T_IDENT
+    {KTypeApp(TSTuple(t), b)}
 
 typesig_i:
   | k = ktype {TSBase(k)}
   | a = typesig_i; TS_TO; b = typesig_i {TSMap(a, b)}
   | LPAREN; t = typesig; RPAREN; {t}
+  | LPAREN; t = separated_nonempty_list(COMMA, typesig); RPAREN
+    {TSTuple(t)}
 
 typesig:
   | t = typesig_i {t}
@@ -145,8 +153,8 @@ expr:
   | e=expr1 {e}
 
 expr1:
-  | b=BANG_OP; e=expr {UnOp(b, e)}
-  | t=TILDE_OP; e=expr {UnOp(t, e)}
+  | b=BANG_OP; e=expr {UnOp(b, e)} %prec BANG_OP
+  | t=TILDE_OP; e=expr {UnOp(t, e)} %prec TILDE_OP
   | e=expr2 {e}
 
 expr2:
@@ -194,6 +202,7 @@ expr10:
   | IF; e1=expr; THEN; e2=expr; ELSE; e3=expr {IfElse(e1, e2, e3)}
   | LET; t=T_IDENT; args=list(T_IDENT); EQ_OP; e1=expr; IN; e2=expr
     {LetIn(t, args, e1, e2)}
+  | LPAREN; e=expr; RPAREN {Paren(e)}
   | e=expr11 {e}
 
 expr11:

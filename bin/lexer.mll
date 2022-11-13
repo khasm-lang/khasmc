@@ -69,6 +69,7 @@ rule token = parse
      | "#" {HASH}
      | "," {COMMA}
      | ";" {SEMICOLON}
+     | "->" {TS_TO}
 	| bang_op {BANG_OP (Lexing.lexeme lexbuf)}
 	| tilde_op {TILDE_OP (Lexing.lexeme lexbuf)}
 	| pow_op {POW_OP (Lexing.lexeme lexbuf)}
@@ -102,7 +103,6 @@ rule token = parse
      | "and" {LAND}
      | "or"  {LOR}
      | "∀" {FORALL}
-     | "->" {TS_TO}
      | "sig" {SIG}
      | COMMENT { token lexbuf }
      | WHITESPACE { token lexbuf}

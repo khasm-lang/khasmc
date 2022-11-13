@@ -39,4 +39,15 @@ let _ =
     let as_str = List.map Ast.show_program programs in
     List.iter print_endline as_str
   end;
-  Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t)
+  Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t);
+  let test = Typecheck_env.unify
+               (
+                 TSForall(
+                     ["'b"],
+                     (TSBase(KTypeBasic("'a")))
+                   )
+               )
+               (TSMap(TSBase(KTypeBasic("a")),TSBase(KTypeBasic("a"))))
+               (Typecheck_env.new_unity None)
+  in 
+  print_endline (Typecheck_env.show_unity test)

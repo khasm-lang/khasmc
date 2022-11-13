@@ -1,6 +1,1 @@
-let apply f x = f x
-
-let test =
-    let add10 x = x + 10 in
-    let y = 10 in
-    apply add10 y
+sig test = (int, int) -> int

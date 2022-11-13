@@ -1,45 +1,4 @@
 
-** Conflict (shift/reduce) in state 107.
-** Tokens involved: SUB_OP SEMICOLON POW_OP PIP_OP MUL_OP MOD_OP LT_OP GT_OP EQ_OP DOL_OP DIV_OP COL_OP CAR_OP AT_OP AND_OP ADD_OP
-** The following explanations concentrate on token SUB_OP.
-** This state is reached from program after reading:
-
-LET T_IDENT list(T_IDENT) EQ_OP TILDE_OP expr
-
-** The derivations that appear below have the following common factor:
-** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
-
-program 
-nonempty_list(toplevel) EOF 
-toplevel 
-assign 
-LET T_IDENT list(T_IDENT) EQ_OP expr 
-                                expr1 
-                                (?)
-
-** In state 107, looking ahead at SUB_OP, reducing production
-** expr1 -> TILDE_OP expr
-** is permitted because of the following sub-derivation:
-
-expr2 
-expr3 
-expr4 
-expr5 
-expr SUB_OP expr // lookahead token appears
-expr1 // lookahead token is inherited
-TILDE_OP expr . 
-
-** In state 107, looking ahead at SUB_OP, shifting is permitted
-** because of the following sub-derivation:
-
-TILDE_OP expr 
-         expr1 
-         expr2 
-         expr3 
-         expr4 
-         expr5 
-         expr . SUB_OP expr 
-
 ** Conflict (shift/reduce) in state 102.
 ** Token involved: RPAREN
 ** This state is reached from program after reading:
@@ -56,25 +15,25 @@ assign
 LET T_IDENT list(T_IDENT) EQ_OP expr 
                                 expr1 
                                 expr2 
+                                expr3 
+                                expr4 
+                                expr5 
+                                expr6 
+                                expr7 
+                                expr8 
+                                expr9 
                                 (?)
 
 ** In state 102, looking ahead at RPAREN, shifting is permitted
 ** because of the following sub-derivation:
 
-fexpr nonempty_list(parenexpr) 
+expr10 
 LPAREN expr . RPAREN 
 
 ** In state 102, looking ahead at RPAREN, reducing production
 ** separated_nonempty_list(COMMA,expr) -> expr
 ** is permitted because of the following sub-derivation:
 
-expr3 
-expr4 
-expr5 
-expr6 
-expr7 
-expr8 
-expr9 
 LPAREN separated_nonempty_list(COMMA,expr) RPAREN // lookahead token appears
        expr . 
 
@@ -187,44 +146,3 @@ IF expr THEN expr ELSE expr
                        expr4 
                        expr5 
                        expr . SUB_OP expr 
-
-** Conflict (shift/reduce) in state 91.
-** Tokens involved: SUB_OP SEMICOLON POW_OP PIP_OP MUL_OP MOD_OP LT_OP GT_OP EQ_OP DOL_OP DIV_OP COL_OP CAR_OP AT_OP AND_OP ADD_OP
-** The following explanations concentrate on token SUB_OP.
-** This state is reached from program after reading:
-
-LET T_IDENT list(T_IDENT) EQ_OP BANG_OP expr
-
-** The derivations that appear below have the following common factor:
-** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
-
-program 
-nonempty_list(toplevel) EOF 
-toplevel 
-assign 
-LET T_IDENT list(T_IDENT) EQ_OP expr 
-                                expr1 
-                                (?)
-
-** In state 91, looking ahead at SUB_OP, reducing production
-** expr1 -> BANG_OP expr
-** is permitted because of the following sub-derivation:
-
-expr2 
-expr3 
-expr4 
-expr5 
-expr SUB_OP expr // lookahead token appears
-expr1 // lookahead token is inherited
-BANG_OP expr . 
-
-** In state 91, looking ahead at SUB_OP, shifting is permitted
-** because of the following sub-derivation:
-
-BANG_OP expr 
-        expr1 
-        expr2 
-        expr3 
-        expr4 
-        expr5 
-        expr . SUB_OP expr 
