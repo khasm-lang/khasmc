@@ -1,0 +1,6591 @@
+"bin/ast.ml" 2 13 31 "bin/ast.ml" 2 13 37
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  Format.formatter ->
+  (string -> unit, Format.formatter, unit) Stdlib.format -> string -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  string -> unit
+)
+"bin/ast.ml" 2 13 15 "bin/ast.ml" 2 13 37
+type(
+  string
+)
+ident(
+  int_ref rhs0 "bin/ast.ml" 2 13 15 "bin/ast.ml" 2 13 37
+)
+type(
+  string
+)
+ident(
+  int_ref lhs0 "bin/ast.ml" 2 13 15 "bin/ast.ml" 2 13 37
+)
+type(
+  string
+)
+ident(
+  int_ref b "bin/ast.ml" 2 13 15 "bin/ast.ml" 2 13 37
+)
+type(
+  string
+)
+ident(
+  int_ref a "bin/ast.ml" 2 13 15 "bin/ast.ml" 2 13 37
+)
+type(
+  string -> string -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.( = ) "stdlib.mli" 121 5051 5051 "stdlib.mli" 121 5051 5095
+)
+type(
+  bool
+)
+type(
+  string
+)
+type(
+  string -> bool
+)
+ident(
+  def b "bin/ast.ml" 2 13 15 "bin/ast.ml" 2 13 37
+)
+type(
+  string
+)
+type(
+  string
+)
+type(
+  string -> string -> bool
+)
+ident(
+  def a "bin/ast.ml" 2 13 15 "bin/ast.ml" 2 13 37
+)
+type(
+  bool
+)
+type(
+  string
+)
+type(
+  ktype
+)
+type(
+  string
+)
+type(
+  ktype
+)
+type(
+  ktype * ktype
+)
+type(
+  ktype * ktype
+)
+ident(
+  def rhs0 "bin/ast.ml" 2 13 15 "bin/ast.ml" 2 13 37
+)
+ident(
+  def lhs0 "bin/ast.ml" 2 13 15 "bin/ast.ml" 2 13 37
+)
+"bin/ast.ml" 3 38 54 "bin/ast.ml" 3 38 61
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+"bin/ast.ml" 3 38 64 "bin/ast.ml" 3 38 70
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  Format.formatter ->
+  (string -> unit, Format.formatter, unit) Stdlib.format -> string -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  string -> unit
+)
+"bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+type(
+  string
+)
+ident(
+  int_ref rhs1 "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  string
+)
+ident(
+  int_ref lhs1 "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  string
+)
+ident(
+  int_ref b "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  string
+)
+ident(
+  int_ref a "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  string -> string -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.( = ) "stdlib.mli" 121 5051 5051 "stdlib.mli" 121 5051 5095
+)
+type(
+  bool
+)
+type(
+  string
+)
+type(
+  string -> bool
+)
+ident(
+  def b "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  string
+)
+type(
+  string
+)
+type(
+  string -> string -> bool
+)
+ident(
+  def a "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  bool
+)
+type(
+  typesig
+)
+ident(
+  int_ref rhs0 "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  typesig
+)
+ident(
+  int_ref lhs0 "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  typesig
+)
+ident(
+  int_ref x "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+ident(
+  int_ref __0 "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  typesig -> typesig -> bool
+)
+type(
+  typesig -> bool
+)
+type(
+  typesig
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  def x "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  string
+)
+type(
+  typesig
+)
+type(
+  ktype
+)
+type(
+  string
+)
+type(
+  typesig
+)
+type(
+  ktype
+)
+type(
+  ktype * ktype
+)
+type(
+  ktype * ktype
+)
+ident(
+  def rhs1 "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+ident(
+  def rhs0 "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+ident(
+  def lhs1 "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+ident(
+  def lhs0 "bin/ast.ml" 3 38 40 "bin/ast.ml" 3 38 70
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  int_ref equal_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+ident(
+  def __0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+type(
+  bool
+)
+type(
+  bool -> bool -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.( && ) "stdlib.mli" 214 8960 8960 "stdlib.mli" 214 8960 9011
+)
+type(
+  ktype
+)
+ident(
+  int_ref rhs "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  ktype
+)
+ident(
+  int_ref lhs "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  ktype * ktype
+)
+type(
+  ktype
+)
+type(
+  ktype -> bool
+)
+ident(
+  def rhs "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  ktype
+)
+type(
+  ktype -> ktype -> bool
+)
+ident(
+  def lhs "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  ktype
+)
+ident(
+  int_ref x "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  ((Format.formatter -> ktype -> unit) -> ktype -> string, Format.formatter,
+   unit, string)
+  format4
+)
+type(
+  ((Format.formatter -> ktype -> unit) -> ktype -> string, Format.formatter,
+   unit, string)
+  format4 -> (Format.formatter -> ktype -> unit) -> ktype -> string
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  string
+)
+type(
+  ktype
+)
+type(
+  ktype -> string
+)
+ident(
+  def x "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> ktype -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 7 128 142 "bin/ast.ml" 7 128 147
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 7 128 130 "bin/ast.ml" 7 128 147
+type(
+  ktype
+)
+ident(
+  int_ref rhs0 "bin/ast.ml" 7 128 130 "bin/ast.ml" 7 128 147
+)
+type(
+  ktype
+)
+ident(
+  int_ref lhs0 "bin/ast.ml" 7 128 130 "bin/ast.ml" 7 128 147
+)
+type(
+  ktype
+)
+ident(
+  int_ref x "bin/ast.ml" 7 128 130 "bin/ast.ml" 7 128 147
+)
+type(
+  unit
+)
+type(
+  unit -> ktype -> ktype -> bool
+)
+ident(
+  int_ref __0 "bin/ast.ml" 7 128 130 "bin/ast.ml" 7 128 147
+)
+type(
+  ktype -> ktype -> bool
+)
+type(
+  ktype -> bool
+)
+type(
+  ktype
+)
+type(
+  ktype -> ktype -> bool
+)
+ident(
+  def x "bin/ast.ml" 7 128 130 "bin/ast.ml" 7 128 147
+)
+type(
+  bool
+)
+type(
+  ktype
+)
+type(
+  typesig
+)
+type(
+  ktype
+)
+type(
+  typesig
+)
+type(
+  typesig * typesig
+)
+type(
+  typesig * typesig
+)
+ident(
+  def rhs0 "bin/ast.ml" 7 128 130 "bin/ast.ml" 7 128 147
+)
+ident(
+  def lhs0 "bin/ast.ml" 7 128 130 "bin/ast.ml" 7 128 147
+)
+type(
+  ktype -> ktype -> bool
+)
+ident(
+  int_ref equal_ktype "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> ktype -> ktype -> bool
+)
+type(
+  unit -> ktype -> ktype -> bool
+)
+ident(
+  def __0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 8 148 161 "bin/ast.ml" 8 148 168
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 8 148 171 "bin/ast.ml" 8 148 178
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+type(
+  typesig
+)
+ident(
+  int_ref rhs1 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  typesig
+)
+ident(
+  int_ref lhs1 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  typesig
+)
+ident(
+  int_ref x "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+ident(
+  int_ref __2 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  typesig -> typesig -> bool
+)
+type(
+  typesig -> bool
+)
+type(
+  typesig
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  def x "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  bool
+)
+type(
+  typesig
+)
+ident(
+  int_ref rhs0 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  typesig
+)
+ident(
+  int_ref lhs0 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  typesig
+)
+ident(
+  int_ref x "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+ident(
+  int_ref __1 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  typesig -> typesig -> bool
+)
+type(
+  typesig -> bool
+)
+type(
+  typesig
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  def x "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+type(
+  typesig * typesig
+)
+type(
+  typesig * typesig
+)
+ident(
+  def rhs1 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+ident(
+  def rhs0 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+ident(
+  def lhs1 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+ident(
+  def lhs0 "bin/ast.ml" 8 148 150 "bin/ast.ml" 8 148 178
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  int_ref equal_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  int_ref equal_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+ident(
+  def __1 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+ident(
+  def __2 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 9 179 195 "bin/ast.ml" 9 179 201
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter ->
+  (string -> unit, Format.formatter, unit) Stdlib.format -> string -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  string -> unit
+)
+"bin/ast.ml" 9 179 195 "bin/ast.ml" 9 179 206
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  string list
+)
+ident(
+  int_ref x "bin/ast.ml" 9 179 195 "bin/ast.ml" 9 179 206
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  string
+)
+ident(
+  int_ref x "bin/ast.ml" 9 179 195 "bin/ast.ml" 9 179 206
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  bool
+)
+ident(
+  int_ref sep "bin/ast.ml" 9 179 195 "bin/ast.ml" 9 179 206
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  string
+)
+type(
+  string -> bool
+)
+ident(
+  def x "bin/ast.ml" 9 179 195 "bin/ast.ml" 9 179 206
+)
+type(
+  bool
+)
+type(
+  bool -> string -> bool
+)
+ident(
+  def sep "bin/ast.ml" 9 179 195 "bin/ast.ml" 9 179 206
+)
+type(
+  (bool -> string -> bool) -> bool -> string list -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.List.fold_left "list.mli" 211 7387 7387 "list.mli" 211 7387 7442
+)
+type(
+  bool
+)
+type(
+  bool -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.ignore "stdlib.mli" 693 26164 26164 "stdlib.mli" 693 26164 26204
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  string list
+)
+type(
+  string list -> unit
+)
+ident(
+  def x "bin/ast.ml" 9 179 195 "bin/ast.ml" 9 179 206
+)
+"bin/ast.ml" 9 179 209 "bin/ast.ml" 9 179 216
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+type(
+  typesig
+)
+ident(
+  int_ref rhs1 "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  typesig
+)
+ident(
+  int_ref lhs1 "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  typesig
+)
+ident(
+  int_ref x "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+ident(
+  int_ref __3 "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  typesig -> typesig -> bool
+)
+type(
+  typesig -> bool
+)
+type(
+  typesig
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  def x "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  bool
+)
+type(
+  string list
+)
+ident(
+  int_ref rhs0 "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list
+)
+ident(
+  int_ref lhs0 "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list
+)
+ident(
+  int_ref y "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list
+)
+ident(
+  int_ref x "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list -> string list -> bool
+)
+ident(
+  int_ref loop "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  bool
+)
+type(
+  string list
+)
+type(
+  string list -> bool
+)
+ident(
+  def y "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list
+)
+type(
+  string list -> string list -> bool
+)
+ident(
+  def x "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  bool
+)
+type(
+  string list * string list
+)
+type(
+  string list * string list
+)
+type(
+  string list
+)
+ident(
+  int_ref y "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list
+)
+ident(
+  int_ref x "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list -> string list -> bool
+)
+ident(
+  int_ref loop "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  bool
+)
+type(
+  string
+)
+ident(
+  int_ref b "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string
+)
+ident(
+  int_ref a "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string
+)
+ident(
+  int_ref b "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string
+)
+ident(
+  int_ref a "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string -> string -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.( = ) "stdlib.mli" 121 5051 5051 "stdlib.mli" 121 5051 5095
+)
+type(
+  bool
+)
+type(
+  string
+)
+type(
+  string -> bool
+)
+ident(
+  def b "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string
+)
+type(
+  string
+)
+type(
+  string -> string -> bool
+)
+ident(
+  def a "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  bool
+)
+type(
+  bool -> bool -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.( && ) "stdlib.mli" 214 8960 8960 "stdlib.mli" 214 8960 9011
+)
+type(
+  bool
+)
+type(
+  string list
+)
+type(
+  string
+)
+type(
+  string list
+)
+type(
+  string list
+)
+type(
+  string
+)
+type(
+  string list
+)
+type(
+  string list * string list
+)
+type(
+  string list * string list
+)
+type(
+  bool
+)
+type(
+  string list
+)
+type(
+  string list
+)
+type(
+  string list * string list
+)
+type(
+  string list * string list
+)
+type(
+  string list
+)
+ident(
+  int_ref y "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list
+)
+ident(
+  int_ref x "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list * string list
+)
+type(
+  bool
+)
+ident(
+  def y "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+ident(
+  def b "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+ident(
+  def x "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+ident(
+  def a "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list
+)
+type(
+  string list -> bool
+)
+ident(
+  def y "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list
+)
+type(
+  string list -> string list -> bool
+)
+ident(
+  def x "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  string list -> string list -> bool
+)
+type(
+  string list -> string list -> bool
+)
+ident(
+  def loop "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  typesig
+)
+type(
+  string list
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+type(
+  string list
+)
+type(
+  typesig
+)
+type(
+  typesig * typesig
+)
+type(
+  typesig * typesig
+)
+ident(
+  def rhs1 "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+ident(
+  def rhs0 "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+ident(
+  def lhs1 "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+ident(
+  def lhs0 "bin/ast.ml" 9 179 181 "bin/ast.ml" 9 179 216
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  int_ref equal_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+ident(
+  def __3 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 10 217 232 "bin/ast.ml" 10 217 239
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 10 217 232 "bin/ast.ml" 10 217 244
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  typesig list
+)
+ident(
+  int_ref x "bin/ast.ml" 10 217 232 "bin/ast.ml" 10 217 244
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  typesig
+)
+ident(
+  int_ref x "bin/ast.ml" 10 217 232 "bin/ast.ml" 10 217 244
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  bool
+)
+ident(
+  int_ref sep "bin/ast.ml" 10 217 232 "bin/ast.ml" 10 217 244
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  typesig
+)
+type(
+  typesig -> bool
+)
+ident(
+  def x "bin/ast.ml" 10 217 232 "bin/ast.ml" 10 217 244
+)
+type(
+  bool
+)
+type(
+  bool -> typesig -> bool
+)
+ident(
+  def sep "bin/ast.ml" 10 217 232 "bin/ast.ml" 10 217 244
+)
+type(
+  (bool -> typesig -> bool) -> bool -> typesig list -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.List.fold_left "list.mli" 211 7387 7387 "list.mli" 211 7387 7442
+)
+type(
+  bool
+)
+type(
+  bool -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.ignore "stdlib.mli" 693 26164 26164 "stdlib.mli" 693 26164 26204
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  typesig list
+)
+type(
+  typesig list -> unit
+)
+ident(
+  def x "bin/ast.ml" 10 217 232 "bin/ast.ml" 10 217 244
+)
+"bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+type(
+  typesig list
+)
+ident(
+  int_ref rhs0 "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list
+)
+ident(
+  int_ref lhs0 "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list
+)
+ident(
+  int_ref y "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list
+)
+ident(
+  int_ref x "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list -> typesig list -> bool
+)
+ident(
+  int_ref loop "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  bool
+)
+type(
+  typesig list
+)
+type(
+  typesig list -> bool
+)
+ident(
+  def y "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list
+)
+type(
+  typesig list -> typesig list -> bool
+)
+ident(
+  def x "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  bool
+)
+type(
+  typesig list * typesig list
+)
+type(
+  typesig list * typesig list
+)
+type(
+  typesig list
+)
+ident(
+  int_ref y "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list
+)
+ident(
+  int_ref x "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list -> typesig list -> bool
+)
+ident(
+  int_ref loop "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  bool
+)
+type(
+  typesig
+)
+ident(
+  int_ref b "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig
+)
+ident(
+  int_ref a "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig
+)
+ident(
+  int_ref x "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+ident(
+  int_ref __4 "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig -> typesig -> bool
+)
+type(
+  typesig -> bool
+)
+type(
+  typesig
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  def x "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  bool
+)
+type(
+  bool -> bool -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.( && ) "stdlib.mli" 214 8960 8960 "stdlib.mli" 214 8960 9011
+)
+type(
+  bool
+)
+type(
+  typesig list
+)
+type(
+  typesig
+)
+type(
+  typesig list
+)
+type(
+  typesig list
+)
+type(
+  typesig
+)
+type(
+  typesig list
+)
+type(
+  typesig list * typesig list
+)
+type(
+  typesig list * typesig list
+)
+type(
+  bool
+)
+type(
+  typesig list
+)
+type(
+  typesig list
+)
+type(
+  typesig list * typesig list
+)
+type(
+  typesig list * typesig list
+)
+type(
+  typesig list
+)
+ident(
+  int_ref y "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list
+)
+ident(
+  int_ref x "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list * typesig list
+)
+type(
+  bool
+)
+ident(
+  def y "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+ident(
+  def b "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+ident(
+  def x "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+ident(
+  def a "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list
+)
+type(
+  typesig list -> bool
+)
+ident(
+  def y "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list
+)
+type(
+  typesig list -> typesig list -> bool
+)
+ident(
+  def x "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig list -> typesig list -> bool
+)
+type(
+  typesig list -> typesig list -> bool
+)
+ident(
+  def loop "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  bool
+)
+type(
+  typesig list
+)
+type(
+  typesig
+)
+type(
+  typesig list
+)
+type(
+  typesig
+)
+type(
+  typesig * typesig
+)
+type(
+  typesig * typesig
+)
+ident(
+  def rhs0 "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+ident(
+  def lhs0 "bin/ast.ml" 10 217 219 "bin/ast.ml" 10 217 244
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  int_ref equal_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+type(
+  unit -> typesig -> typesig -> bool
+)
+ident(
+  def __4 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+type(
+  bool
+)
+type(
+  bool -> bool -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.( && ) "stdlib.mli" 214 8960 8960 "stdlib.mli" 214 8960 9011
+)
+type(
+  bool -> bool -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.( && ) "stdlib.mli" 214 8960 8960 "stdlib.mli" 214 8960 9011
+)
+type(
+  typesig
+)
+ident(
+  int_ref rhs "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  typesig
+)
+ident(
+  int_ref lhs "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  typesig * typesig
+)
+type(
+  typesig
+)
+type(
+  typesig -> bool
+)
+ident(
+  def rhs "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  typesig
+)
+type(
+  typesig -> typesig -> bool
+)
+ident(
+  def lhs "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  typesig
+)
+ident(
+  int_ref x "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  ((Format.formatter -> typesig -> unit) -> typesig -> string,
+   Format.formatter, unit, string)
+  format4
+)
+type(
+  ((Format.formatter -> typesig -> unit) -> typesig -> string,
+   Format.formatter, unit, string)
+  format4 -> (Format.formatter -> typesig -> unit) -> typesig -> string
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  string
+)
+type(
+  typesig
+)
+type(
+  typesig -> string
+)
+ident(
+  def x "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+"bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+type(
+  typesig * typesig
+)
+type(
+  typesig * typesig
+)
+type(
+  bool
+)
+ident(
+  def _ "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  typesig -> typesig -> bool
+)
+type(
+  typesig -> typesig -> bool
+)
+type(
+  typesig -> typesig -> bool
+)
+type(
+  ktype * ktype
+)
+type(
+  ktype * ktype
+)
+type(
+  bool
+)
+ident(
+  def _ "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  ktype -> ktype -> bool
+)
+type(
+  ktype -> ktype -> bool
+)
+type(
+  ktype -> ktype -> bool
+)
+ident(
+  def equal_typesig "bin/ast.ml" 1 0 0 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def equal_ktype "bin/ast.ml" 1 0 0 "bin/ast.pp.ml" 0 0 -1
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref pp_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  typesig -> string
+)
+type(
+  typesig list
+)
+ident(
+  int_ref a0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref __4 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+type(
+  typesig -> unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  typesig list
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+ident(
+  int_ref a1 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref __3 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+type(
+  typesig -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  string list
+)
+ident(
+  int_ref a0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  (string -> unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  typesig
+)
+type(
+  string list
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+ident(
+  int_ref a1 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref __2 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+type(
+  typesig -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  typesig
+)
+ident(
+  int_ref a0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref __1 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+type(
+  typesig -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+type(
+  typesig
+)
+type(
+  ktype
+)
+ident(
+  int_ref a0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> ktype -> unit
+)
+ident(
+  int_ref __0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> ktype -> unit
+)
+type(
+  ktype -> unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  ktype
+)
+type(
+  typesig
+)
+type(
+  typesig -> unit
+)
+ident(
+  def a0 "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+ident(
+  def a1 "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+ident(
+  def a0 "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+ident(
+  def a1 "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+ident(
+  def a0 "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+ident(
+  def a0 "bin/ast.ml" 6 114 114 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+type(
+  Format.formatter -> ktype -> unit
+)
+ident(
+  int_ref pp_ktype "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> ktype -> unit
+)
+type(
+  unit -> Format.formatter -> ktype -> unit
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref pp_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref pp_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref pp_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref pp_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+ident(
+  def __0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+ident(
+  def __1 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+ident(
+  def __2 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+ident(
+  def __3 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+ident(
+  def __4 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+type(
+  Format.formatter -> ktype -> unit
+)
+ident(
+  int_ref pp_ktype "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  ktype -> string
+)
+type(
+  string
+)
+ident(
+  int_ref a1 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  (string -> unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  typesig
+)
+ident(
+  int_ref a0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref __0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+type(
+  typesig -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  string
+)
+type(
+  typesig
+)
+type(
+  ktype
+)
+type(
+  string
+)
+ident(
+  int_ref a0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  (string -> unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  string
+)
+type(
+  ktype
+)
+type(
+  ktype -> unit
+)
+ident(
+  def a1 "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+ident(
+  def a0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+ident(
+  def a0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 4 71 112
+)
+type(
+  Format.formatter -> ktype -> unit
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref pp_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  Format.formatter -> ktype -> unit
+)
+ident(
+  def __0 "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  Format.formatter -> ktype -> unit
+)
+ident(
+  def show_typesig "bin/ast.ml" 1 0 0 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_typesig "bin/ast.ml" 1 0 0 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def show_ktype "bin/ast.ml" 1 0 0 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_ktype "bin/ast.ml" 1 0 0 "bin/ast.pp.ml" 0 0 -1
+)
+"bin/ast.ml" 13 288 302 "bin/ast.ml" 13 288 308
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  Format.formatter ->
+  (kident -> unit, Format.formatter, unit) Stdlib.format -> kident -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  kident -> unit
+)
+"bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+type(
+  kident
+)
+ident(
+  int_ref x "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  Format.formatter -> kident -> unit
+)
+ident(
+  int_ref pp_kident "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  ((Format.formatter -> kident -> unit) -> kident -> kident,
+   Format.formatter, unit, kident)
+  format4
+)
+type(
+  ((Format.formatter -> kident -> unit) -> kident -> kident,
+   Format.formatter, unit, kident)
+  format4 -> (Format.formatter -> kident -> unit) -> kident -> kident
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  kident
+)
+type(
+  kident
+)
+type(
+  kident -> kident
+)
+ident(
+  def x "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  kident -> kident
+)
+type(
+  (kident -> unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> kident -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 13 288 302 "bin/ast.ml" 13 288 308
+)
+type(
+  Format.formatter -> kident -> unit
+)
+type(
+  Format.formatter -> kident -> unit
+)
+ident(
+  def show_kident "bin/ast.ml" 13 288 288 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_kident "bin/ast.ml" 13 288 288 "bin/ast.pp.ml" 0 0 -1
+)
+"bin/ast.ml" 17 349 362 "bin/ast.ml" 17 349 368
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+"bin/ast.ml" 17 349 371 "bin/ast.ml" 17 349 378
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+"bin/ast.ml" 17 349 362 "bin/ast.ml" 17 349 378
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  tdecl -> unit
+)
+"bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+type(
+  tdecl
+)
+ident(
+  int_ref x "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  Format.formatter -> tdecl -> unit
+)
+ident(
+  int_ref pp_tdecl "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  ((Format.formatter -> tdecl -> unit) -> tdecl -> kident, Format.formatter,
+   unit, kident)
+  format4
+)
+type(
+  ((Format.formatter -> tdecl -> unit) -> tdecl -> kident, Format.formatter,
+   unit, kident)
+  format4 -> (Format.formatter -> tdecl -> unit) -> tdecl -> kident
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  kident
+)
+type(
+  tdecl
+)
+type(
+  tdecl -> kident
+)
+ident(
+  def x "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  tdecl -> kident
+)
+type(
+  typesig
+)
+ident(
+  int_ref a1 "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref __1 "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+type(
+  typesig -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  kident
+)
+ident(
+  int_ref a0 "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kident -> unit
+)
+ident(
+  int_ref __0 "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  Format.formatter -> kident -> unit
+)
+type(
+  kident -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  typesig
+)
+type(
+  kident
+)
+type(
+  kident * typesig
+)
+ident(
+  def a1 "bin/ast.ml" 17 349 362 "bin/ast.ml" 17 349 378
+)
+ident(
+  def a0 "bin/ast.ml" 17 349 362 "bin/ast.ml" 17 349 378
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> tdecl -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 17 349 362 "bin/ast.ml" 17 349 378
+)
+type(
+  Format.formatter -> tdecl -> unit
+)
+type(
+  Format.formatter -> kident -> unit
+)
+ident(
+  int_ref pp_kident "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kident -> unit
+)
+type(
+  unit -> Format.formatter -> kident -> unit
+)
+type(
+  Format.formatter -> typesig -> unit
+)
+ident(
+  int_ref pp_typesig "bin/ast.ml" 1 0 0 "bin/ast.ml" 11 245 286
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  unit -> Format.formatter -> typesig -> unit
+)
+type(
+  Format.formatter -> tdecl -> unit
+)
+ident(
+  def __0 "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+ident(
+  def __1 "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  Format.formatter -> tdecl -> unit
+)
+ident(
+  def show_tdecl "bin/ast.ml" 17 349 349 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_tdecl "bin/ast.ml" 17 349 349 "bin/ast.pp.ml" 0 0 -1
+)
+"bin/ast.ml" 22 432 445 "bin/ast.ml" 22 432 451
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+"bin/ast.ml" 23 452 463 "bin/ast.ml" 23 452 469
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter ->
+  (unop -> unit, Format.formatter, unit) Stdlib.format -> unop -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unop -> unit
+)
+"bin/ast.ml" 24 470 483 "bin/ast.ml" 24 470 489
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter ->
+  (unop -> unit, Format.formatter, unit) Stdlib.format -> unop -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unop -> unit
+)
+"bin/ast.ml" 25 490 501 "bin/ast.ml" 25 490 507
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter ->
+  (unop -> unit, Format.formatter, unit) Stdlib.format -> unop -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unop -> unit
+)
+"bin/ast.ml" 26 508 521 "bin/ast.ml" 26 508 526
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+"bin/ast.ml" 26 508 521 "bin/ast.ml" 26 508 531
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  kexpr list
+)
+ident(
+  int_ref x "bin/ast.ml" 26 508 521 "bin/ast.ml" 26 508 531
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  kexpr
+)
+ident(
+  int_ref x "bin/ast.ml" 26 508 521 "bin/ast.ml" 26 508 531
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  bool
+)
+ident(
+  int_ref sep "bin/ast.ml" 26 508 521 "bin/ast.ml" 26 508 531
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  kexpr
+)
+type(
+  kexpr -> bool
+)
+ident(
+  def x "bin/ast.ml" 26 508 521 "bin/ast.ml" 26 508 531
+)
+type(
+  bool
+)
+type(
+  bool -> kexpr -> bool
+)
+ident(
+  def sep "bin/ast.ml" 26 508 521 "bin/ast.ml" 26 508 531
+)
+type(
+  (bool -> kexpr -> bool) -> bool -> kexpr list -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.List.fold_left "list.mli" 211 7387 7387 "list.mli" 211 7387 7442
+)
+type(
+  bool
+)
+type(
+  bool -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.ignore "stdlib.mli" 693 26164 26164 "stdlib.mli" 693 26164 26204
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  kexpr list
+)
+type(
+  kexpr list -> unit
+)
+ident(
+  def x "bin/ast.ml" 26 508 521 "bin/ast.ml" 26 508 531
+)
+"bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+type(
+  kbase
+)
+ident(
+  int_ref x "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  ((Format.formatter -> kbase -> unit) -> kbase -> unop, Format.formatter,
+   unit, unop)
+  format4
+)
+type(
+  ((Format.formatter -> kbase -> unit) -> kbase -> unop, Format.formatter,
+   unit, unop)
+  format4 -> (Format.formatter -> kbase -> unit) -> kbase -> unop
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  unop
+)
+type(
+  kbase
+)
+type(
+  kbase -> unop
+)
+ident(
+  def x "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> kbase -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+"bin/ast.ml" 30 572 583 "bin/ast.ml" 30 572 589
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 30 572 572 "bin/ast.ml" 31 590 627
+)
+type(
+  Format.formatter ->
+  (unop -> unit, Format.formatter, unit) Stdlib.format -> unop -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unop -> unit
+)
+"bin/ast.ml" 30 572 572 "bin/ast.ml" 31 590 627
+type(
+  unop
+)
+ident(
+  int_ref x "bin/ast.ml" 30 572 572 "bin/ast.ml" 31 590 627
+)
+type(
+  ((Format.formatter -> unop -> unit) -> unop -> unop, Format.formatter,
+   unit, unop)
+  format4
+)
+type(
+  ((Format.formatter -> unop -> unit) -> unop -> unop, Format.formatter,
+   unit, unop)
+  format4 -> (Format.formatter -> unop -> unit) -> unop -> unop
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  unop
+)
+type(
+  unop
+)
+type(
+  unop -> unop
+)
+ident(
+  def x "bin/ast.ml" 30 572 572 "bin/ast.ml" 31 590 627
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 30 572 583 "bin/ast.ml" 30 572 589
+)
+"bin/ast.ml" 33 629 641 "bin/ast.ml" 33 629 647
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 33 629 629 "bin/ast.ml" 34 648 685
+)
+type(
+  Format.formatter ->
+  (unop -> unit, Format.formatter, unit) Stdlib.format -> unop -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unop -> unit
+)
+"bin/ast.ml" 33 629 629 "bin/ast.ml" 34 648 685
+type(
+  unop
+)
+ident(
+  int_ref x "bin/ast.ml" 33 629 629 "bin/ast.ml" 34 648 685
+)
+type(
+  ((Format.formatter -> unop -> unit) -> unop -> unop, Format.formatter,
+   unit, unop)
+  format4
+)
+type(
+  ((Format.formatter -> unop -> unit) -> unop -> unop, Format.formatter,
+   unit, unop)
+  format4 -> (Format.formatter -> unop -> unit) -> unop -> unop
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  unop
+)
+type(
+  unop
+)
+type(
+  unop -> unop
+)
+ident(
+  def x "bin/ast.ml" 33 629 629 "bin/ast.ml" 34 648 685
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 33 629 641 "bin/ast.ml" 33 629 647
+)
+"bin/ast.ml" 38 700 712 "bin/ast.ml" 38 700 717
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 39 718 731 "bin/ast.ml" 39 718 736
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 40 737 750 "bin/ast.ml" 40 737 755
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 40 737 758 "bin/ast.ml" 40 737 763
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 40 737 758 "bin/ast.ml" 40 737 768
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  kexpr list
+)
+ident(
+  int_ref x "bin/ast.ml" 40 737 758 "bin/ast.ml" 40 737 768
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  kexpr
+)
+ident(
+  int_ref x "bin/ast.ml" 40 737 758 "bin/ast.ml" 40 737 768
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  bool
+)
+ident(
+  int_ref sep "bin/ast.ml" 40 737 758 "bin/ast.ml" 40 737 768
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  kexpr
+)
+type(
+  kexpr -> bool
+)
+ident(
+  def x "bin/ast.ml" 40 737 758 "bin/ast.ml" 40 737 768
+)
+type(
+  bool
+)
+type(
+  bool -> kexpr -> bool
+)
+ident(
+  def sep "bin/ast.ml" 40 737 758 "bin/ast.ml" 40 737 768
+)
+type(
+  (bool -> kexpr -> bool) -> bool -> kexpr list -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.List.fold_left "list.mli" 211 7387 7387 "list.mli" 211 7387 7442
+)
+type(
+  bool
+)
+type(
+  bool -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.ignore "stdlib.mli" 693 26164 26164 "stdlib.mli" 693 26164 26204
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  kexpr list
+)
+type(
+  kexpr list -> unit
+)
+ident(
+  def x "bin/ast.ml" 40 737 758 "bin/ast.ml" 40 737 768
+)
+"bin/ast.ml" 41 769 781 "bin/ast.ml" 41 769 785
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 41 769 788 "bin/ast.ml" 41 769 793
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 42 794 807 "bin/ast.ml" 42 794 812
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 42 794 815 "bin/ast.ml" 42 794 820
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 42 794 823 "bin/ast.ml" 42 794 828
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 43 829 842 "bin/ast.ml" 43 829 848
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 43 829 851 "bin/ast.ml" 43 829 857
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 43 829 851 "bin/ast.ml" 43 829 862
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unop list
+)
+ident(
+  int_ref x "bin/ast.ml" 43 829 851 "bin/ast.ml" 43 829 862
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  unop
+)
+ident(
+  int_ref x "bin/ast.ml" 43 829 851 "bin/ast.ml" 43 829 862
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  bool
+)
+ident(
+  int_ref sep "bin/ast.ml" 43 829 851 "bin/ast.ml" 43 829 862
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  unop
+)
+type(
+  unop -> bool
+)
+ident(
+  def x "bin/ast.ml" 43 829 851 "bin/ast.ml" 43 829 862
+)
+type(
+  bool
+)
+type(
+  bool -> unop -> bool
+)
+ident(
+  def sep "bin/ast.ml" 43 829 851 "bin/ast.ml" 43 829 862
+)
+type(
+  (bool -> unop -> bool) -> bool -> unop list -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.List.fold_left "list.mli" 211 7387 7387 "list.mli" 211 7387 7442
+)
+type(
+  bool
+)
+type(
+  bool -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.ignore "stdlib.mli" 693 26164 26164 "stdlib.mli" 693 26164 26204
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unop list
+)
+type(
+  unop list -> unit
+)
+ident(
+  def x "bin/ast.ml" 43 829 851 "bin/ast.ml" 43 829 862
+)
+"bin/ast.ml" 43 829 865 "bin/ast.ml" 43 829 870
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 43 829 873 "bin/ast.ml" 43 829 878
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 44 879 893 "bin/ast.ml" 44 879 898
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 44 879 901 "bin/ast.ml" 44 879 906
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 44 879 909 "bin/ast.ml" 44 879 914
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 45 915 927 "bin/ast.ml" 45 915 932
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 45 915 935 "bin/ast.ml" 45 915 940
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+"bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+type(
+  kexpr
+)
+ident(
+  int_ref x "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  ((Format.formatter -> kexpr -> unit) -> kexpr -> unop, Format.formatter,
+   unit, unop)
+  format4
+)
+type(
+  ((Format.formatter -> kexpr -> unit) -> kexpr -> unop, Format.formatter,
+   unit, unop)
+  format4 -> (Format.formatter -> kexpr -> unit) -> kexpr -> unop
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  unop
+)
+type(
+  kexpr
+)
+type(
+  kexpr -> unop
+)
+ident(
+  def x "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+"bin/ast.ml" 49 1016 1028 "bin/ast.ml" 49 1016 1034
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+"bin/ast.ml" 49 1016 1037 "bin/ast.ml" 49 1016 1043
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+"bin/ast.ml" 49 1016 1037 "bin/ast.ml" 49 1016 1048
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unop list
+)
+ident(
+  int_ref x "bin/ast.ml" 49 1016 1037 "bin/ast.ml" 49 1016 1048
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  unop
+)
+ident(
+  int_ref x "bin/ast.ml" 49 1016 1037 "bin/ast.ml" 49 1016 1048
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  bool
+)
+ident(
+  int_ref sep "bin/ast.ml" 49 1016 1037 "bin/ast.ml" 49 1016 1048
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  unop
+)
+type(
+  unop -> bool
+)
+ident(
+  def x "bin/ast.ml" 49 1016 1037 "bin/ast.ml" 49 1016 1048
+)
+type(
+  bool
+)
+type(
+  bool -> unop -> bool
+)
+ident(
+  def sep "bin/ast.ml" 49 1016 1037 "bin/ast.ml" 49 1016 1048
+)
+type(
+  (bool -> unop -> bool) -> bool -> unop list -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.List.fold_left "list.mli" 211 7387 7387 "list.mli" 211 7387 7442
+)
+type(
+  bool
+)
+type(
+  bool -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.ignore "stdlib.mli" 693 26164 26164 "stdlib.mli" 693 26164 26204
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unop list
+)
+type(
+  unop list -> unit
+)
+ident(
+  def x "bin/ast.ml" 49 1016 1037 "bin/ast.ml" 49 1016 1048
+)
+"bin/ast.ml" 49 1016 1052 "bin/ast.ml" 49 1016 1057
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+"bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+type(
+  kass
+)
+ident(
+  int_ref x "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  ((Format.formatter -> kass -> unit) -> kass -> unop, Format.formatter,
+   unit, unop)
+  format4
+)
+type(
+  ((Format.formatter -> kass -> unit) -> kass -> unop, Format.formatter,
+   unit, unop)
+  format4 -> (Format.formatter -> kass -> unit) -> kass -> unop
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  unop
+)
+type(
+  kass
+)
+type(
+  kass -> unop
+)
+ident(
+  def x "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> kass -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+"bin/ast.ml" 53 1112 1129 "bin/ast.ml" 53 1112 1133
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+"bin/ast.ml" 54 1134 1150 "bin/ast.ml" 54 1134 1155
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+"bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+type(
+  toplevel
+)
+ident(
+  int_ref x "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+type(
+  ((Format.formatter -> toplevel -> unit) -> toplevel -> unop,
+   Format.formatter, unit, unop)
+  format4
+)
+type(
+  ((Format.formatter -> toplevel -> unit) -> toplevel -> unop,
+   Format.formatter, unit, unop)
+  format4 -> (Format.formatter -> toplevel -> unit) -> toplevel -> unop
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  unop
+)
+type(
+  toplevel
+)
+type(
+  toplevel -> unop
+)
+ident(
+  def x "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> toplevel -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+"bin/ast.ml" 57 1195 1222 "bin/ast.ml" 57 1195 1230
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+)
+"bin/ast.ml" 57 1195 1222 "bin/ast.ml" 57 1195 1235
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  toplevel list
+)
+ident(
+  int_ref x "bin/ast.ml" 57 1195 1222 "bin/ast.ml" 57 1195 1235
+)
+type(
+  bool
+)
+type(
+  bool
+)
+type(
+  toplevel
+)
+ident(
+  int_ref x "bin/ast.ml" 57 1195 1222 "bin/ast.ml" 57 1195 1235
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  bool
+)
+ident(
+  int_ref sep "bin/ast.ml" 57 1195 1222 "bin/ast.ml" 57 1195 1235
+)
+type(
+  unit
+)
+type(
+  bool
+)
+type(
+  toplevel
+)
+type(
+  toplevel -> bool
+)
+ident(
+  def x "bin/ast.ml" 57 1195 1222 "bin/ast.ml" 57 1195 1235
+)
+type(
+  bool
+)
+type(
+  bool -> toplevel -> bool
+)
+ident(
+  def sep "bin/ast.ml" 57 1195 1222 "bin/ast.ml" 57 1195 1235
+)
+type(
+  (bool -> toplevel -> bool) -> bool -> toplevel list -> bool
+)
+ident(
+  int_ref Ppx_deriving_runtime.List.fold_left "list.mli" 211 7387 7387 "list.mli" 211 7387 7442
+)
+type(
+  bool
+)
+type(
+  bool -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.ignore "stdlib.mli" 693 26164 26164 "stdlib.mli" 693 26164 26204
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  toplevel list
+)
+type(
+  toplevel list -> unit
+)
+ident(
+  def x "bin/ast.ml" 57 1195 1222 "bin/ast.ml" 57 1195 1235
+)
+"bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+type(
+  program
+)
+ident(
+  int_ref x "bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+)
+type(
+  ((Format.formatter -> program -> unit) -> program -> unop,
+   Format.formatter, unit, unop)
+  format4
+)
+type(
+  ((Format.formatter -> program -> unit) -> program -> unop,
+   Format.formatter, unit, unop)
+  format4 -> (Format.formatter -> program -> unit) -> program -> unop
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.asprintf "format.mli" 1234 48305 48305 "format.mli" 1234 48305 48363
+)
+type(
+  unop
+)
+type(
+  program
+)
+type(
+  program -> unop
+)
+ident(
+  def x "bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+ident(
+  int_ref fmt "bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> (unit, Format.formatter, unit) Stdlib.format -> unit
+)
+ident(
+  int_ref Ppx_deriving_runtime.Format.fprintf "format.mli" 1139 43575 43575 "format.mli" 1139 43575 43636
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  Format.formatter
+)
+type(
+  Format.formatter -> program -> unit
+)
+ident(
+  def fmt "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+"bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+type(
+  Format.formatter -> program -> unit
+)
+ident(
+  int_ref pp_program "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  program -> unop
+)
+type(
+  toplevel list
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> toplevel -> unit
+)
+ident(
+  int_ref __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> toplevel -> unit
+)
+type(
+  toplevel -> unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  toplevel list
+)
+type(
+  program
+)
+type(
+  program -> unit
+)
+ident(
+  def a0 "bin/ast.ml" 57 1195 1195 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> program -> unit
+)
+type(
+  Format.formatter -> toplevel -> unit
+)
+ident(
+  int_ref pp_toplevel "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> toplevel -> unit
+)
+type(
+  unit -> Format.formatter -> toplevel -> unit
+)
+type(
+  Format.formatter -> program -> unit
+)
+ident(
+  def __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> program -> unit
+)
+type(
+  Format.formatter -> toplevel -> unit
+)
+ident(
+  int_ref pp_toplevel "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  toplevel -> unop
+)
+type(
+  tdecl
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> tdecl -> unit
+)
+ident(
+  int_ref __1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> tdecl -> unit
+)
+type(
+  tdecl -> unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  tdecl
+)
+type(
+  toplevel
+)
+type(
+  kass
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kass -> unit
+)
+ident(
+  int_ref __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kass -> unit
+)
+type(
+  kass -> unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kass
+)
+type(
+  toplevel
+)
+type(
+  toplevel -> unit
+)
+ident(
+  def a0 "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+ident(
+  def a0 "bin/ast.ml" 52 1097 1097 "bin/ast.ml" 55 1156 1193
+)
+type(
+  Format.formatter -> toplevel -> unit
+)
+type(
+  Format.formatter -> kass -> unit
+)
+ident(
+  int_ref pp_kass "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kass -> unit
+)
+type(
+  unit -> Format.formatter -> kass -> unit
+)
+type(
+  Format.formatter -> tdecl -> unit
+)
+ident(
+  int_ref pp_tdecl "bin/ast.ml" 17 349 349 "bin/ast.ml" 18 379 416
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> tdecl -> unit
+)
+type(
+  unit -> Format.formatter -> tdecl -> unit
+)
+type(
+  Format.formatter -> toplevel -> unit
+)
+ident(
+  def __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> toplevel -> unit
+)
+type(
+  Format.formatter -> kass -> unit
+)
+ident(
+  int_ref pp_kass "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  kass -> unop
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a2 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __2 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unop list
+)
+ident(
+  int_ref a1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+ident(
+  int_ref __1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  unop -> unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unop
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+ident(
+  int_ref __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  unop -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kexpr
+)
+type(
+  unop list
+)
+type(
+  unop
+)
+type(
+  kass
+)
+type(
+  kass -> unit
+)
+ident(
+  def a2 "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+ident(
+  def a1 "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+ident(
+  def a0 "bin/ast.ml" 48 1005 1005 "bin/ast.ml" 50 1058 1095
+)
+type(
+  Format.formatter -> kass -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  int_ref pp_kident "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  int_ref pp_kident "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kass -> unit
+)
+ident(
+  def __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __2 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kass -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  kexpr -> unop
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __17 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __16 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a2 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __15 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __14 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __13 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a3 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __12 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a2 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __11 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unop list
+)
+ident(
+  int_ref a1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+ident(
+  int_ref __10 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  unop -> unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unop
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+ident(
+  int_ref __9 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  unop -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+type(
+  unop list
+)
+type(
+  unop
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a2 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __8 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unop
+)
+ident(
+  int_ref a1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+ident(
+  int_ref __7 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  unop -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __6 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kexpr
+)
+type(
+  unop
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __5 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  unop
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+ident(
+  int_ref __4 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  unop -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kexpr
+)
+type(
+  unop
+)
+type(
+  kexpr
+)
+type(
+  kexpr list
+)
+ident(
+  int_ref a1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __3 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __2 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kexpr list
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kexpr
+)
+type(
+  kexpr
+)
+type(
+  kbase
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kbase -> unit
+)
+ident(
+  int_ref __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kbase -> unit
+)
+type(
+  kbase -> unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kbase
+)
+type(
+  kexpr
+)
+type(
+  kexpr -> unit
+)
+ident(
+  def a1 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a0 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a2 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a1 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a0 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a3 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a2 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a1 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a0 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a2 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a1 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a0 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a1 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a0 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a1 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a0 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a0 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+ident(
+  def a0 "bin/ast.ml" 37 688 688 "bin/ast.ml" 46 966 1003
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kbase -> unit
+)
+ident(
+  int_ref pp_kbase "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kbase -> unit
+)
+type(
+  unit -> Format.formatter -> kbase -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  int_ref pp_unop "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  int_ref pp_binop "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  int_ref pp_kident "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  int_ref pp_kident "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  def __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __2 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __3 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __4 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __5 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __6 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __7 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __8 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __9 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __10 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __11 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __12 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __13 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __14 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __15 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __16 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __17 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  int_ref pp_binop "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unop -> unop
+)
+type(
+  (unop -> unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  int_ref pp_unop "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unop -> unop
+)
+type(
+  (unop -> unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> kbase -> unit
+)
+ident(
+  int_ref pp_kbase "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  kbase -> unop
+)
+type(
+  kexpr list
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref __1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+type(
+  kexpr -> unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  kexpr list
+)
+type(
+  kbase
+)
+type(
+  unop
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  (unop -> unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unop
+)
+type(
+  kbase
+)
+type(
+  unop
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  (unop -> unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unop
+)
+type(
+  kbase
+)
+type(
+  unop
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  (unop -> unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unop
+)
+type(
+  kbase
+)
+type(
+  unop
+)
+ident(
+  int_ref a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+ident(
+  int_ref __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> unop -> unit
+)
+type(
+  unop -> unit
+)
+type(
+  unit
+)
+type(
+  (unit, Format.formatter, unit) Stdlib.format
+)
+type(
+  unop
+)
+type(
+  kbase
+)
+type(
+  kbase -> unit
+)
+ident(
+  def a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+ident(
+  def a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+ident(
+  def a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+ident(
+  def a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+ident(
+  def a0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 27 532 569
+)
+type(
+  Format.formatter -> kbase -> unit
+)
+type(
+  Format.formatter -> unop -> unit
+)
+ident(
+  int_ref pp_kident "bin/ast.ml" 13 288 288 "bin/ast.ml" 14 309 346
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  unit -> Format.formatter -> unop -> unit
+)
+type(
+  Format.formatter -> kexpr -> unit
+)
+ident(
+  int_ref pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  unit -> Format.formatter -> kexpr -> unit
+)
+type(
+  Format.formatter -> kbase -> unit
+)
+ident(
+  def __0 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+ident(
+  def __1 "bin/ast.ml" 21 419 419 "bin/ast.ml" 58 1236 1273
+)
+type(
+  Format.formatter -> kbase -> unit
+)
+ident(
+  def show_program "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_program "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def show_toplevel "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_toplevel "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def show_kass "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_kass "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def show_kexpr "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_kexpr "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def show_binop "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_binop "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def show_unop "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_unop "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def show_kbase "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)
+ident(
+  def pp_kbase "bin/ast.ml" 21 419 419 "bin/ast.pp.ml" 0 0 -1
+)

@@ -1,0 +1,4 @@
+(lang dune 3.5)
+(name khasmc)
+(sections (lib .) (bin ../../bin) (doc ../../doc/khasmc))
+(files (lib (META dune-package opam)) (bin (khasmc)) (doc (README.md)))
