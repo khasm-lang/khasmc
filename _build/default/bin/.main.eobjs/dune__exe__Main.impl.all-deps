@@ -1,6 +1,0 @@
-Ast
-Dune__exe
-Lexer
-Parser
-Typecheck
-Typecheck_env
