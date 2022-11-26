@@ -114,7 +114,7 @@ and subtype_of x y ctx =
        combine (add_to_unity a y ctx) ctx
      else
        raise (SubtypeOfFailure "cannot subtype_of base and non-base w/o polymorhpism")
-  | (_, _) -> raise (SubtypeOfFailure "invalid unification")
+  | (_, _) -> raise (SubtypeOfFailure "invalid subtype")
 
 and subtype_tuples x y ctx =
   match (x, y) with
@@ -124,5 +124,6 @@ and subtype_tuples x y ctx =
   | ([], []) -> ctx
   | (_, _) -> raise (SubtypeOfFailure "unequal tuple lengths")
 
-
-let (<@@>) a b = subtype_of a b
+module SubtypeBinOp = struct
+  let (<@@>) a b = subtype_of a b
+end

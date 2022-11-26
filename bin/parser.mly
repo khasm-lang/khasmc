@@ -3,6 +3,7 @@
 %}
 
 %token <string> T_IDENT
+%token <string> T_FIDENT
 %token <string> T_INT
 %token <string> T_FLOAT
 %token <string> T_STRING
@@ -136,7 +137,8 @@ typesig:
     {TSForall(f, a)}
 
 base:
-  | t = T_IDENT {Ident(t)}
+  | t = T_IDENT {Ident(Bot(t))}
+  | t = T_FIDENT {Ident(process_fullident t)}
   | t = T_INT   {Int(t)}
   | t = T_FLOAT {Float(t)}
   | t = T_STRING {Str(t)}
@@ -147,7 +149,7 @@ parenexpr:
 
 fexpr:
   | LPAREN; e = expr; RPAREN {e}
-  | t = T_IDENT {Base(Ident(t))}
+  | t = T_IDENT {Base(Ident(Bot(t)))}
 
 expr:
   | e=expr1 {e}
