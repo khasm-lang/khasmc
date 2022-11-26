@@ -13,5 +13,8 @@ current issues involve:
   ```
   ∀a1, (∀a2, a2 -> a2) -> a1
   ```
-- currently, typechecking is barely started due to needing to deal with above issues, but it'll get there
-- parametric polymorphism is easy, it's the ad hoc that's the problem lol
+
+
+
+## Currently working on:
+`typecheck_assign` - make sure args are added qualified

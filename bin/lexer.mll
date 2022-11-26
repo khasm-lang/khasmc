@@ -23,7 +23,9 @@ let INT = (digit)+
 let start = ['a'-'z' 'A'-'Z' '_' '\'']
 let all = ['a'-'z' 'A'-'Z' '_' '\'' '0'-'9']
 
-let IDENT = start all* ((start all* | ':' ':' | '.' | '-' '>' )* start all *)? 
+let IDENT = start all*
+
+let FIDENT = start all* ((start all* | ':' | '.' )* start all *)? 
 
 
 let operator_chars = ['$'  '&'  '@'  '+'  '*'  '-'  '='  '>'  '<'  '?'  ':'  '!'  '.'  '%'  '~'  '|'  '/'  '['  ']'  '~' '^']

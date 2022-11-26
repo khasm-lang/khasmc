@@ -1,51 +1,58 @@
 open Ast
 exception Impossible of string
 
-type func = {
-    qual_name   : string;
-    tsigs : typesig list;
+let rec unqual_name x =
+  match x with
+  | Bot(y) -> y
+  | Mod(_, y) -> unqual_name y
+  | Struc(_, y) -> unqual_name y
+
+let qual_name x = x
+
+let pname_from_kident x = Bot(x)
+
+type obj = {
+    nm : fident;
+    ts: typesig;
   }
 
 type env = {
-    prefix : string;
-    parent : env option;
-    binds : func list;
+    parent: env option;
+    objs: obj list;
   }
 
-let qual_name name fname = fname ^ "." ^ name
+let new_env () =
+  {parent = None; objs=[];}
 
-let new_env pre = {parent = None; binds = []; prefix = pre}
-
-let new_func prefix name =
-  {qual_name = prefix ^ name; tsigs = []}
+let new_env_parent parent =
+  {parent = parent; objs=[];}
 
 
-let rec find_func_in_env name env =
-  match List.filter (fun x -> x.qual_name = name) env.binds with
-  | x :: xs ->
-     if xs <> [] then
-       raise (Impossible "Multiple funcs returned find_func_in_env")
-     else
-       Some(x)
+let add_to_env unqual ql ts prev =
+  {
+    prev with objs =
+               {nm = mod_from_list ql unqual; ts=ts}
+               :: prev.objs
+  }
+
+let rec find_qual_in_env ql en =
+  match List.map (fun x -> x.nm) en.objs
+        |> List.filter (fun x -> qual_name x = ql) with
+  | x :: xs -> Some(x :: xs)
   | [] ->
-     match env.parent with
-     | Some(y) -> find_func_in_env name y
+     match en.parent with
+     | Some(x) -> find_qual_in_env ql x
      | None -> None
 
-let add_func_to_env name env =
-  match find_func_in_env name env with
-  | Some(_) -> env
-  | None -> {env with binds = {qual_name = name; tsigs = []} :: env.binds}
+let rec find_unqual_in_env ql en =
+  match List.map (fun x -> x.nm) en.objs
+        |> List.filter (fun x -> unqual_name x = ql) with
+  | x :: xs -> Some(x :: xs)
+  | [] ->
+     match en.parent with
+     | Some(x) -> find_unqual_in_env ql x
+     | None -> None
 
-let add_tsig_to_func name tsig env =
-  match find_func_in_env name env with
-  | Some(ne) ->
-     begin
-       let without = List.filter (fun x -> x.qual_name <> name) env.binds in
-       let new_func = {ne with tsigs = tsig :: ne.tsigs} in
-       {env with binds = new_func :: without}
-     end
-  | None -> raise Not_found
 
 (*
   TODO:
@@ -80,7 +87,3 @@ let rec ts_get_right ts =
        | x -> TSForall(sl, x)
      end
   | TSTuple(_) -> raise Not_found
-
-
-let add_assign_to_env ts args env =
-  env
