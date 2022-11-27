@@ -16,6 +16,8 @@ type fident =
   | Struc of string * fident (* struc.x *)
 [@@deriving show {with_path = false}, eq]
 
+let typesig_of_str x = TSBase(KTypeBasic(x))
+
 exception Impossible of string 
 
 let fullident_ensure_str x =
@@ -39,7 +41,7 @@ let rec build_fullident x =
      | _ -> raise (Impossible("build_fullident 2"))
        
 let process_fullident s =
-  let reg = Str.regexp "([:][:] | [.])" in
+  let reg = Str.regexp "([:] | [.])" in
   let whole = Str.full_split reg s in
   build_fullident whole
 
@@ -48,6 +50,12 @@ let rec mod_from_list l e =
   | [x] -> Mod(x, Bot(e))
   | x :: xs -> Mod(x, mod_from_list xs e)
   | [] -> Bot(e)
+
+let rec str_of_fident f =
+  match f with
+  | Bot(x) -> x
+  | Mod(x, y) -> x ^ "." ^ str_of_fident y
+  | Struc(x, y) -> x ^ ":" ^ str_of_fident y
 
 type kident = string
 [@@deriving show {with_path = false}]
@@ -81,7 +89,7 @@ and kexpr =
   | BinOp of kexpr * binop * kexpr
   | LetIn of kident * kident list * kexpr * kexpr
   | IfElse of kexpr * kexpr * kexpr
-  | Join of kexpr * kexpr (* expr1; expr2; expr3*)
+  | Join of kexpr * kexpr (* expr1; expr2; expr3, rightassoc*)
 [@@deriving show {with_path = false}]
 
 and kass =
