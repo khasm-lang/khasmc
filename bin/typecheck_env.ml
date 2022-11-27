@@ -36,8 +36,7 @@ let add_to_env unqual ql ts prev =
   }
 
 let rec find_qual_in_env ql en =
-  match List.map (fun x -> x.nm) en.objs
-        |> List.filter (fun x -> qual_name x = ql) with
+  match List.filter (fun x -> qual_name x.nm = ql) en.objs with
   | x :: xs -> Some(x :: xs)
   | [] ->
      match en.parent with
@@ -45,8 +44,7 @@ let rec find_qual_in_env ql en =
      | None -> None
 
 let rec find_unqual_in_env ql en =
-  match List.map (fun x -> x.nm) en.objs
-        |> List.filter (fun x -> unqual_name x = ql) with
+  match List.filter (fun x -> unqual_name x.nm = ql) en.objs with
   | x :: xs -> Some(x :: xs)
   | [] ->
      match en.parent with
@@ -63,6 +61,8 @@ let rec find_unqual_in_env ql en =
   add a step before typechecking where all typevars are fixed to be
   their own thing, just using like, counting upwards in letters
  *)
+
+exception TypeError of string
 
 let rec ts_get_left ts =
   match ts with
@@ -87,3 +87,42 @@ let rec ts_get_right ts =
        | x -> TSForall(sl, x)
      end
   | TSTuple(_) -> raise Not_found
+
+let show_list f lst =
+  let rec print_elements = function
+    | [] -> ""
+    | h::t -> f h ^ ";" ^ print_elements t
+  in
+  "[" ^ print_elements lst ^ "]"
+
+let show_strlist sl = show_list (fun x -> x) sl
+
+let rec args_ts_to_objs args ts =
+  match args with
+  | [] -> []
+  | ar :: ars ->
+     try
+       {nm = Bot(ar); ts = ts_get_left ts}
+       :: args_ts_to_objs ars (ts_get_right ts)
+     with Not_found ->
+       raise (TypeError
+                ("args dont match typesig:"
+                 ^ show_strlist args
+                 ^ "\n"
+                 ^ show_typesig ts))
+
+let add_args_to_env args ts env =
+  {env with objs = args_ts_to_objs args ts @ env.objs}
+
+let rec return_type_of args ts =
+  match args with
+  | [] -> ts
+  | _ :: xs ->
+     try
+       return_type_of xs (ts_get_right ts)
+     with Not_found ->
+       raise (TypeError
+                ("args dont match typesig:"
+                 ^ show_strlist args
+                 ^ "\n"
+                 ^ show_typesig ts))

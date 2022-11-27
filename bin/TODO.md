@@ -17,4 +17,7 @@ current issues involve:
 
 
 ## Currently working on:
-`typecheck_assign` - make sure args are added qualified
+- Make sure that tuples are implemented properly in the parser
+- proper tuple syntax in the parser :despair:
+- fix typechecking, all `NotImpl`s need to. not be that
+- i thing that's it?
