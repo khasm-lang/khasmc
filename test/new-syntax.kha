@@ -1,11 +1,1 @@
-sig test = int -> int
-
-let test x = x + x
-
-sig example = bool -> int -> int -> int
-
-let example cond x y =
-	if cond then
-	   x
-	else
-	   y
+sig num : forall 'a, 'a -> 'a
