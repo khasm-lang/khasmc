@@ -15,11 +15,14 @@ type obj = {
     nm : fident;
     ts: typesig;
   }
+[@@deriving show {with_path=false}]
+
 
 type env = {
     parent: env option;
     objs: obj list;
   }
+[@@deriving show {with_path=false}]
 
 let new_env () =
   {parent = None; objs=[];}
@@ -51,6 +54,18 @@ let rec find_unqual_in_env ql en =
      | Some(x) -> find_unqual_in_env ql x
      | None -> None
 
+let option_concat a b =
+  match (a, b) with
+  | (Some(a), Some(b)) -> Some(a @ b)
+  | (Some(a), None) -> Some(a)
+  | (None, Some(b)) -> Some(b)
+  | (None, None) -> None
+
+let rec find_either_in_env ql en =
+  option_concat
+    (find_qual_in_env ql en)
+    (find_unqual_in_env (unqual_name ql) en)
+
 
 (*
   TODO:
@@ -75,6 +90,7 @@ let rec ts_get_left ts =
        | x -> TSForall(sl, x)
      end
   | TSTuple(_) -> raise Not_found
+  | TSAdHoc(_) -> raise Not_found
 
 let rec ts_get_right ts =
   match ts with
@@ -87,6 +103,7 @@ let rec ts_get_right ts =
        | x -> TSForall(sl, x)
      end
   | TSTuple(_) -> raise Not_found
+  | TSAdHoc(_) -> raise Not_found
 
 let show_list f lst =
   let rec print_elements = function

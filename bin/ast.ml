@@ -8,6 +8,7 @@ and typesig =
   | TSMap of typesig * typesig
   | TSForall of string list * typesig
   | TSTuple of typesig list
+  | TSAdHoc of typesig list
 [@@deriving show {with_path = false}, eq]
 
 type fident =
@@ -17,6 +18,8 @@ type fident =
 [@@deriving show {with_path = false}, eq]
 
 let typesig_of_str x = TSBase(KTypeBasic(x))
+
+let str_of_typesig x = show_typesig x
 
 exception Impossible of string 
 

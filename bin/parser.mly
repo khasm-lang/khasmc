@@ -130,6 +130,14 @@ typesig_i:
   | LPAREN; t = typesig; RPAREN; {t}
   | LPAREN; t = separated_nonempty_list(COMMA, typesig); RPAREN
     {TSTuple(t)}
+  | t1=typesig_i; MUL_OP; t2=typesig_i
+    {
+      match (t1, t2) with
+      | (TSTuple(x), TSTuple(y)) -> TSTuple(x @ y)
+      | (TSTuple(x), _) -> TSTuple(x @ [t2])
+      | (_, TSTuple(y)) -> TSTuple([t1] @ y)
+      | (_, _) -> TSTuple([t1] @ [t2])
+    }
 
 typesig:
   | t = typesig_i {t}
@@ -215,7 +223,7 @@ expr12:
   | b=base {Base(b)}
 
 tdecl:
-  | SIG; a = T_IDENT; e=EQ_OP; t = typesig
+  | SIG; a = T_IDENT; e=COL_OP; t = typesig
     {(a, t)}
 
 assign:
