@@ -28,6 +28,7 @@
 %token DOLLAR
 %token QMARK
 %token IF
+%token OF
 %token THEN
 %token ELSE
 %token WHILE
@@ -87,7 +88,6 @@
 %type<Ast.ktype> ktype
 %type<Ast.kident list> nonempty_list(T_IDENT)
 %type<Ast.program> program
-%type<Ast.kass> assign
 %type<Ast.kbase> base
 %type<Ast.kexpr> expr
 %type<Ast.kexpr> fexpr
@@ -95,7 +95,6 @@
 %type<Ast.kexpr list> nonempty_list(parenexpr)
 %type<Ast.toplevel list> nonempty_list(toplevel)
 %type<Ast.kexpr> parenexpr
-%type<Ast.tdecl> tdecl
 %type<Ast.toplevel> toplevel
 
 %right TS_TO
@@ -222,17 +221,14 @@ expr11:
 expr12:
   | b=base {Base(b)}
 
-tdecl:
-  | SIG; a = T_IDENT; e=COL_OP; t = typesig
-    {(a, t)}
-
-assign:
-  | LET; a = T_IDENT; args = list(T_IDENT); eq=EQ_OP; e = expr
-    {KAss(a, args, e)}
+siglet:
+  | SIG; t = typesig; IN; LET; b = T_IDENT; args=list(T_IDENT); eq=EQ_OP; e = expr
+    {
+      TopAssign((b, t),(b, args, e))
+    }
 
 toplevel:
-  | a = assign {TopAssign(a)}
-  | t = tdecl  {TopTDecl(t)}
+  | a = siglet {a}
 
 program:
   | a = nonempty_list(toplevel); EOF {Program(a)}

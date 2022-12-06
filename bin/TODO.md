@@ -4,20 +4,8 @@ currently working on polymorphic typechecking, just finished making functions to
 
 current issues involve:
 - ad hoc needs some sort of system to loop over the various type sigs and find a correct one
-- all typevars need to be made unique bc. otherwise it will cause issues with stuff like
-  ```
-  ∀a, (∀a, a -> a) -> a
-  ```
-  bc the outside and inside a are different typevars, but are currently interpreted as the same typevar
-  solution: transform it to something like
-  ```
-  ∀a1, (∀a2, a2 -> a2) -> a1
-  ```
 
 
 
 ## Currently working on:
-- Make sure that tuples are implemented properly in the parser
-- proper tuple syntax in the parser :despair:
-- fix typechecking, all `NotImpl`s need to. not be that
-- i thing that's it?
+- typechecking expressions

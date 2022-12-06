@@ -1,6 +1,12 @@
 open Ast
-open Typecheck_env
-open BatPervasives
+
+let uniq = ref 0
+let get_uniq = let x = !uniq in
+               uniq := !uniq + 1;
+               x
+let unique () = !uniq
+
+let reset_uniq () = uniq := 0
 
 exception UniqErr of string
 
@@ -63,15 +69,18 @@ and make_uniq_ts ts env =
      TSForall(get_binds newenv, make_uniq_ts t (Some(newenv)))
   | TSTuple(x) ->
      TSTuple(List.map (fun x -> make_uniq_ts x (Some(env))) x)
-  | TSAdHoc(x) ->
-     TSAdHoc(List.map (fun x -> make_uniq_ts x (Some(env))) x)
+  | TSPermute(x) ->
+     TSPermute(List.map (fun x -> make_uniq_ts x (Some(env))) x)
 
 let rec make_uniq_toplevel t =
   match t with
-  | TopAssign(_) -> t
-  | TopTDecl(id, ts) -> TopTDecl(id, make_uniq_ts ts None)
+  | TopAssign((id, ts), ap) -> TopAssign((id, make_uniq_ts ts None), ap)
 
 let rec make_uniq_typevars program =
   match program with
   | Program([]) -> program
-  | Program(x)  -> Program(List.map make_uniq_toplevel x)
+  | Program(x)  -> Program(
+                       List.map
+                         (fun x -> reset_uniq (); make_uniq_toplevel x)
+                         x
+                     )

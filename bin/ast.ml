@@ -8,13 +8,13 @@ and typesig =
   | TSMap of typesig * typesig
   | TSForall of string list * typesig
   | TSTuple of typesig list
-  | TSAdHoc of typesig list
+  | TSPermute of typesig list
 [@@deriving show {with_path = false}, eq]
 
 type fident =
   | Bot of string
-  | Mod of string * fident (* mod::x *)
-  | Struc of string * fident (* struc.x *)
+  | Mod of string * fident (* mod.x *)
+  | Struc of string * fident (* struc:x *)
 [@@deriving show {with_path = false}, eq]
 
 let typesig_of_str x = TSBase(KTypeBasic(x))
@@ -95,13 +95,11 @@ and kexpr =
   | Join of kexpr * kexpr (* expr1; expr2; expr3, rightassoc*)
 [@@deriving show {with_path = false}]
 
-and kass =
-  | KAss of kident * kident list *  kexpr
+and kass = kident * kident list *  kexpr
 [@@deriving show {with_path = false}]
 
 and toplevel =
-  | TopAssign of kass
-  | TopTDecl of tdecl
+  | TopAssign of tdecl * kass
 [@@deriving show {with_path = false}]
 
 and program = | Program of toplevel list
