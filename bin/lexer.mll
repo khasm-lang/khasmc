@@ -90,6 +90,7 @@ rule token = parse
 	| and_op {AND_OP (Lexing.lexeme lexbuf)}
 	| dol_op {DOL_OP (Lexing.lexeme lexbuf)}
      | "if"	{IF}
+     | "of"	{OF}
      | "then"   {THEN}
      | "else"   {ELSE}
      | "while" 	{WHILE}

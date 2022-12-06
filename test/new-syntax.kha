@@ -1,1 +1,2 @@
-sig num : forall 'a, 'a -> 'a
+sig forall 'a, 'a -> 'a * 'a in
+let id x = (x, x)
