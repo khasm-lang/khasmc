@@ -85,7 +85,6 @@
 
 %type<Ast.typesig> typesig
 %type<Ast.typesig> typesig_i
-%type<Ast.ktype> ktype
 %type<Ast.kident list> nonempty_list(T_IDENT)
 %type<Ast.program> program
 %type<Ast.kbase> base
@@ -116,15 +115,15 @@
 %%
 
 ktype:
-  | t = T_IDENT {KTypeBasic(t)}
-  | a = ktype; b = T_IDENT {KTypeApp(TSBase(a), b)}
+  | t = T_IDENT {TSBase(t)}
+  | a = ktype; b = T_IDENT {TSApp(a, b)}
   | LPAREN; a = typesig; RPAREN; b = T_IDENT
-    {KTypeApp(a, b)}
+    {TSApp(a, b)}
   | LPAREN; t = separated_nonempty_list(COMMA, typesig); RPAREN; b = T_IDENT
-    {KTypeApp(TSTuple(t), b)}
+    {TSApp(TSTuple(t), b)}
 
 typesig_i:
-  | k = ktype {TSBase(k)}
+  | k = ktype {k}
   | a = typesig_i; TS_TO; b = typesig_i {TSMap(a, b)}
   | LPAREN; t = typesig; RPAREN; {t}
   | LPAREN; t = separated_nonempty_list(COMMA, typesig); RPAREN
@@ -141,7 +140,15 @@ typesig_i:
 typesig:
   | t = typesig_i {t}
   | FORALL; f = nonempty_list(T_IDENT); COMMA; a = typesig_i
-    {TSForall(f, a)}
+    {
+      let rec make sl a =
+	match sl with
+	| [] -> failwith "Impossible"
+        | [x] -> TSForall(x, a)
+        | x :: xs -> TSForall(x, make xs a)
+      in
+      make f a
+    }
 
 base:
   | t = T_IDENT {Ident(Bot(t))}
@@ -149,6 +156,8 @@ base:
   | t = T_INT   {Int(t)}
   | t = T_FLOAT {Float(t)}
   | t = T_STRING {Str(t)}
+  | TRUE  {True}
+  | FALSE {False}
 
 parenexpr:
   | b = base {Base(b)}
@@ -167,7 +176,16 @@ expr1:
   | e=expr2 {e}
 
 expr2:
-  | f=fexpr; e=nonempty_list(parenexpr) {FCall(f, e)}
+  | f=fexpr; e=nonempty_list(parenexpr)
+    {
+      let rec tmp x y =
+	match y with
+	| [] -> failwith "parsing failure expr2"
+        | [k] -> FCall(x, k)
+        | k :: ks -> FCall(tmp x ks, k)
+      in
+      tmp f (List.rev e)
+    }
   | e=expr3 {e}
 
 expr3:
@@ -210,7 +228,24 @@ expr9:
 expr10:
   | IF; e1=expr; THEN; e2=expr; ELSE; e3=expr {IfElse(e1, e2, e3)}
   | LET; t=T_IDENT; args=list(T_IDENT); EQ_OP; e1=expr; IN; e2=expr
-    {LetIn(t, args, e1, e2)}
+    {
+      let rec tmp x y =
+	match x with
+	| [] -> y
+	| x :: xs -> Lam(x, tmp xs y)
+      in
+      LetIn(t, tmp args e1, e2)
+    }
+  | BSLASH; a=list(T_IDENT); COMMA; e=expr
+    {
+      let rec tmp x =
+	match x with
+	| [] -> failwith "expr10 bslash impossible"
+        | [x] -> Lam(x, e)
+        | x :: xs -> Lam(x, tmp xs)
+      in
+      tmp a
+    }
   | LPAREN; e=expr; RPAREN {Paren(e)}
   | e=expr11 {e}
 

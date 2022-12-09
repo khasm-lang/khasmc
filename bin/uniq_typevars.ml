@@ -1,12 +1,15 @@
 open Ast
 
 let uniq = ref 0
-let get_uniq = let x = !uniq in
+
+let unique () = let x = !uniq in
                uniq := !uniq + 1;
                x
-let unique () = !uniq
 
 let reset_uniq () = uniq := 0
+
+let get_uniq () =
+  (string_of_int (unique ())) ^ "_tvar"
 
 exception UniqErr of string
 
@@ -16,10 +19,6 @@ type uniq_env = {
   }
 
 let new_uniq_env () = {parent=None; binds=[]}
-
-let get_uniq () =
-  (string_of_int (unique ())) ^ "_tvar"
-
 
 let rec get_uniq_in s env =
   match List.filter (fun x -> fst x = s) env.binds with
@@ -35,24 +34,15 @@ let rec get_uniq_in s env =
                                 ^ "\" declared multiple"
                                 ^ " times in one rank"))
 
-let rec mkbinds sl =
-  match sl with
-  | [] -> []
-  | x :: xs -> (x, get_uniq ()) :: mkbinds xs
+let rec mkbind s = (s, get_uniq ())
 
-let add_binds sl env =
-    {parent = Some(env); binds = mkbinds sl;}
+and add_binds s env =
+    {parent = Some(env); binds = mkbind s :: env.binds;}
 
 and get_binds newenv =
-  List.map (fun x -> snd x) newenv.binds
+  List.nth newenv.binds 0
+  |> snd
 
-
-let rec make_uniq_base t env =
-  match t with
-  | KTypeBasic(s) ->
-     KTypeBasic(get_uniq_in s env)
-  | KTypeApp(t, s) ->
-     KTypeApp(make_uniq_ts t (Some(env)), get_uniq_in s env)
 
 and make_uniq_ts ts env =
   let env =
@@ -61,16 +51,16 @@ and make_uniq_ts ts env =
     | Some(x) -> x
   in
   match ts with
-  | TSBase(t) -> TSBase(make_uniq_base t env)
+  | TSBase(t) -> TSBase(get_uniq_in t env)
   | TSMap(t, k) -> TSMap(make_uniq_ts t (Some(env))
                        , make_uniq_ts k (Some(env)))
-  | TSForall(sl, t) ->
-     let newenv = add_binds sl env in
+  | TSForall(s, t) ->
+     let newenv = add_binds s env in
      TSForall(get_binds newenv, make_uniq_ts t (Some(newenv)))
   | TSTuple(x) ->
      TSTuple(List.map (fun x -> make_uniq_ts x (Some(env))) x)
-  | TSPermute(x) ->
-     TSPermute(List.map (fun x -> make_uniq_ts x (Some(env))) x)
+  | TSApp(x, y) -> TSApp(make_uniq_ts x (Some(env)), y)
+
 
 let rec make_uniq_toplevel t =
   match t with
@@ -81,6 +71,6 @@ let rec make_uniq_typevars program =
   | Program([]) -> program
   | Program(x)  -> Program(
                        List.map
-                         (fun x -> reset_uniq (); make_uniq_toplevel x)
+                         make_uniq_toplevel
                          x
                      )

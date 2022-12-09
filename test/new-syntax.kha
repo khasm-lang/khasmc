@@ -1,2 +1,2 @@
-sig forall 'a, 'a -> 'a * 'a in
-let id x = (x, x)
+sig forall 'a, 'a -> 'a in
+let app = \x, x
