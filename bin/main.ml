@@ -55,8 +55,19 @@ let _ =
       let names = normalise files in 
       let uniq_typevars = List.map make_uniq_typevars programs in
       List.iter (fun x -> print_endline (show_program x)) uniq_typevars;
-      let final_env = typecheck_program_list uniq_typevars names None in
-      print_endline (show_env final_env);
+      print_endline
+        (pshow_typesig
+           (infer (emptyctx ())
+              (
+                Lam("y",
+                    Lam("x",
+                        Base(Tuple([
+                                   Base(Ident(Bot("x")));
+                                   Base(Ident(Bot("y")))
+                          ]))
+                      )
+                  )
+        )));
       ()
     with
     | TypeErr(x) -> print_endline ("Caught TypeErr:\n" ^ x)

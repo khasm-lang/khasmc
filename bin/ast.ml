@@ -1,15 +1,31 @@
-type ktype =
-  | KTypeBasic of string
-  | KTypeApp of typesig * string
+type typesig =
+  | TSBase of string
+  | TSApp of typesig * string
+  | TSMap of typesig * typesig
+  | TSForall of string * typesig
+  | TSTuple of typesig list
 [@@deriving show {with_path = false}, eq]
 
-and typesig =
-  | TSBase of ktype
-  | TSMap of typesig * typesig
-  | TSForall of string list * typesig
-  | TSTuple of typesig list
-  | TSPermute of typesig list
-[@@deriving show {with_path = false}, eq]
+
+
+let brac x = "(" ^ x ^ ")"
+
+let rec by_sep x y =
+  match x with
+  | [] -> ""
+  | [x] -> x
+  | x :: xs -> x ^ y ^ by_sep xs y 
+
+let rec pshow_typesig ts =
+  match ts with
+  | TSBase(x) -> x
+  | TSApp(x, y) -> brac (pshow_typesig x) ^ y
+  | TSMap(x, y) ->
+     brac (pshow_typesig x) ^ " -> " ^ brac (pshow_typesig y)
+  | TSForall(x, y) -> "∀" ^ x ^ ", " ^ pshow_typesig y
+  | TSTuple(x) -> brac (by_sep (List.map pshow_typesig x) ", ")
+
+let str_of_typesig x = pshow_typesig x
 
 type fident =
   | Bot of string
@@ -17,9 +33,13 @@ type fident =
   | Struc of string * fident (* struc:x *)
 [@@deriving show {with_path = false}, eq]
 
-let typesig_of_str x = TSBase(KTypeBasic(x))
 
-let str_of_typesig x = show_typesig x
+
+let rec unqual x =
+  match x with
+  | Bot(y) -> y
+  | Mod(_, y) -> unqual y
+  | Struc(_, y) -> unqual y
 
 exception Impossible of string 
 
@@ -74,7 +94,11 @@ type kbase =
   | Float of string
   | Str of string
   | Tuple of kexpr list
+  | True
+  | False
 [@@deriving show {with_path = false}]
+
+
 
 
 and unop = string
@@ -87,13 +111,16 @@ and binop = string
 and kexpr =
   | Base of kbase
   | Paren of kexpr
-  | FCall of kexpr * kexpr list
+  | FCall of kexpr * kexpr
   | UnOp of unop * kexpr
   | BinOp of kexpr * binop * kexpr
-  | LetIn of kident * kident list * kexpr * kexpr
+  | LetIn of kident * kexpr * kexpr
   | IfElse of kexpr * kexpr * kexpr
   | Join of kexpr * kexpr (* expr1; expr2; expr3, rightassoc*)
+  | Inst of kexpr * typesig
+  | Lam of kident * kexpr
 [@@deriving show {with_path = false}]
+
 
 and kass = kident * kident list *  kexpr
 [@@deriving show {with_path = false}]
