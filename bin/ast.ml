@@ -4,6 +4,7 @@ type typesig =
   | TSMap of typesig * typesig
   | TSForall of string * typesig
   | TSTuple of typesig list
+
 [@@deriving show {with_path = false}, eq]
 
 
@@ -89,7 +90,7 @@ type tdecl = kident * typesig
 
 
 type kbase =
-  | Ident of fident
+  | Ident of kident
   | Int of string
   | Float of string
   | Str of string

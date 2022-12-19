@@ -11,6 +11,9 @@ let reset_uniq () = uniq := 0
 let get_uniq () =
   (string_of_int (unique ())) ^ "_tvar"
 
+let get_uniq_with s =
+  (string_of_int (unique ())) ^ s
+
 exception UniqErr of string
 
 type uniq_env = {
