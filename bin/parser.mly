@@ -45,6 +45,7 @@
 %token SIG
 %token TILDE
 %token FUN
+%token TFUN
 
 %token<string> BANG_OP
 %token<string> TILDE_OP
@@ -152,8 +153,11 @@ typesig:
     }
 
 base:
-  | t = T_IDENT {Ident(Bot(t))}
-  | t = T_FIDENT {Ident(process_fullident t)}
+  | t = T_IDENT
+    {
+      Ident(t)
+	   (*FIDENT SUPPORT NEEDED HERE*)
+    }
   | t = T_INT   {Int(t)}
   | t = T_FLOAT {Float(t)}
   | t = T_STRING {Str(t)}
@@ -166,7 +170,7 @@ parenexpr:
 
 fexpr:
   | LPAREN; e = expr; RPAREN {e}
-  | t = T_IDENT {Base(Ident(Bot(t)))}
+  | t = T_IDENT {Base(Ident(t))}
 
 expr:
   | e=expr1 {e}
@@ -261,6 +265,7 @@ expr10:
     {
       AnnotLam(a, t, e)
     }
+  | TFUN; a=T_IDENT; TS_TO; e=expr {TypeLam(a, e)}
   | LPAREN; e=expr; RPAREN {Paren(e)}
   | e=expr; DOT; t=T_INT {TupAccess(e, int_of_string t)}
   | e=expr11 {e}

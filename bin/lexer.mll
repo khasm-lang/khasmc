@@ -100,6 +100,7 @@ rule token = parse
      | "true"   {TRUE}
      | "false"  {FALSE}
      | "fun"    {FUN}
+     | "Tfun"   {TFUN}
      | "nomangle" {NOMANGLE}
      | "inline" {INLINE}
      | "ignore" {IGNORE}
