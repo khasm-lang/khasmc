@@ -44,6 +44,7 @@
 %token FORALL
 %token SIG
 %token TILDE
+%token FUN
 
 %token<string> BANG_OP
 %token<string> TILDE_OP
@@ -236,7 +237,17 @@ expr10:
       in
       LetIn(t, tmp args e1, e2)
     }
-  | BSLASH; a=list(T_IDENT); COMMA; e=expr
+  | LET; i=T_IDENT; args=list(T_IDENT); PIP_OP; t=typesig; PIP_OP;
+    EQ_OP; e1=expr; IN; e2=expr;
+    {
+      let rec tmp x y =
+	match x with
+	| [] -> y
+	| x :: xs -> Lam(x, tmp xs y)
+      in
+      AnnotLet(i, t, tmp args e1, e2)
+    }
+  | FUN; a=list(T_IDENT); TS_TO; e=expr
     {
       let rec tmp x =
 	match x with
@@ -246,7 +257,12 @@ expr10:
       in
       tmp a
     }
+  | FUN; a=T_IDENT; PIP_OP; t=typesig; PIP_OP; TS_TO; e=expr
+    {
+      AnnotLam(a, t, e)
+    }
   | LPAREN; e=expr; RPAREN {Paren(e)}
+  | e=expr; DOT; t=T_INT {TupAccess(e, int_of_string t)}
   | e=expr11 {e}
 
 expr11:

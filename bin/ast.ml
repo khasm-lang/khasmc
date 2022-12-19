@@ -21,7 +21,7 @@ let rec pshow_typesig ts =
   | TSBase(x) -> x
   | TSApp(x, y) -> brac (pshow_typesig x) ^ y
   | TSMap(x, y) ->
-     brac (pshow_typesig x) ^ " -> " ^ brac (pshow_typesig y)
+     pshow_typesig x ^ " -> " ^ brac (pshow_typesig y)
   | TSForall(x, y) -> "∀" ^ x ^ ", " ^ pshow_typesig y
   | TSTuple(x) -> brac (by_sep (List.map pshow_typesig x) ", ")
 
@@ -119,6 +119,12 @@ and kexpr =
   | Join of kexpr * kexpr (* expr1; expr2; expr3, rightassoc*)
   | Inst of kexpr * typesig
   | Lam of kident * kexpr
+  | TypeLam of kident * kexpr
+  | TupAccess of kexpr * int
+  | AnnotLet of kident * typesig * kexpr * kexpr
+  | AnnotLam of kident * typesig * kexpr
+
+
 [@@deriving show {with_path = false}]
 
 
