@@ -59,15 +59,45 @@ let _ =
         (pshow_typesig
            (infer (emptyctx ())
               (
-                Lam("y",
-                    Lam("x",
+                AnnotLet(
+                    "swap",
+                    TSForall(
+                        "x",
+                        TSForall(
+                            "y",
+                            TSMap(
+                                TSTuple([TSBase("x");TSBase("y")]),
+                                TSTuple([TSBase("y");TSBase("x")])
+                              )
+                          )
+                      ),
+                    TypeLam(
+                        "A",
+                        TypeLam(
+                            "B",
+                            AnnotLam(
+                                "x",
+                                TSTuple([TSBase("A");TSBase("B")]),
+                                Base(
+                                    Tuple([
+                                          TupAccess(Base(Ident(Bot("x"))), 1);
+                                          TupAccess(Base(Ident(Bot("x"))), 0)
+                                      ])
+                                  )
+                              )
+                          )
+                      ),
+                    FCall(
+                        Base(Ident(Bot("swap"))),
                         Base(Tuple([
-                                   Base(Ident(Bot("x")));
-                                   Base(Ident(Bot("y")))
+                                   Base(Int("10"));
+                                   Base(Float("1.0"))
                           ]))
                       )
                   )
-        )));
+            )  
+           )
+        );
       ()
     with
     | TypeErr(x) -> print_endline ("Caught TypeErr:\n" ^ x)

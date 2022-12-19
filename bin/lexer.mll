@@ -99,6 +99,7 @@ rule token = parse
      | "in"     {IN}
      | "true"   {TRUE}
      | "false"  {FALSE}
+     | "fun"    {FUN}
      | "nomangle" {NOMANGLE}
      | "inline" {INLINE}
      | "ignore" {IGNORE}
@@ -114,6 +115,7 @@ rule token = parse
      | FLOAT { T_FLOAT (Lexing.lexeme lexbuf)}
      | '"' {let buffer = Buffer.create 20 in T_STRING(stringl buffer lexbuf)}
      | IDENT { T_IDENT (Lexing.lexeme lexbuf)}
+     | "." {DOT}
      | eof {EOF}
      | _ {raise (SyntaxError ("Lexer - Illegal Character: " ^ Lexing.lexeme lexbuf))}
 

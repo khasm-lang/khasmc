@@ -1,2 +1,2 @@
 sig forall 'a, 'a -> 'a in
-let app = \x, x
+let swap = fun x -> (x.1, x.0)

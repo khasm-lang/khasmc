@@ -7,11 +7,10 @@ open Uniq_typevars
 type ctx = {
     vars : (fident * typesig) list;
     typs : string list;
-    open_modules: string list;
   }
+[@@deriving show {with_path=false}]
 
-
-let emptyctx () = {vars = []; typs = []; open_modules = []}
+let emptyctx () = {vars = []; typs = []}
 
 let assume ctx name typ = {ctx with vars = (name, typ) :: ctx.vars}
 
@@ -80,6 +79,9 @@ let rec lookupBase ctx x =
   | Tuple(l) -> TSTuple(List.map (fun x -> infer ctx x) l)
 
 and infer ctx term =
+  print_endline "\n\n\nINFER:\n";
+  print_endline (show_ctx ctx);
+  print_endline (show_kexpr term);
   match term with
   | Base(x) -> lookupBase ctx x
   | Paren(x) -> infer ctx x
@@ -88,7 +90,7 @@ and infer ctx term =
        let typ1 = infer ctx f in
        match typ1 with
        | TSMap(l1, r1) -> check ctx a l1; r1
-       | TSForall(s, e) ->
+       | TSForall(_, _) ->
           let typ2 = infer ctx (Inst(f, infer ctx a)) in
           typ2
        | _ -> raise (TypeErr "cannot apply non-function type")
@@ -104,17 +106,54 @@ and infer ctx term =
      let body = infer ctx e1 in
      let ass = assume ctx (Bot(nm)) body in
      infer ass e2
-  | Lam(x, b) ->
-     let new' = get_uniq () in
-     TSForall(new', infer (assume ctx (Bot(x)) (TSBase(new'))) b)
+  | AnnotLam(x, t, b) ->
+     let out = infer (assume ctx (Bot(x)) t) b in
+     TSMap(t, out)
+  | AnnotLet(i, t, e1, e2) ->
+     check ctx e1 t;
+     let ass = assume ctx (Bot(i)) t in
+     infer ass e2
+  | IfElse(_, e1, e2) ->
+     begin
+       try
+         let typ = infer ctx e1 in
+         check ctx e2 typ;
+         typ
+       with
+       | TypeErr(_) ->
+          let typ = infer ctx e2 in
+          check ctx e1 typ;
+          typ
+     end
+  | TupAccess(tm, i) ->
+     begin
+       let typ = infer ctx tm in
+       match typ with
+       | TSTuple(x) ->
+          List.nth x i
+       | _ -> raise (TypeErr("Can't project from non-tuple:\n"
+                             ^ show_kexpr tm
+                             ^ "\nwith type:\n"
+                             ^ pshow_typesig typ))
+     end
+  | TypeLam(t, e) ->
+     let typ = infer (assumeT ctx t) e in
+     TSForall(t, typ)
   | _ -> raise (TypeErr ("Cannot infer:\n\n"
                          ^ show_kexpr term
                          ^ "\n\nMaybe add annotations?"))
 
 and check ctx term typ =
+  print_endline "\n\n\nCHECK:\n";
+  print_endline (show_ctx ctx);
+  print_endline (show_kexpr term);
+  print_endline (pshow_typesig typ);
   match (term, typ) with
   | (Lam(e, e'), TSMap(x, y)) ->
      check (assume ctx (Bot(e)) x) e' y
+  | (TypeLam(t, e), TSForall(nm, typ)) ->
+     let typ' = subs typ nm (TSBase(t)) in
+     check (assumeT ctx t) e typ'
   | (LetIn(i, e, e'), b) ->
      let body = infer ctx e in
      let ass = assume ctx (Bot(i)) body in
