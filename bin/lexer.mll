@@ -72,6 +72,7 @@ rule token = parse
      | "," {COMMA}
      | ";" {SEMICOLON}
      | "->" {TS_TO}
+     | "=>" {LAM_TO}
 	| bang_op {BANG_OP (Lexing.lexeme lexbuf)}
 	| tilde_op {TILDE_OP (Lexing.lexeme lexbuf)}
 	| pow_op {POW_OP (Lexing.lexeme lexbuf)}
@@ -100,7 +101,7 @@ rule token = parse
      | "true"   {TRUE}
      | "false"  {FALSE}
      | "fun"    {FUN}
-     | "Tfun"   {TFUN}
+     | "tun"   {TFUN}
      | "nomangle" {NOMANGLE}
      | "inline" {INLINE}
      | "ignore" {IGNORE}
@@ -108,6 +109,8 @@ rule token = parse
      | "and" {LAND}
      | "or"  {LOR}
      | "∀" {FORALL}
+     | "λ" {FUN}
+     | "Λ" {TFUN}
      | "sig" {SIG}
      | COMMENT { token lexbuf }
      | WHITESPACE { token lexbuf}

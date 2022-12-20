@@ -3,7 +3,6 @@ open Lexing
 open Ast
 open Uniq_typevars
 open Typecheck
-open Typecheck_env
 open Exp
 let print_error_position lexbuf =
   let pos = lexbuf.lex_curr_p in
@@ -55,38 +54,22 @@ let _ =
       let names = normalise files in 
       let uniq_typevars = List.map make_uniq_typevars programs in
       List.iter (fun x -> print_endline (show_program x)) uniq_typevars;
-      print_endline
-        (pshow_typesig
-           (infer (emptyctx ())
-              (
-                AnnotLet(
-                    "swap",
-                    TSForall(
-                        "a",
-                        TSForall(
-                            "b",
-                            TSMap(
-                                TSTuple([TSBase("a");TSBase("b")]),
-                                TSTuple([TSBase("b");TSBase("a")])
-                              )
-                          )
-                      ),
-                    Lam(
-                        "x",
-                        Base(Tuple[
-                                 TupAccess(Base(Ident(Bot("x"))), 1);
-                                 TupAccess(Base(Ident(Bot("x"))), 0)
-                          ])
-                      ),
-                    Base(Ident(Bot("swap")))
+      let tmp = unify
+                  (empty_unify_ctx ())
+                  (
+                    TSMap(TSMeta("$m"), TSMeta("$m"))
                   )
-              )
-           )
-        );
+                  (
+                    TSMap(TSBase("float"), TSBase("float"))
+                  )
+      in
+      print_endline (show_unify_ctx (fst tmp));
+      print_endline (pshow_typesig (snd tmp));
       ()
     with
     | TypeErr(x) -> print_endline ("Caught TypeErr:\n" ^ x)
     | NotFound(x) -> print_endline ("Caught NotFound:\n" ^ x)
     | NotImpl(x) -> print_endline ("NOTIMPL:\n" ^ x)
+    | UnifyErr(x) -> print_endline ("Caught UnifyErr:\n" ^ x)
   end;
   Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t)

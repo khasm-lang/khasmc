@@ -1,5 +1,6 @@
 type typesig =
   | TSBase of string
+  | TSMeta of string
   | TSApp of typesig * string
   | TSMap of typesig * typesig
   | TSForall of string * typesig
@@ -20,6 +21,7 @@ let rec by_sep x y =
 let rec pshow_typesig ts =
   match ts with
   | TSBase(x) -> x
+  | TSMeta(x) -> x
   | TSApp(x, y) -> brac (pshow_typesig x) ^ y
   | TSMap(x, y) ->
      pshow_typesig x ^ " -> " ^ brac (pshow_typesig y)
@@ -138,3 +140,5 @@ and toplevel =
 
 and program = | Program of toplevel list
 [@@deriving show {with_path = false}]
+
+
