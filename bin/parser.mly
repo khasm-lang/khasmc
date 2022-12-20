@@ -40,6 +40,7 @@
 %token SEMICOLON
 %token EOF
 %token TS_TO
+%token LAM_TO
 %token IGNORE
 %token FORALL
 %token SIG
@@ -241,7 +242,7 @@ expr10:
       in
       LetIn(t, tmp args e1, e2)
     }
-  | LET; i=T_IDENT; args=list(T_IDENT); PIP_OP; t=typesig; PIP_OP;
+  | LET; i=T_IDENT; args=list(T_IDENT); COL_OP; t=typesig;
     EQ_OP; e1=expr; IN; e2=expr;
     {
       let rec tmp x y =
@@ -251,21 +252,20 @@ expr10:
       in
       AnnotLet(i, t, tmp args e1, e2)
     }
-  | FUN; a=list(T_IDENT); TS_TO; e=expr
-    {
-      let rec tmp x =
-	match x with
-	| [] -> failwith "expr10 bslash impossible"
-        | [x] -> Lam(x, e)
-        | x :: xs -> Lam(x, tmp xs)
-      in
-      tmp a
-    }
-  | FUN; a=T_IDENT; PIP_OP; t=typesig; PIP_OP; TS_TO; e=expr
+  | FUN; a=T_IDENT; COL_OP; t=typesig; LAM_TO; e=expr
     {
       AnnotLam(a, t, e)
     }
-  | TFUN; a=T_IDENT; TS_TO; e=expr {TypeLam(a, e)}
+  | TFUN; a=nonempty_list(T_IDENT); LAM_TO; e=expr
+    {
+      let rec tmp x y =
+	match x with
+	| [] -> failwith "impossible"
+        | [x] -> TypeLam(x, y)
+        | x :: xs -> TypeLam(x, tmp xs y)
+      in
+      tmp a e
+    }
   | LPAREN; e=expr; RPAREN {Paren(e)}
   | e=expr; DOT; t=T_INT {TupAccess(e, int_of_string t)}
   | e=expr11 {e}
