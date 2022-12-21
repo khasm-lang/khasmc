@@ -8,6 +8,8 @@ type ctx = {
     binds : (kident * typesig) list;
   }
 
+let empty_typ_ctx () = {typvars=[];binds=[]}
+
 let is_typvar ctx x =
   List.mem ctx.typvars x
 
@@ -23,7 +25,7 @@ let rec subs typ nm newt =
        newt
      else
        typ
-  | TSMeta(x) -> typ
+  | TSMeta(_) -> typ
   | TSApp(x, y) -> TSApp(subs x nm newt, y)
   | TSMap(l, r) -> TSMap(subs l nm newt, subs r nm newt)
   | TSForall(nm', ts) ->
@@ -42,6 +44,25 @@ let empty_unify_ctx () = {metas = []}
 
 let get_meta_opt ctx m =
   List.find_opt (fun x -> fst x = m) ctx.metas 
+
+let lookup_meta ctx m =
+  match List.find_opt (fun x -> fst x = m) ctx.metas with
+  | Some(x) -> Some(snd x)
+  | None -> None
+
+
+let rec inst_meta tp orig meta =
+  match tp with
+  | TSBase(x) -> if x = orig then meta else tp
+  | TSMeta(_) -> tp
+  | TSApp(ts, p) -> TSApp(inst_meta ts orig meta, p)
+  | TSMap(a, b) -> TSMap(inst_meta a orig meta, inst_meta b orig meta)
+  | TSForall(f, x) ->
+     if f = orig then
+       tp
+     else
+       TSForall(f, inst_meta x orig meta)
+  | TSTuple(t) -> TSTuple(List.map (fun x -> inst_meta x orig meta) t)
 
 let uniq_cons x xs = if List.mem x xs then xs else x :: xs
 
@@ -132,7 +153,30 @@ and unify ctx l r =
             r
           )
      end
-  | (_, _) -> raise (NotImpl ("unify - other cases?"))
+  | (_, _) -> raise (NotImpl
+                       (
+                         "unify - other cases?"
+                         ^ "\nunifying:\n"
+                         ^ pshow_typesig l
+                         ^ "\nand:\n"
+                         ^ pshow_typesig r
+                       )
+                )
+
+let rec apply_unify ctx tp =
+  match tp with
+  | TSBase(_) -> tp
+  | TSMeta(t) -> 
+     begin
+       match lookup_meta ctx t with
+       | Some(x) -> x
+       | None -> tp
+     end
+  | TSApp(f, x) -> TSApp(apply_unify ctx f, x)
+  | TSMap(a, b) -> TSMap(apply_unify ctx a, apply_unify ctx b)
+  | TSForall(f, x) -> TSForall(f, apply_unify ctx x)
+  | TSTuple(t) -> TSTuple(List.map (apply_unify ctx) t)
+
 
 let rec infer_base ctx tm =
   match tm with
@@ -141,10 +185,33 @@ let rec infer_base ctx tm =
   | Float(_) -> TSBase("float")
   | Str(_) -> TSBase("string")
   | Tuple(l) -> TSTuple(List.map (infer ctx) l)
-  | True | False -> TSBase("Bool")
+  | True | False -> TSBase("bool")
 
 and infer ctx tm =
   match tm with
   | Base(x) -> infer_base ctx x
   | Paren(x) -> infer ctx x
-
+  | FCall(f, x) ->
+     begin
+       let typ = infer ctx f in
+       let inst_all tp =
+         match tp with
+         | TSForall(fv, bd) ->
+            let meta = TSMeta(get_meta ()) in
+            inst_meta bd fv meta
+         | _ -> tp
+       in
+       match inst_all typ with
+       | TSMap(a, b) ->
+          let arg = infer ctx x in
+          let res = unify (empty_unify_ctx()) a arg in
+          apply_unify (fst res) b
+       | tp -> raise (TypeErr ("Cannot apply \n"
+                              ^ show_kexpr x
+                              ^ " to \n"
+                              ^ show_kexpr f
+                              ^ "\n of type: "
+                              ^ pshow_typesig tp))
+     end
+  | _ -> raise (NotImpl "infer")
+       

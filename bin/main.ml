@@ -54,18 +54,29 @@ let _ =
       let names = normalise files in 
       let uniq_typevars = List.map make_uniq_typevars programs in
       List.iter (fun x -> print_endline (show_program x)) uniq_typevars;
-      let tmp = unify
-                  (empty_unify_ctx ())
-                  (
-                    TSMap(TSMeta("$m"), TSMeta("$m"))
-                  )
-                  (
-                    TSMap(TSBase("float"), TSBase("float"))
-                  )
+      let res =
+        infer
+          ({
+              typvars = [];
+              binds = [
+                  ("f", TSForall("a", TSMap(
+                                          TSBase("a"),
+                                          TSMap(TSBase("a"), TSBase("a"))
+                  )));
+                  ("x", TSBase("int"));
+                  ("y", TSBase("int"))
+                ]
+          })
+          (FCall (
+               (FCall(
+                    Base(Ident("f")),
+                    Base(Ident("x"))
+               )),
+               Base(Ident("y"))
+          ))
       in
-      print_endline (show_unify_ctx (fst tmp));
-      print_endline (pshow_typesig (snd tmp));
-      ()
+      print_endline (pshow_typesig res);
+    ()
     with
     | TypeErr(x) -> print_endline ("Caught TypeErr:\n" ^ x)
     | NotFound(x) -> print_endline ("Caught NotFound:\n" ^ x)

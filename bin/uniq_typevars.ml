@@ -66,6 +66,7 @@ and make_uniq_ts ts env =
   | TSTuple(x) ->
      TSTuple(List.map (fun x -> make_uniq_ts x (Some(env))) x)
   | TSApp(x, y) -> TSApp(make_uniq_ts x (Some(env)), y)
+  | TSMeta(m) -> TSMeta(m)
 
 
 let rec make_uniq_toplevel t =
