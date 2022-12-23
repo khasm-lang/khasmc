@@ -104,7 +104,8 @@ let rec unify_list ctx l1 l2 =
 (* TODO
 Credit to AradArbel10 on rpl
 
-if you're doing this in ocaml (or any language with ref cells) there's actually a really neat trick to optimize (and simplify 😄) metavars.
+if you're doing this in ocaml (or any language with ref cells) there's
+actually a really neat trick to optimize (and simplify 😄) metavars.
 ```
 type meta_state =
 | Solved of typ
@@ -114,7 +115,9 @@ and typ =
 | ...
 | Meta of meta_state ref
 ```
-so now the metavar is mutable, and when you solve it it gets "propagated up" automatically. actually implementing it introduces a couple of other subtleties but I think it's worth it.
+so now the metavar is mutable, and when you solve it it gets
+"propagated up" automatically. actually implementing it introduces a
+couple of other subtleties but I think it's worth it.
  *)
 
 and unify ctx l r =
