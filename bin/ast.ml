@@ -21,12 +21,12 @@ let rec by_sep x y =
 
 let rec pshow_typesig ts =
   match ts with
-  | TSBottom -> " () "
+  | TSBottom -> "()"
   | TSBase(x) -> x
   | TSMeta(x) -> x
   | TSApp(x, y) -> brac (pshow_typesig x) ^ y
   | TSMap(x, y) ->
-     pshow_typesig x ^ " -> " ^ brac (pshow_typesig y)
+     pshow_typesig x ^ " -> " ^ pshow_typesig y
   | TSForall(x, y) -> "∀" ^ x ^ ", " ^ pshow_typesig y
   | TSTuple(x) -> brac (by_sep (List.map pshow_typesig x) ", ")
 
@@ -135,6 +135,7 @@ and kass = kident * kident list *  kexpr
 
 and toplevel =
   | TopAssign of tdecl * kass
+  | Extern of kident * typesig
 [@@deriving show {with_path = false}]
 
 and program = | Program of toplevel list
