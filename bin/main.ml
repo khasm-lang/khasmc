@@ -55,27 +55,35 @@ let _ =
       let uniq_typevars = List.map make_uniq_typevars programs in
       List.iter (fun x -> print_endline (show_program x)) uniq_typevars;
       let res =
-        infer
-          ({
-              typvars = [];
-              binds = [
-                  ("f", TSForall("a", TSMap(
-                                          TSBase("a"),
-                                          TSMap(TSBase("a"), TSBase("a"))
-                  )));
-                  ("x", TSBase("int"));
-                  ("y", TSBase("int"))
-                ]
-          })
-          (FCall (
-               (FCall(
-                    Base(Ident("f")),
-                    Base(Ident("x"))
-               )),
-               Base(Ident("y"))
-          ))
+        infer (empty_typ_ctx ())
+          (
+            AnnotLet(
+                "swap",
+                TSForall(
+                    "a",
+                    TSForall(
+                        "b",
+                        TSMap(
+                            TSTuple([TSBase("a");TSBase("b")]),
+                            TSTuple([TSBase("b");TSBase("a")])
+                          )
+                      )
+                  ),
+                TypeLam(
+                    "A",
+                    TypeLam(
+                        "B",
+                        AnnotLam(
+                            "x",
+                            
+                          )
+                      )
+                  )
+                Base(Ident("swap"))
+              )
+          )
       in
-      print_endline (pshow_typesig res);
+      print_endline (pshow_typesig (fst res));
     ()
     with
     | TypeErr(x) -> print_endline ("Caught TypeErr:\n" ^ x)

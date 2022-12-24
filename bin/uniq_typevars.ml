@@ -57,6 +57,7 @@ and make_uniq_ts ts env =
     | Some(x) -> x
   in
   match ts with
+  | TSBottom -> TSBottom
   | TSBase(t) -> TSBase(get_uniq_in t env)
   | TSMap(t, k) -> TSMap(make_uniq_ts t (Some(env))
                        , make_uniq_ts k (Some(env)))

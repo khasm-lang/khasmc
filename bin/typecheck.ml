@@ -4,14 +4,15 @@ open Uniq_typevars
 
 
 type ctx = {
-    typvars : kident list;
     binds : (kident * typesig) list;
   }
 
-let empty_typ_ctx () = {typvars=[];binds=[]}
+let empty_typ_ctx () = {binds=[]}
 
-let is_typvar ctx x =
-  List.mem ctx.typvars x
+let assume_typ ctx id ts =
+  {binds = (id, ts) :: ctx.binds}
+
+
 
 let lookup ctx x =
   match List.find_opt (fun y -> fst y = x) ctx.binds with
@@ -20,6 +21,7 @@ let lookup ctx x =
 
 let rec subs typ nm newt =
   match typ with
+  | TSBottom -> TSBottom
   | TSBase(x) ->
      if x == nm then
        newt
@@ -53,6 +55,7 @@ let lookup_meta ctx m =
 
 let rec inst_meta tp orig meta =
   match tp with
+  | TSBottom -> TSBottom
   | TSBase(x) -> if x = orig then meta else tp
   | TSMeta(_) -> tp
   | TSApp(ts, p) -> TSApp(inst_meta ts orig meta, p)
@@ -120,6 +123,42 @@ so now the metavar is mutable, and when you solve it it gets
 couple of other subtleties but I think it's worth it.
  *)
 
+(*
+  MetaVar strategy:
+```
+given f x
+instantiate f with metavariables until reaching a non-forall type
+check that f's type matches 'a -> 'b
+unify x's type and 'a
+apply that unification to 'b
+return that type
+```
+so, for example:
+```
+f : ∀'a, 'a -> 'a
+x : float
+
+f x
+→ 
+META_INST(f) : $m -> $m
+→
+unify LHS(f) and x, ∴ $m = float
+→
+apply to RHS(f)
+∴ 
+f : float -> float 
+(in this application)
+→
+return RHS(f) : float
+```
+
+
+ *)
+
+(*
+  returns a tuple of env, typ 
+ *)
+
 and unify ctx l r =
   match (l, r) with
   | (TSBase(x), TSBase(y)) ->
@@ -144,6 +183,7 @@ and unify ctx l r =
   | (TSTuple(a), TSTuple(x)) ->
      let tmp = unify_list ctx a x in
      (fst tmp, TSTuple(snd tmp))
+  | (TSBottom, TSBottom) -> (ctx, TSBottom)
   | (TSMeta(m), _) ->
      begin
        match get_meta_opt ctx m with
@@ -156,18 +196,16 @@ and unify ctx l r =
             r
           )
      end
-  | (_, _) -> raise (NotImpl
-                       (
-                         "unify - other cases?"
-                         ^ "\nunifying:\n"
-                         ^ pshow_typesig l
-                         ^ "\nand:\n"
-                         ^ pshow_typesig r
-                       )
-                )
+  | (_, _) -> raise (UnifyErr
+                       ("Can't unify "
+                     ^ pshow_typesig l
+                     ^ " and "
+                     ^ pshow_typesig r
+                ))
 
 let rec apply_unify ctx tp =
   match tp with
+  | TSBottom -> TSBottom
   | TSBase(_) -> tp
   | TSMeta(t) -> 
      begin
@@ -181,22 +219,28 @@ let rec apply_unify ctx tp =
   | TSTuple(t) -> TSTuple(List.map (apply_unify ctx) t)
 
 
+(*
+  Both the unify and check functions return a tuple of
+  (type, expr)
+  this is so that type information is avalible at every level
+  to allow for the transition to the IR
+ *)
+
 let rec infer_base ctx tm =
   match tm with
   | Ident(i) -> lookup ctx i
   | Int(_) -> TSBase("int")
   | Float(_) -> TSBase("float")
   | Str(_) -> TSBase("string")
-  | Tuple(l) -> TSTuple(List.map (infer ctx) l)
+  | Tuple(l) -> TSTuple(List.map (fun x -> fst (infer ctx x)) l)
   | True | False -> TSBase("bool")
 
 and infer ctx tm =
   match tm with
-  | Base(x) -> infer_base ctx x
-  | Paren(x) -> infer ctx x
+  | Base(x) -> (infer_base ctx x, tm)
   | FCall(f, x) ->
      begin
-       let typ = infer ctx f in
+       let typ = fst (infer ctx f) in
        let inst_all tp =
          match tp with
          | TSForall(fv, bd) ->
@@ -206,9 +250,9 @@ and infer ctx tm =
        in
        match inst_all typ with
        | TSMap(a, b) ->
-          let arg = infer ctx x in
+          let arg = fst (infer ctx x) in
           let res = unify (empty_unify_ctx()) a arg in
-          apply_unify (fst res) b
+          (apply_unify (fst res) b, tm)
        | tp -> raise (TypeErr ("Cannot apply \n"
                               ^ show_kexpr x
                               ^ " to \n"
@@ -216,5 +260,75 @@ and infer ctx tm =
                               ^ "\n of type: "
                               ^ pshow_typesig tp))
      end
-  | _ -> raise (NotImpl "infer")
-       
+  (*
+    try and infer/check one side against the other and vice versa
+   *)
+  | IfElse(c, e1, e2) ->
+     ignore (check ctx c (TSBase("bool")));
+     begin
+       try
+         let typ = infer ctx e1 in
+         ignore (check ctx e2 (fst typ));
+         (fst typ, tm)
+       with
+       | TypeErr(_) ->
+          let typ = infer ctx e2 in
+          ignore (check ctx e1 (fst typ));
+          (fst typ, tm)
+     end
+  | LetIn(id, e1, e2) ->
+     begin
+       let bodytyp = fst (infer ctx e1) in
+       let intyp = fst(infer (assume_typ ctx id bodytyp) e2) in
+       (intyp, tm)
+     end
+  | Join(a, b) ->
+     ignore (check ctx a TSBottom);
+     (fst (infer ctx b), tm)
+  | Inst(_, _) ->
+     raise (TypeErr "UNREACHABLE")
+  | TypeLam(t, b) ->
+     let bodytyp = fst (infer ctx b) in
+     (TSForall(t, bodytyp), tm)
+  | TupAccess(expr, i) ->
+     begin
+       match fst (infer ctx expr) with
+       | TSTuple(t) -> (List.nth t i, tm)
+       | _ -> raise (TypeErr (
+                         "can't tuple access non-tuple:\n"
+                         ^ show_kexpr expr
+                ))
+     end
+  | AnnotLet(id, ts, e1, e2) ->
+     ignore (check ctx e1 ts);
+     let ctx' = assume_typ ctx id ts in
+     (fst (infer ctx' e2), tm)
+  | AnnotLam(id, ts, e) ->
+     let out = fst (infer (assume_typ ctx id ts) e) in
+     (TSMap(ts, out), tm)
+  | _ -> raise (TypeErr (
+                    "Cannot infer:\n"
+                    ^ show_kexpr tm
+                    ^ "\nMaybe add annotations?"
+           ))
+
+
+and check ctx tm tp =
+  match (tm, tp) with
+  | (Lam(id, bd), TSMap(a, b)) ->
+     ignore (check (assume_typ ctx id a) bd b);
+     (tp, tm)
+  | (TypeLam(a, b), TSForall(fv, bd)) ->
+     let typ' = subs bd fv (TSBase(a)) in
+     ignore (check ctx b typ');
+     (tp, tm)
+  | (LetIn(id, e1, e2), bd) ->
+     let bdtyp = fst (infer ctx e1) in
+     ignore (check (assume_typ ctx id bdtyp) e2 bd);
+     (tp, tm)
+  | (Base(Tuple(x)), TSTuple(ts)) ->
+     List.iter2 (fun x y -> ignore (check ctx x y)) x ts;
+     (tp, tm)
+  | (term, exp) ->
+     let actual = (infer ctx term) in
+     (snd (unify (empty_unify_ctx ()) (fst actual) exp), tm)

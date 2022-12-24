@@ -1,4 +1,5 @@
 type typesig =
+  | TSBottom
   | TSBase of string
   | TSMeta of string
   | TSApp of typesig * string
@@ -20,6 +21,7 @@ let rec by_sep x y =
 
 let rec pshow_typesig ts =
   match ts with
+  | TSBottom -> " () "
   | TSBase(x) -> x
   | TSMeta(x) -> x
   | TSApp(x, y) -> brac (pshow_typesig x) ^ y
@@ -113,10 +115,7 @@ and binop = string
 
 and kexpr =
   | Base of kbase
-  | Paren of kexpr
   | FCall of kexpr * kexpr
-  | UnOp of unop * kexpr
-  | BinOp of kexpr * binop * kexpr
   | LetIn of kident * kexpr * kexpr
   | IfElse of kexpr * kexpr * kexpr
   | Join of kexpr * kexpr (* expr1; expr2; expr3, rightassoc*)
