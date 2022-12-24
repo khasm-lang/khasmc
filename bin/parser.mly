@@ -1,5 +1,7 @@
 %{
     open Ast
+    let unOp x y = FCall(Base(Ident(x)), y)
+    let binOp x o z = FCall(FCall(Base(Ident(o)), x) , z )
 %}
 
 %token <string> T_IDENT
@@ -118,6 +120,7 @@
 %%
 
 ktype:
+  | LPAREN; RPAREN {TSBottom}
   | t = T_IDENT {TSBase(t)}
   | a = ktype; b = T_IDENT {TSApp(a, b)}
   | LPAREN; a = typesig; RPAREN; b = T_IDENT
@@ -177,8 +180,8 @@ expr:
   | e=expr1 {e}
 
 expr1:
-  | b=BANG_OP; e=expr {UnOp(b, e)} %prec BANG_OP
-  | t=TILDE_OP; e=expr {UnOp(t, e)} %prec TILDE_OP
+  | b=BANG_OP; e=expr {unOp b e} %prec BANG_OP
+  | t=TILDE_OP; e=expr {unOp t e} %prec TILDE_OP
   | e=expr2 {e}
 
 expr2:
@@ -195,36 +198,36 @@ expr2:
   | e=expr3 {e}
 
 expr3:
-  | e1=expr; p=POW_OP; e2=expr {BinOp(e1, p, e2)}
+  | e1=expr; p=POW_OP; e2=expr {binOp e1  p e2}
   | e=expr4 {e}
 
 expr4:
-  | e1=expr; p=MUL_OP; e2=expr {BinOp(e1, p, e2)}
-  | e1=expr; d=DIV_OP; e2=expr {BinOp(e1, d, e2)}
-  | e1=expr; m=MOD_OP; e2=expr {BinOp(e1, m, e2)}
+  | e1=expr; p=MUL_OP; e2=expr {binOp e1 p e2}
+  | e1=expr; d=DIV_OP; e2=expr {binOp e1 d e2}
+  | e1=expr; m=MOD_OP; e2=expr {binOp e1 m e2}
   | e=expr5 {e}
 
 expr5:
-  | e1=expr; a=ADD_OP; e2=expr {BinOp(e1, a, e2)}
-  | e1=expr; a=SUB_OP; e2=expr {BinOp(e1, a, e2)}
+  | e1=expr; a=ADD_OP; e2=expr {binOp e1 a e2}
+  | e1=expr; a=SUB_OP; e2=expr {binOp e1 a e2}
   | e=expr6 {e}
 
 expr6:
-  | e1=expr; a=COL_OP; e2=expr {BinOp(e1, a, e2)}
+  | e1=expr; a=COL_OP; e2=expr {binOp e1 a e2}
   | e=expr7 {e}
 
 expr7:
-  | e1=expr; a=AT_OP; e2=expr {BinOp(e1, a, e2)}
-  | e1=expr; a=CAR_OP; e2=expr {BinOp(e1, a, e2)}
+  | e1=expr; a=AT_OP; e2=expr {binOp e1 a e2}
+  | e1=expr; a=CAR_OP; e2=expr {binOp e1 a e2}
   | e=expr8 {e}
 
 expr8:
-  | e1=expr; a=EQ_OP; e2=expr {BinOp(e1, a, e2)}
-  | e1=expr; a=LT_OP; e2=expr {BinOp(e1, a, e2)}
-  | e1=expr; a=GT_OP; e2=expr {BinOp(e1, a, e2)}
-  | e1=expr; a=PIP_OP; e2=expr {BinOp(e1, a, e2)}
-  | e1=expr; a=AND_OP; e2=expr {BinOp(e1, a, e2)}
-  | e1=expr; a=DOL_OP; e2=expr {BinOp(e1, a, e2)}
+  | e1=expr; a=EQ_OP; e2=expr {binOp e1 a e2}
+  | e1=expr; a=LT_OP; e2=expr {binOp e1 a e2}
+  | e1=expr; a=GT_OP; e2=expr {binOp e1 a e2}
+  | e1=expr; a=PIP_OP; e2=expr {binOp e1 a e2}
+  | e1=expr; a=AND_OP; e2=expr {binOp e1 a e2}
+  | e1=expr; a=DOL_OP; e2=expr {binOp e1 a e2}
   | e=expr9 {e}
 
 expr9:
@@ -254,19 +257,14 @@ expr10:
     }
   | FUN; a=T_IDENT; COL_OP; t=typesig; LAM_TO; e=expr
     {
-      AnnotLam(a, t, e)
-    }
-  | TFUN; a=nonempty_list(T_IDENT); LAM_TO; e=expr
-    {
-      let rec tmp x y =
-	match x with
-	| [] -> failwith "impossible"
-        | [x] -> TypeLam(x, y)
-        | x :: xs -> TypeLam(x, tmp xs y)
+      let rec helper ts id ex =
+	match ts with
+	| TSForall(fv, bd) -> TypeLam(fv, helper bd id ex)
+        | _ -> AnnotLam(id, ts, ex)
       in
-      tmp a e
+      helper t a e
     }
-  | LPAREN; e=expr; RPAREN {Paren(e)}
+  | LPAREN; e=expr; RPAREN {e}
   | e=expr; DOT; t=T_INT {TupAccess(e, int_of_string t)}
   | e=expr11 {e}
 
