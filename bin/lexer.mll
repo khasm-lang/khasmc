@@ -106,6 +106,7 @@ rule token = parse
      | "inline" {INLINE}
      | "ignore" {IGNORE}
      | "forall" {FORALL}
+     | "extern" {EXTERN}
      | "and" {LAND}
      | "or"  {LOR}
      | "∀" {FORALL}
@@ -118,7 +119,8 @@ rule token = parse
      | INT { T_INT (Lexing.lexeme lexbuf) }
      | FLOAT { T_FLOAT (Lexing.lexeme lexbuf)}
      | '"' {let buffer = Buffer.create 20 in T_STRING(stringl buffer lexbuf)}
-     | IDENT { T_IDENT (Lexing.lexeme lexbuf)}
+     | FIDENT { T_IDENT (Lexing.lexeme lexbuf)} (*TODO: make modules work properly lol*)
+     | "()" {T_IDENT "()"}
      | "." {DOT}
      | eof {EOF}
      | _ {raise (SyntaxError ("Lexer - Illegal Character: " ^ Lexing.lexeme lexbuf))}

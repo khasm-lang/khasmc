@@ -1,6 +1,5 @@
 
 open Lexing
-open Ast
 open Uniq_typevars
 open Typecheck
 open Exp
@@ -53,42 +52,19 @@ let _ =
       let programs = List.map parseToAst files in
       let names = normalise files in 
       let uniq_typevars = List.map make_uniq_typevars programs in
-      List.iter (fun x -> print_endline (show_program x)) uniq_typevars;
-      let res =
-        infer (empty_typ_ctx ())
-          (
-            AnnotLet(
-                "swap",
-                TSForall(
-                    "a",
-                    TSForall(
-                        "b",
-                        TSMap(
-                            TSTuple([TSBase("a");TSBase("b")]),
-                            TSTuple([TSBase("b");TSBase("a")])
-                          )
-                      )
-                  ),
-                TypeLam(
-                    "A",
-                    TypeLam(
-                        "B",
-                        AnnotLam(
-                            "x",
-                            
-                          )
-                      )
-                  )
-                Base(Ident("swap"))
-              )
-          )
-      in
-      print_endline (pshow_typesig (fst res));
-    ()
+      (*
+        After the following, all code is assumed to have correct types.
+       *)
+      typecheck_program_list uniq_typevars;
+      let out = Codegen_lua.codegen names uniq_typevars in
+      let fp = open_out "out.lua" in
+      Printf.fprintf fp "%s" out;
+      ()
     with
     | TypeErr(x) -> print_endline ("Caught TypeErr:\n" ^ x)
     | NotFound(x) -> print_endline ("Caught NotFound:\n" ^ x)
     | NotImpl(x) -> print_endline ("NOTIMPL:\n" ^ x)
     | UnifyErr(x) -> print_endline ("Caught UnifyErr:\n" ^ x)
   end;
+  (* Debug.log_debug_stdout (); *)
   Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t)

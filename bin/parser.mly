@@ -80,6 +80,7 @@
 
 %token NOMANGLE
 %token INLINE
+%token EXTERN
 
 %token LBRACE
 %token RBRACE
@@ -120,8 +121,13 @@
 %%
 
 ktype:
-  | LPAREN; RPAREN {TSBottom}
-  | t = T_IDENT {TSBase(t)}
+  | t = T_IDENT
+    {
+      if t = "()" then
+	TSBottom
+      else
+	TSBase(t)
+    }
   | a = ktype; b = T_IDENT {TSApp(a, b)}
   | LPAREN; a = typesig; RPAREN; b = T_IDENT
     {TSApp(a, b)}
@@ -145,7 +151,7 @@ typesig_i:
 
 typesig:
   | t = typesig_i {t}
-  | FORALL; f = nonempty_list(T_IDENT); COMMA; a = typesig_i
+  | FORALL; f = nonempty_list(T_IDENT); COMMA; a = typesig
     {
       let rec make sl a =
 	match sl with
@@ -167,6 +173,7 @@ base:
   | t = T_STRING {Str(t)}
   | TRUE  {True}
   | FALSE {False}
+  | LPAREN; s=separated_nonempty_list(COMMA, expr); RPAREN {Tuple(s)}
 
 parenexpr:
   | b = base {Base(b)}
@@ -231,7 +238,7 @@ expr8:
   | e=expr9 {e}
 
 expr9:
-  | LPAREN; s=separated_nonempty_list(COMMA, expr); RPAREN {Base(Tuple(s))}
+
   | e=expr10 {e}
 
 expr10:
@@ -283,6 +290,7 @@ siglet:
 
 toplevel:
   | a = siglet {a}
+  | EXTERN; a=T_IDENT; COL_OP; t=typesig; {Extern(a, t)}
 
 program:
   | a = nonempty_list(toplevel); EOF {Program(a)}

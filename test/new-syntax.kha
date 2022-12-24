@@ -1,2 +1,10 @@
-sig forall 'a, 'a -> () in
-let swap = fun x : forall i, i => 1
+extern print : ∀a, a -> ()
+
+sig ∀a b, (a, b) -> (b, a) in
+let swap = fun x : ∀a b, (a, b) => (x.1, x.0)
+
+sig () -> () in
+let main () = print
+		((swap
+			("first", "second")	
+		).0)
