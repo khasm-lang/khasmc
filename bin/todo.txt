@@ -1,3 +1,7 @@
+high:
+- fix typechecker on typelams (introduce typevars field?)
+
+low:
 - Binops in extern and letin
 - ad hoc poly
 - making the backend less sketchy

@@ -3,8 +3,12 @@ extern print : ∀a, a -> ()
 sig ∀a b, (a, b) -> (b, a) in
 let swap = fun x : ∀a b, (a, b) => (x.1, x.0)
 
+sig (∀c, c -> c) -> (∀a b, a -> b -> (a, b)) in
+let dothing =
+    λf : ∀c, c -> c =>
+    λx : ∀a, a =>
+    λy : ∀b, b =>
+    (f x, f y)
+
 sig () -> () in
-let main () = print
-		((swap
-			("first", "second")	
-		).0)
+let main () = print ((dothing swap ("one", "two") (1, 2)).1)
