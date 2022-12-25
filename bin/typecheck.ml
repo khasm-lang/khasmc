@@ -163,6 +163,10 @@ return RHS(f) : float
  *)
 
 and unify ctx l r =
+  debug "\n\nUNIFY";
+  debug (show_unify_ctx ctx);
+  debug (pshow_typesig l);
+  debug (pshow_typesig r);
   match (l, r) with
   | (TSBase(x), TSBase(y)) ->
      if x = y then

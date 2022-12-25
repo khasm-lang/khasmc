@@ -66,5 +66,5 @@ let _ =
     | NotImpl(x) -> print_endline ("NOTIMPL:\n" ^ x)
     | UnifyErr(x) -> print_endline ("Caught UnifyErr:\n" ^ x)
   end;
-  (* Debug.log_debug_stdout (); *)
+  Debug.log_debug_stdout (); (**)
   Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t)

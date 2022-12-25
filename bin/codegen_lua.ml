@@ -52,8 +52,12 @@ let kha_prefix = "_K"
 
 let kprefix t = kha_prefix ^ square ("\"" ^ t ^ "\"")
 
-let prelude = kha_prefix ^ {| = {}
--- END PRELUDE                            
+let prelude = kha_prefix ^
+                {| = {}
+                 _K["if"] = function(c, e1, e2)
+                 if c then return e1() else return e2() end
+                 end
+                 -- END PRELUDE                            
 |}
 
 let postlude = {|
@@ -100,8 +104,12 @@ and codegen_expr ctx expr =
      a ^ " = " ^ codegen_expr ctx e1
      ^ "; " ^ codegen_expr ctx e2
   | IfElse(c, e1, e2) ->
-     "if " ^ codegen_expr ctx c ^ " then " ^ codegen_expr ctx e1
-     ^ " else " ^ codegen_expr ctx e2 ^ "end"
+     (* use the _K["if"] helper in the prelude *)
+     kha_prefix ^ {|["if"]( |} ^ paren (codegen_expr ctx c)
+     ^ ", function() " ^ (codegen_expr ctx e1)
+     ^ " end, function() " ^ (codegen_expr ctx e2)
+     ^ " end )"
+     
   | Join(a, b) ->
      codegen_expr ctx a ^ " ; " ^ codegen_expr ctx b
   | Inst(_, _) ->
