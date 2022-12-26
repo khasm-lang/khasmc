@@ -1,0 +1,16 @@
+extern print : ∀a, a -> ()
+
+sig ∀a b, a -> (a -> b) -> b in
+let (|>) =
+    Λa =>
+    λx : a =>
+    λf : ∀d, a -> d =>
+    f x
+
+sig ∀a b, (a, b) -> a in
+let first =
+    λx : ∀a b, (a, b) =>
+    x.0
+
+sig () -> () in
+let main = λx : () => (1, 2) |> first |> print

@@ -175,6 +175,30 @@ base:
   | FALSE {False}
   | LPAREN; s=separated_nonempty_list(COMMA, expr); RPAREN {Tuple(s)}
 
+letid:
+  | t = T_IDENT {t}
+  | LPAREN; t = letid_h; RPAREN; {t}
+
+letid_h:
+  | BANG_OP {$1}
+  | POW_OP {$1}
+  | TILDE_OP {$1}
+  | MUL_OP {$1}
+  | DIV_OP {$1}
+  | MOD_OP {$1}
+  | ADD_OP {$1}
+  | SUB_OP {$1}
+  | COL_OP {$1}
+  | CAR_OP {$1}
+  | AT_OP {$1}
+  | EQ_OP {$1}
+  | LT_OP {$1}
+  | GT_OP {$1}
+  | PIP_OP {$1}
+  | AND_OP {$1}
+  | DOL_OP {$1}
+
+
 parenexpr:
   | b = base {Base(b)}
   | LPAREN; e = expr RPAREN {e}
@@ -243,7 +267,7 @@ expr9:
 
 expr10:
   | IF; e1=expr; THEN; e2=expr; ELSE; e3=expr {IfElse(e1, e2, e3)}
-  | LET; t=T_IDENT; args=list(T_IDENT); EQ_OP; e1=expr; IN; e2=expr
+  | LET; t=letid; args=list(T_IDENT); EQ_OP; e1=expr; IN; e2=expr
     {
       let rec tmp x y =
 	match x with
@@ -252,7 +276,7 @@ expr10:
       in
       LetIn(t, tmp args e1, e2)
     }
-  | LET; i=T_IDENT; args=list(T_IDENT); COL_OP; t=typesig;
+  | LET; i=letid; args=list(T_IDENT); COL_OP; t=typesig;
     EQ_OP; e1=expr; IN; e2=expr;
     {
       let rec tmp x y =
@@ -269,7 +293,15 @@ expr10:
 	| TSForall(fv, bd) -> TypeLam(fv, helper bd id ex)
         | _ -> AnnotLam(id, ts, ex)
       in
-      helper t a e
+      helper t a e 
+    }
+  | TFUN; a=T_IDENT; COL_OP; t=typesig; LAM_TO; e=expr
+    {
+      AnnotLam(a, t, e)
+    }
+  | TFUN; a=T_IDENT; LAM_TO; e=expr
+    {
+      TypeLam(a, e)
     }
   | LPAREN; e=expr; RPAREN {e}
   | e=expr; DOT; t=T_INT {TupAccess(e, int_of_string t)}
@@ -283,14 +315,14 @@ expr12:
   | b=base {Base(b)}
 
 siglet:
-  | SIG; t = typesig; IN; LET; b = T_IDENT; args=list(T_IDENT); eq=EQ_OP; e = expr
+  | SIG; t = typesig; IN; LET; b = letid; args=list(T_IDENT); eq=EQ_OP; e = expr
     {
       TopAssign((b, t),(b, args, e))
     }
 
 toplevel:
   | a = siglet {a}
-  | EXTERN; a=T_IDENT; COL_OP; t=typesig; {Extern(a, t)}
+  | EXTERN; a=letid; COL_OP; t=typesig; {Extern(a, t)}
 
 program:
   | a = nonempty_list(toplevel); EOF {Program(a)}
