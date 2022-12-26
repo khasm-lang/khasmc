@@ -57,7 +57,7 @@ _K["2A2A"] = __kpow
 _K["3D"] = __keq
 -- END FILE Stdlib
 
--- BEGIN FILE Fib
+-- BEGIN FILE Add
 
 -- TOPASSIGN fib : (int) -> (int)
 _K["666962"] = function(x) return 6 end
@@ -68,7 +68,7 @@ _K["666962"] = function(n) return _K["if"]( (((_K["3D"])(n))(0)), function() ret
 -- TOPASSIGN main : (()) -> (())
 _K["6D61696E"] = function() return (_K["73686F77"])((_K["666962"])(35)) end
 
--- END FILE Fib
+-- END FILE Add
 
 -- END
 _K["6D61696E"]()

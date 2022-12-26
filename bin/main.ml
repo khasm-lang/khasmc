@@ -3,6 +3,7 @@ open Lexing
 open Uniq_typevars
 open Typecheck
 open Exp
+open Ast
 let print_error_position lexbuf =
   let pos = lexbuf.lex_curr_p in
   Fmt.str "Line: %d, Position: %d" pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
@@ -45,26 +46,28 @@ let _ =
     end;
   print_endline "";
   let t = Unix.gettimeofday() in
-  begin
+  let succ = begin
     try
       let list = Array.to_list Sys.argv in
       let files = List.tl list in (* make this better *)
       let programs = List.map parseToAst files in
       let names = normalise files in 
-      let uniq_typevars = List.map make_uniq_typevars programs in
       (*
         After the following, all code is assumed to have correct types.
        *)
-      typecheck_program_list uniq_typevars;
-      let out = Codegen_lua.codegen names uniq_typevars in
+      typecheck_program_list programs;
+      let out = Codegen_lua.codegen names programs in
       let fp = open_out "out.lua" in
       Printf.fprintf fp "%s" out;
-      ()
+      "success"
     with
-    | TypeErr(x) -> print_endline ("Caught TypeErr:\n" ^ x)
-    | NotFound(x) -> print_endline ("Caught NotFound:\n" ^ x)
-    | NotImpl(x) -> print_endline ("NOTIMPL:\n" ^ x)
-    | UnifyErr(x) -> print_endline ("Caught UnifyErr:\n" ^ x)
-  end;
-  Debug.log_debug_stdout (); (**)
-  Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t)
+    | TypeErr(x) -> ("Caught TypeErr:\n" ^ x)
+    | NotFound(x) -> ("Caught NotFound:\n" ^ x)
+    | NotImpl(x) -> ("NOTIMPL:\n" ^ x)
+    | UnifyErr(x) -> ("Caught UnifyErr:\n" ^ x)
+    end
+  in
+  Debug.log_debug_stdout true;
+  print_endline ("\nStatus: " ^ succ);
+  Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t);
+  ()

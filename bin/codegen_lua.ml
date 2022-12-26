@@ -17,6 +17,8 @@ type ctx = {
   }
 [@@deriving show {with_path = false}]
 
+let merge a b = {a with binds = a.binds @ b.binds}
+
 let ctx_with n = {binds = [
                     ("()", "")
                   ]; namespace = n}
@@ -52,13 +54,48 @@ let kha_prefix = "_K"
 
 let kprefix t = kha_prefix ^ square ("\"" ^ t ^ "\"")
 
+let rec gen_lua_binops l =
+  match l with
+  | [] -> ""
+  | x :: xs ->
+     (fst x)
+     ^  {| = function(a) return function(b) return a |} ^ snd x ^ {| b end end
+                                                               |}
+     ^ gen_lua_binops xs
+
 let prelude = kha_prefix ^
                 {| = {}
                  _K["if"] = function(c, e1, e2)
                  if c then return e1() else return e2() end
                  end
-                 -- END PRELUDE                            
-|}
+                 |}
+                ^
+                  gen_lua_binops [
+                      ("__kadd", "+");
+                      ("__ksub", "-");
+                      ("__kdiv", "/");
+                      ("__kmul", "*");
+                      ("__kpow", "^");
+                      ("__keq", "==")
+                    ]
+                ^ {|
+
+                   -- https://stackoverflow.com/questions/9168058/how-to-dump-a-table-to-console
+                   function dump(o)
+                   if type(o) == 'table' then
+                   local s = '{ '
+                   for k,v in pairs(o) do
+                   if type(k) ~= 'number' then k = '"'..k..'"' end
+                   s = s .. '['..k..'] = ' .. dump(v) .. ','
+                   end
+                   return s .. '} '
+                   else
+                   return tostring(o)
+                   end
+                   end
+                   function __kshow(x) print(dump(x)) end
+                   
+                   |}
 
 let postlude = {|
 _K["6D61696E"]()
@@ -106,8 +143,8 @@ and codegen_expr ctx expr =
   | IfElse(c, e1, e2) ->
      (* use the _K["if"] helper in the prelude *)
      kha_prefix ^ {|["if"]( |} ^ paren (codegen_expr ctx c)
-     ^ ", function() " ^ (codegen_expr ctx e1)
-     ^ " end, function() " ^ (codegen_expr ctx e2)
+     ^ ", function() return " ^ (codegen_expr ctx e1)
+     ^ " end, function() return " ^ (codegen_expr ctx e2)
      ^ " end )"
      
   | Join(a, b) ->
@@ -135,33 +172,39 @@ let rec codegen_assign ctx id args bd =
   
 let rec codegen_toplevel ctx tp =
   match tp with
-  | [] -> ""
+  | [] -> ("", ctx)
   | x :: xs ->
      let (s, ctx') = begin
        match x with
        | Extern(id, ts) ->
-          ("-- EXTERN " ^ id ^ " : " ^ pshow_typesig ts ^ "\n"
+          ("\n-- EXTERN " ^ id ^ " : " ^ pshow_typesig ts ^ "\n"
           , ctx_add ctx (id, id))
        | TopAssign((id, ts), (_, args, bd)) ->
-          ("-- TOPASSIGN " ^ id ^ " : " ^ pshow_typesig ts ^ "\n"
+          ("\n-- TOPASSIGN " ^ id ^ " : " ^ pshow_typesig ts ^ "\n"
            ^ codegen_assign ctx id args bd
            , ctx_add ctx (id, kprefix(mangle id)))
-     end in
-     s ^ codegen_toplevel ctx' xs
+       end in
+     let next = codegen_toplevel ctx' xs in
+     (s ^ fst next, merge (snd next) ctx')
 
 let rec codegen_program ctx file =
   match file with
   | Program(x) -> codegen_toplevel ctx x
 
-let rec codegen_h names files =
+let rec codegen_h names files ctx =
+  let ctx = match ctx with
+    | Some(x) -> x
+    | None -> ({binds=[]; namespace=""})
+  in
   match (names, files) with
   | ([], []) -> "-- END"
   | (n :: ns, f :: fs) ->
+     let fctx = codegen_program (merge (ctx_with n) ctx) f in
      "-- BEGIN FILE " ^ n ^ "\n"
-     ^ codegen_program (ctx_with n) f
+     ^ fst fctx
      ^ "\n-- END FILE " ^ n
-     ^ "\n\n" ^ codegen_h ns fs
+     ^ "\n\n" ^ codegen_h ns fs (Some(snd fctx))
   | (_, _) -> raise (Impossible "codegen_h")
 
 let codegen names files =
-  prelude ^ codegen_h names files ^ postlude
+  prelude ^ codegen_h names files None ^ postlude

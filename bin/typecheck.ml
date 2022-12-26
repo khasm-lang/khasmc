@@ -13,8 +13,76 @@ let empty_typ_ctx () = {binds=[
                        ]}
 
 let assume_typ ctx id ts =
-  {binds = (id, ts) :: ctx.binds}
+  {binds = (id, make_uniq_ts ts None) :: ctx.binds}
 
+
+let rec occurs_ts s ts =
+  match ts with
+  | TSBase(x) -> x = s
+  | TSBottom -> false
+  | TSMeta(_) -> false
+  | TSApp(x, _) -> occurs_ts s x
+  | TSMap(x, y) -> occurs_ts s x || occurs_ts s y
+  | TSForall(x, y) -> if x = s then false else occurs_ts s y
+  | TSTuple(x) ->
+     List.map (fun x -> occurs_ts s x) x
+     |> List.mem true
+
+let rec lift_ts_h t =
+  match t with
+  | TSBase(_) -> (t, false)
+  | TSBottom -> (t, false)
+  | TSMeta(_) -> (t, false)
+  | TSApp(x, y) ->
+     let did = lift_ts_h x in
+     (TSApp(fst did, y), snd did)
+  | TSMap(x, TSForall(f, y)) ->
+     if occurs_ts f x then
+       let left = lift_ts_h x in
+       let right = lift_ts_h (TSForall(f, y)) in
+       (TSMap(fst left, fst right), snd left || snd right)
+     else
+       (TSForall(f, TSMap(x, y)), true)
+  | TSMap(x, y) ->
+     let left = lift_ts_h x in
+     let right = lift_ts_h y in
+     (TSMap(fst left, fst right), snd left || snd right)
+  | TSForall(x, TSMap(l, TSForall(y, r))) ->
+     let l' = lift_ts_h l in
+     let r' = lift_ts_h r in
+     if occurs_ts y l then
+       (
+         TSForall(x, TSMap(fst l', TSForall(y, fst r')))
+       ,
+         snd l' || snd r'
+       )
+     else
+       (
+         TSForall(x, TSForall(y, TSMap(fst l', fst r')))
+       ,
+         true
+       )
+  | TSForall(x, y) ->
+     let r' = lift_ts_h y in
+     (TSForall(x, fst r'), snd r')
+  | TSTuple(t) ->
+     let hm = List.map lift_ts_h t in
+     (TSTuple(List.map fst hm), List.mem true (List.map snd hm))
+
+let rec lift_ts ts =
+  (* lifts types like
+     ∀a, a -> (∀b, b)
+     to
+     ∀a b, a -> b
+
+     and simpls, like
+     ∀a b, a -> a
+     to
+     ∀a, a -> a
+   *)
+  match lift_ts_h ts with
+  | (t, false) -> t
+  | (t, true) -> lift_ts t
 
 
 let lookup ctx x =
@@ -69,6 +137,19 @@ let rec inst_meta tp orig meta =
      else
        TSForall(f, inst_meta x orig meta)
   | TSTuple(t) -> TSTuple(List.map (fun x -> inst_meta x orig meta) t)
+
+let rec inst_all ts =
+  match ts with
+  | TSForall(fv, bd) ->
+     let meta = TSMeta(get_meta ()) in
+     let new' = inst_meta bd fv meta in
+     inst_all new'
+  | TSApp(x, y) -> TSApp(x, y)
+  | TSMap(x, y) -> TSMap(x, y)
+  | TSBottom -> TSBottom
+  | TSBase(x) -> TSBase(x)
+  | TSMeta(x) -> TSMeta(x)
+  | TSTuple(t) -> TSTuple(List.map inst_all t)
 
 let uniq_cons x xs = if List.mem x xs then xs else x :: xs
 
@@ -162,53 +243,73 @@ return RHS(f) : float
   returns a tuple of env, typ 
  *)
 
-and unify ctx l r =
+and unify ?(loop) ctx l r =
   debug "\n\nUNIFY";
   debug (show_unify_ctx ctx);
+  let l = lift_ts l in
+  let r = lift_ts r in
   debug (pshow_typesig l);
   debug (pshow_typesig r);
-  match (l, r) with
-  | (TSBase(x), TSBase(y)) ->
-     if x = y then
-       (ctx, TSBase(x))
-     else
-       raise (UnifyErr ("can't unify " ^ x ^ " and " ^ y))
-  | (TSMap(a, b), TSMap(x, y)) ->
-     let lt = unify ctx a x in
-     let rt = unify ctx b y in
-     (combine (fst lt) (fst rt), TSMap((snd lt), (snd rt)))
-  | (TSApp(a, b), TSApp(x, y)) ->
-     if b <> y then
-       raise (UnifyErr ("can't unify" ^ b ^ " and " ^ y))
-     else
-       let t = unify ctx a x in
-       (fst t, TSApp(snd t, b))
-  | (TSForall(a, b), TSForall(x, y)) ->
-     let sub = subs y x (TSBase(a)) in
-     let unf = unify ctx sub b in 
-     (fst unf, TSForall(x, snd unf))
-  | (TSTuple(a), TSTuple(x)) ->
-     let tmp = unify_list ctx a x in
-     (fst tmp, TSTuple(snd tmp))
-  | (TSBottom, TSBottom) -> (ctx, TSBottom)
-  | (TSMeta(m), _) ->
-     begin
-       match get_meta_opt ctx m with
-       | Some(x) ->
-          let typ = snd x in
-          unify ctx typ r
-       | None ->
-          (
-            combine {metas = [(m, r)]} ctx,
-            r
-          )
-     end
-  | (_, _) -> raise (UnifyErr
-                       ("Can't unify "
-                     ^ pshow_typesig l
-                     ^ " and "
-                     ^ pshow_typesig r
-                ))
+  let res = match (l, r) with
+    | (TSBase(x), TSBase(y)) ->
+       debug "BASE";
+       if x = y then
+         (ctx, TSBase(x))
+       else
+         raise (UnifyErr ("can't unify " ^ x ^ " and " ^ y))
+    | (TSMap(a, b), TSMap(x, y)) ->
+       debug "MAP";
+       let lt = unify ctx a x in
+       let rt = unify ctx b y in
+       (combine (fst lt) (fst rt), TSMap((snd lt), (snd rt)))
+    | (TSApp(a, b), TSApp(x, y)) ->
+       debug "APP";
+       if b <> y then
+         raise (UnifyErr ("can't unify" ^ b ^ " and " ^ y))
+       else
+         let t = unify ctx a x in
+         (fst t, TSApp(snd t, b))
+    | (TSForall(a, b), TSForall(x, y)) ->
+       debug "FORALL";
+       let sub = subs y x (TSBase(a)) in
+       let met = subs b a (TSMeta(get_meta ())) in
+       let unf = unify ctx met sub in 
+       (fst unf, TSForall(a, snd unf))
+    | (TSTuple(a), TSTuple(x)) ->
+       debug "TUPLE";
+       let tmp = unify_list ctx a x in
+       (fst tmp, TSTuple(snd tmp))
+    | (TSBottom, TSBottom) ->
+       debug "BOT";
+       (ctx, TSBottom)
+    | (TSMeta(m), _) ->
+       debug "META";
+       begin
+         match get_meta_opt ctx m with
+         | Some(x) ->
+            let typ = snd x in
+            unify ctx typ r
+         | None ->
+            (
+              combine {metas = [(m, r)]} ctx,
+              r
+            )
+       end
+    | (_, _) ->
+       match loop with
+       | None -> unify ~loop:true ctx r l
+       | Some(_) -> 
+          raise (UnifyErr
+                   ("Can't unify "
+                    ^ pshow_typesig l
+                    ^ " and "
+                    ^ pshow_typesig r
+            ))
+  in
+  let res = (fst res, lift_ts (snd res)) in
+  debug "\n\nUNIFY RESULT:";
+  debug (pshow_typesig (snd res));
+  res
 
 let rec apply_unify ctx tp =
   match tp with
@@ -246,24 +347,22 @@ and infer ctx tm =
   debug "\n\nINFER";
   debug (show_ctx ctx);
   debug (show_kexpr tm);
-  match tm with
+  let res = match tm with
   | Base(x) -> infer_base ctx x
   | FCall(f, x) ->
+     debug "\n\nFCALL";
+     debug (show_kexpr f);
+     debug (show_kexpr x);
      begin
-       let typ = (infer ctx f) in
-       let rec inst_all tp =
-         match tp with
-         | TSForall(fv, bd) ->
-            let meta = TSMeta(get_meta ()) in
-            let new' = inst_meta bd fv meta in
-            inst_all new'
-         | _ -> tp
-       in
-       match inst_all typ with
+       let typ_r = (infer ctx f) in
+       let inst_r = inst_all typ_r in
+       let typ_l = (infer ctx x) in
+       let inst_l = inst_all typ_l in
+       debug ("INST r. : " ^ pshow_typesig inst_r);
+       debug ("INST l. : " ^ pshow_typesig inst_l);
+       match inst_r with
        | TSMap(a, b) ->
-          let arg = (infer ctx x) in
-          debug ("unify " ^ pshow_typesig a ^ " & " ^ pshow_typesig arg);
-          let res = unify (empty_unify_ctx()) a arg in
+          let res = unify (empty_unify_ctx()) a inst_l in
           apply_unify (fst res) b
        | tp -> raise (TypeErr ("Cannot apply \n"
                               ^ show_kexpr x
@@ -323,7 +422,13 @@ and infer ctx tm =
                     ^ show_kexpr tm
                     ^ "\nMaybe add annotations?"
            ))
-
+  in
+  let res = lift_ts res in
+  debug "\n\nINFER RES:";
+  debug (show_kexpr tm);
+  debug ":";
+  debug (pshow_typesig res);
+  res 
 
 and check ctx tm tp =
   debug "\n\nCHECK";

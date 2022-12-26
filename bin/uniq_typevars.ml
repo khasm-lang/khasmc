@@ -9,7 +9,7 @@ let unique () = let x = !uniq in
 let reset_uniq () = uniq := 0
 
 let get_uniq () =
-  (string_of_int (unique ())) ^ "_tvar"
+  (string_of_int (unique ())) ^ "_t"
 
 let get_meta () =
   "$m" ^ (string_of_int (unique ()))
@@ -22,9 +22,10 @@ exception UniqErr of string
 type uniq_env = {
     parent: uniq_env option;
     binds : (string * string) list;
+    typlams : string list;
   }
 
-let new_uniq_env () = {parent=None; binds=[]}
+let new_uniq_env () = {parent=None; binds=[]; typlams=[]}
 
 let rec get_uniq_in s env =
   match List.filter (fun x -> fst x = s) env.binds with
@@ -43,7 +44,7 @@ let rec get_uniq_in s env =
 let rec mkbind s = (s, get_uniq ())
 
 and add_binds s env =
-    {parent = Some(env); binds = mkbind s :: env.binds;}
+    {env with parent = Some(env); binds = mkbind s :: env.binds;}
 
 and get_binds newenv =
   List.nth newenv.binds 0
