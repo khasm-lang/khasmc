@@ -1,29 +1,29 @@
-extern __kadd : ∀a, a -> a -> a
-extern __ksub : ∀a, a -> a -> a
-extern __kdiv : ∀a, a -> a -> a
-extern __kmul : ∀a, a -> a -> a
-extern __kpow : ∀a, a -> a -> a
-extern __keq : ∀a, a -> a -> bool
+extern _Kadd : ∀a, a -> a -> a
+extern _Ksub : ∀a, a -> a -> a
+extern _Kdiv : ∀a, a -> a -> a
+extern _Kmul : ∀a, a -> a -> a
+extern _Kpow : ∀a, a -> a -> a
+extern _Keq : ∀a, a -> a -> bool
 
-extern __kshow : ∀a, a -> ()
+extern _Kshow : ∀a, a -> ()
 
 sig ∀a, a -> () in
-let show = __kshow
+let show = _Kshow
 
 sig ∀a, a -> a -> a in
-let (+) = __kadd
+let (+) = _Kadd
 
 sig ∀a, a -> a -> a in
-let (-) = __ksub
+let (-) = _Ksub
 
 sig ∀a, a -> a -> a in
-let (/) = __kdiv
+let (/) = _Kdiv
 
 sig ∀a, a -> a -> a in
-let ( * ) = __kmul
+let ( * ) = _Kmul
 
 sig ∀a, a -> a -> a in
-let ( ** ) = __kpow
+let ( ** ) = _Kpow
 
 sig ∀a, a -> a -> bool in
-let ( = ) = __keq
+let ( = ) = _Keq
