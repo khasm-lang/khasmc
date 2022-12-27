@@ -3,60 +3,16 @@
 
 
 CHECK
-{ binds =
-  [("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kshow"))
+(Base (Ident "_Kshow"))
 ∀a, (a) -> (())
 
 
 INFER
-{ binds =
-  [("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kshow"))
+(Base (Ident "_Kshow"))
 
 
 INFER RES:
-(Base (Ident "__kshow"))
+(Base (Ident "_Kshow"))
 :
 ∀6_t, (6_t) -> (())
 
@@ -106,62 +62,16 @@ UNIFY RESULT:
 
 
 CHECK
-{ binds =
-  [("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kadd"))
+(Base (Ident "_Kadd"))
 ∀a, (a) -> ((a) -> (a))
 
 
 INFER
-{ binds =
-  [("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kadd"))
+(Base (Ident "_Kadd"))
 
 
 INFER RES:
-(Base (Ident "__kadd"))
+(Base (Ident "_Kadd"))
 :
 ∀0_t, (0_t) -> ((0_t) -> (0_t))
 
@@ -233,70 +143,16 @@ UNIFY RESULT:
 
 
 CHECK
-{ binds =
-  [("+",
-    (TSForall ("10_t",
-       (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-       )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__ksub"))
+(Base (Ident "_Ksub"))
 ∀a, (a) -> ((a) -> (a))
 
 
 INFER
-{ binds =
-  [("+",
-    (TSForall ("10_t",
-       (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-       )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__ksub"))
+(Base (Ident "_Ksub"))
 
 
 INFER RES:
-(Base (Ident "__ksub"))
+(Base (Ident "_Ksub"))
 :
 ∀1_t, (1_t) -> ((1_t) -> (1_t))
 
@@ -368,78 +224,16 @@ UNIFY RESULT:
 
 
 CHECK
-{ binds =
-  [("-",
-    (TSForall ("12_t",
-       (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-       )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kdiv"))
+(Base (Ident "_Kdiv"))
 ∀a, (a) -> ((a) -> (a))
 
 
 INFER
-{ binds =
-  [("-",
-    (TSForall ("12_t",
-       (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-       )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kdiv"))
+(Base (Ident "_Kdiv"))
 
 
 INFER RES:
-(Base (Ident "__kdiv"))
+(Base (Ident "_Kdiv"))
 :
 ∀2_t, (2_t) -> ((2_t) -> (2_t))
 
@@ -511,86 +305,16 @@ UNIFY RESULT:
 
 
 CHECK
-{ binds =
-  [("/",
-    (TSForall ("14_t",
-       (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-       )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kmul"))
+(Base (Ident "_Kmul"))
 ∀a, (a) -> ((a) -> (a))
 
 
 INFER
-{ binds =
-  [("/",
-    (TSForall ("14_t",
-       (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-       )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kmul"))
+(Base (Ident "_Kmul"))
 
 
 INFER RES:
-(Base (Ident "__kmul"))
+(Base (Ident "_Kmul"))
 :
 ∀3_t, (3_t) -> ((3_t) -> (3_t))
 
@@ -662,94 +386,16 @@ UNIFY RESULT:
 
 
 CHECK
-{ binds =
-  [("*",
-    (TSForall ("16_t",
-       (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-       )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kpow"))
+(Base (Ident "_Kpow"))
 ∀a, (a) -> ((a) -> (a))
 
 
 INFER
-{ binds =
-  [("*",
-    (TSForall ("16_t",
-       (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-       )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__kpow"))
+(Base (Ident "_Kpow"))
 
 
 INFER RES:
-(Base (Ident "__kpow"))
+(Base (Ident "_Kpow"))
 :
 ∀4_t, (4_t) -> ((4_t) -> (4_t))
 
@@ -821,102 +467,16 @@ UNIFY RESULT:
 
 
 CHECK
-{ binds =
-  [("**",
-    (TSForall ("18_t",
-       (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-       )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__keq"))
+(Base (Ident "_Keq"))
 ∀a, (a) -> ((a) -> (bool))
 
 
 INFER
-{ binds =
-  [("**",
-    (TSForall ("18_t",
-       (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-       )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
-(Base (Ident "__keq"))
+(Base (Ident "_Keq"))
 
 
 INFER RES:
-(Base (Ident "__keq"))
+(Base (Ident "_Keq"))
 :
 ∀5_t, (5_t) -> ((5_t) -> (bool))
 
@@ -988,157 +548,15 @@ UNIFY RESULT:
 
 
 CHECK
-{ binds =
-  [("=",
-    (TSForall ("20_t",
-       (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-       )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (AnnotLam ("x", (TSBase "int"), (Base (Int "6"))))
 (int) -> (int)
 
 
 INFER
-{ binds =
-  [("=",
-    (TSForall ("20_t",
-       (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-       )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (AnnotLam ("x", (TSBase "int"), (Base (Int "6"))))
 
 
 INFER
-{ binds =
-  [("x", (TSBase "int"));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Int "6"))
 
 
@@ -1188,54 +606,6 @@ UNIFY RESULT:
 
 
 CHECK
-{ binds =
-  [("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (AnnotLam ("n", (TSBase "int"),
    (IfElse (
       (FCall ((FCall ((Base (Ident "=")), (Base (Ident "n")))),
@@ -1264,54 +634,6 @@ CHECK
 
 
 INFER
-{ binds =
-  [("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (AnnotLam ("n", (TSBase "int"),
    (IfElse (
       (FCall ((FCall ((Base (Ident "=")), (Base (Ident "n")))),
@@ -1339,54 +661,6 @@ INFER
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (IfElse (
    (FCall ((FCall ((Base (Ident "=")), (Base (Ident "n")))), (Base (Int "0"))
       )),
@@ -1412,107 +686,11 @@ INFER
 
 
 CHECK
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((FCall ((Base (Ident "=")), (Base (Ident "n")))), (Base (Int "0"))))
 bool
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((FCall ((Base (Ident "=")), (Base (Ident "n")))), (Base (Int "0"))))
 
 
@@ -1522,54 +700,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((Base (Ident "=")), (Base (Ident "n"))))
 
 
@@ -1579,54 +709,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "="))
 
 
@@ -1637,54 +719,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "n"))
 
 
@@ -1714,54 +748,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Int "0"))
 
 
@@ -1802,54 +788,6 @@ bool
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "n"))
 
 
@@ -1860,54 +798,6 @@ int
 
 
 CHECK
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (IfElse (
    (FCall ((FCall ((Base (Ident "=")), (Base (Ident "n")))), (Base (Int "1"))
       )),
@@ -1929,54 +819,6 @@ int
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (IfElse (
    (FCall ((FCall ((Base (Ident "=")), (Base (Ident "n")))), (Base (Int "1"))
       )),
@@ -1997,107 +839,11 @@ INFER
 
 
 CHECK
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((FCall ((Base (Ident "=")), (Base (Ident "n")))), (Base (Int "1"))))
 bool
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((FCall ((Base (Ident "=")), (Base (Ident "n")))), (Base (Int "1"))))
 
 
@@ -2107,54 +853,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((Base (Ident "=")), (Base (Ident "n"))))
 
 
@@ -2164,54 +862,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "="))
 
 
@@ -2222,54 +872,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "n"))
 
 
@@ -2299,54 +901,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Int "1"))
 
 
@@ -2387,54 +941,6 @@ bool
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "n"))
 
 
@@ -2445,54 +951,6 @@ int
 
 
 CHECK
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall (
    (FCall ((Base (Ident "+")),
       (FCall ((Base (Ident "fib")),
@@ -2509,54 +967,6 @@ int
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall (
    (FCall ((Base (Ident "+")),
       (FCall ((Base (Ident "fib")),
@@ -2585,54 +995,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((Base (Ident "+")),
    (FCall ((Base (Ident "fib")),
       (FCall ((FCall ((Base (Ident "-")), (Base (Ident "n")))),
@@ -2650,54 +1012,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "+"))
 
 
@@ -2708,54 +1022,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((Base (Ident "fib")),
    (FCall ((FCall ((Base (Ident "-")), (Base (Ident "n")))), (Base (Int "1"))
       ))
@@ -2768,54 +1034,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "fib"))
 
 
@@ -2826,54 +1044,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((FCall ((Base (Ident "-")), (Base (Ident "n")))), (Base (Int "1"))))
 
 
@@ -2883,54 +1053,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((Base (Ident "-")), (Base (Ident "n"))))
 
 
@@ -2940,54 +1062,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "-"))
 
 
@@ -2998,54 +1072,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "n"))
 
 
@@ -3075,54 +1101,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Int "1"))
 
 
@@ -3198,54 +1176,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((Base (Ident "fib")),
    (FCall ((FCall ((Base (Ident "-")), (Base (Ident "n")))), (Base (Int "2"))
       ))
@@ -3258,54 +1188,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "fib"))
 
 
@@ -3316,54 +1198,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((FCall ((Base (Ident "-")), (Base (Ident "n")))), (Base (Int "2"))))
 
 
@@ -3373,54 +1207,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((Base (Ident "-")), (Base (Ident "n"))))
 
 
@@ -3430,54 +1216,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "-"))
 
 
@@ -3488,54 +1226,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "n"))
 
 
@@ -3565,54 +1255,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("n", (TSBase "int")); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Int "2"))
 
 
@@ -3827,55 +1469,6 @@ UNIFY RESULT:
 
 
 CHECK
-{ binds =
-  [("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (AnnotLam ("()", TSBottom,
    (FCall ((Base (Ident "show")),
       (FCall ((Base (Ident "fib")), (Base (Int "35"))))))
@@ -3884,55 +1477,6 @@ CHECK
 
 
 INFER
-{ binds =
-  [("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (AnnotLam ("()", TSBottom,
    (FCall ((Base (Ident "show")),
       (FCall ((Base (Ident "fib")), (Base (Int "35"))))))
@@ -3940,55 +1484,6 @@ INFER
 
 
 INFER
-{ binds =
-  [("()", TSBottom); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((Base (Ident "show")),
    (FCall ((Base (Ident "fib")), (Base (Int "35"))))))
 
@@ -3999,55 +1494,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("()", TSBottom); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "show"))
 
 
@@ -4058,55 +1504,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("()", TSBottom); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (FCall ((Base (Ident "fib")), (Base (Int "35"))))
 
 
@@ -4116,55 +1513,6 @@ FCALL
 
 
 INFER
-{ binds =
-  [("()", TSBottom); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Ident "fib"))
 
 
@@ -4175,55 +1523,6 @@ INFER RES:
 
 
 INFER
-{ binds =
-  [("()", TSBottom); ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("fib", (TSMap ((TSBase "int"), (TSBase "int"))));
-    ("=",
-     (TSForall ("20_t",
-        (TSMap ((TSBase "20_t"), (TSMap ((TSBase "20_t"), (TSBase "bool")))))
-        )));
-    ("**",
-     (TSForall ("18_t",
-        (TSMap ((TSBase "18_t"), (TSMap ((TSBase "18_t"), (TSBase "18_t")))))
-        )));
-    ("*",
-     (TSForall ("16_t",
-        (TSMap ((TSBase "16_t"), (TSMap ((TSBase "16_t"), (TSBase "16_t")))))
-        )));
-    ("/",
-     (TSForall ("14_t",
-        (TSMap ((TSBase "14_t"), (TSMap ((TSBase "14_t"), (TSBase "14_t")))))
-        )));
-    ("-",
-     (TSForall ("12_t",
-        (TSMap ((TSBase "12_t"), (TSMap ((TSBase "12_t"), (TSBase "12_t")))))
-        )));
-    ("+",
-     (TSForall ("10_t",
-        (TSMap ((TSBase "10_t"), (TSMap ((TSBase "10_t"), (TSBase "10_t")))))
-        )));
-    ("show", (TSForall ("8_t", (TSMap ((TSBase "8_t"), TSBottom)))));
-    ("__kshow", (TSForall ("6_t", (TSMap ((TSBase "6_t"), TSBottom)))));
-    ("__keq",
-     (TSForall ("5_t",
-        (TSMap ((TSBase "5_t"), (TSMap ((TSBase "5_t"), (TSBase "bool"))))))));
-    ("__kpow",
-     (TSForall ("4_t",
-        (TSMap ((TSBase "4_t"), (TSMap ((TSBase "4_t"), (TSBase "4_t"))))))));
-    ("__kmul",
-     (TSForall ("3_t",
-        (TSMap ((TSBase "3_t"), (TSMap ((TSBase "3_t"), (TSBase "3_t"))))))));
-    ("__kdiv",
-     (TSForall ("2_t",
-        (TSMap ((TSBase "2_t"), (TSMap ((TSBase "2_t"), (TSBase "2_t"))))))));
-    ("__ksub",
-     (TSForall ("1_t",
-        (TSMap ((TSBase "1_t"), (TSMap ((TSBase "1_t"), (TSBase "1_t"))))))));
-    ("__kadd",
-     (TSForall ("0_t",
-        (TSMap ((TSBase "0_t"), (TSMap ((TSBase "0_t"), (TSBase "0_t"))))))));
-    ("()", TSBottom)]
-  }
 (Base (Int "35"))
 
 
@@ -4315,4 +1614,4 @@ UNIFY RESULT:
 
 Status: success
 
-khasmc done in 0.015803s
+khasmc done in 0.004936s
