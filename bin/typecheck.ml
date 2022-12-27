@@ -9,6 +9,7 @@ type ctx = {
 [@@deriving show {with_path = false}]
 
 let empty_typ_ctx () = {binds=[
+                          (*hardcode in that () is bottom*)
                           ("()", TSBottom)
                        ]}
 
@@ -17,6 +18,7 @@ let assume_typ ctx id ts =
 
 
 let rec occurs_ts s ts =
+  (* checks whether a variable s is free in ts *)
   match ts with
   | TSBase(x) -> x = s
   | TSBottom -> false
@@ -244,6 +246,32 @@ return RHS(f) : float
  *)
 
 and unify ?(loop) ctx l r =
+  (*
+    unification takes something with metavariables, eg
+    $m1 -> $m1
+
+    and figures out what the metavariables should be:
+
+    unify
+    $m1 -> $m1
+    int -> int
+    ∴
+    $m1 = int
+
+    it does this by returning a tuple of (ctx, tm)
+
+    where the ctx contains metavariable info.
+    on a map, it can then check that the metavar info is the same on
+    both sides, and go forth as such.
+
+
+    note that metavars can appear on both sides -
+    this is why there's a default case at the bottom to switch
+    the arguments around, using an optional param to make sure
+    that it doesn't loop forever (way easier then rewriting the
+    logic for both sides lol)
+
+   *)
   debug "\n\nUNIFY";
   debug (show_unify_ctx ctx);
   let l = lift_ts l in
@@ -271,6 +299,9 @@ and unify ?(loop) ctx l r =
          (fst t, TSApp(snd t, b))
     | (TSForall(a, b), TSForall(x, y)) ->
        debug "FORALL";
+       (*
+         TODO: show how this works
+        *)
        let sub = subs y x (TSBase(a)) in
        let met = subs b a (TSMeta(get_meta ())) in
        let unf = unify ctx met sub in 
@@ -327,12 +358,7 @@ let rec apply_unify ctx tp =
   | TSTuple(t) -> TSTuple(List.map (apply_unify ctx) t)
 
 
-(*
-  Both the unify and check functions return a tuple of
-  (type, expr)
-  this is so that type information is avalible at every level
-  to allow for the transition to the IR
- *)
+
 
 let rec infer_base ctx tm =
   match tm with
@@ -344,8 +370,10 @@ let rec infer_base ctx tm =
   | True | False -> TSBase("bool")
 
 and infer ctx tm =
+  (*
+    infer the type of a term
+   *)
   debug "\n\nINFER";
-  debug (show_ctx ctx);
   debug (show_kexpr tm);
   let res = match tm with
   | Base(x) -> infer_base ctx x
@@ -353,6 +381,20 @@ and infer ctx tm =
      debug "\n\nFCALL";
      debug (show_kexpr f);
      debug (show_kexpr x);
+     (*
+
+       alright, so this mess. Basically what this does is
+       infer instation of a function - ie, it takes
+       f x
+       and turns it into
+       f [typeof x] x
+
+       but it's not always that simple
+       does this by inserting metavariables into all the foralls,
+       then unifying the LHS of the function with the argument,
+       then applying that to the RHS.
+
+      *)
      begin
        let typ_r = (infer ctx f) in
        let inst_r = inst_all typ_r in
@@ -431,8 +473,10 @@ and infer ctx tm =
   res 
 
 and check ctx tm tp =
+  (*
+    check a type against a term
+   *)
   debug "\n\nCHECK";
-  debug (show_ctx ctx);
   debug (show_kexpr tm);
   debug (pshow_typesig tp); 
   match (tm, tp) with
@@ -463,15 +507,46 @@ let rec typecheck_toplevel_list ctx tl =
      let ctx' =
        match x with
        | TopAssign((id, ts), (_, args, body)) ->
-          let rec helper args body =
-            begin
-              match args with
-              | [] -> body
-              | x :: xs -> Lam(x, helper xs body)
-            end
+          (*
+            The purpose of this is to transform arguments into
+            typelams and annotlams so that you can do
+            sig ∀a b, a -> (a -> b) -> b in
+            let apply x f = f x
+
+            =>
+
+            sig ∀a b, a -> (a -> b) -> b in
+            let apply =
+            ΛΑ =>
+            ΛΒ =>
+            λx : A =>
+            λf : A -> B =>
+            f x
+            
+           *)
+          let rec forall_to_typelam ts args body =
+            match (ts, args) with
+            | (TSForall(fv, bd), _ :: xs) ->
+               let tmp = forall_to_typelam bd xs body in
+               (fst tmp, TypeLam(fv, snd tmp))
+            | _ -> (lift_ts ts, body)
           in
-          check ctx (helper args body) ts;
+          let rec add_args ts args body =
+            match (ts, args) with
+            | (TSMap(a, b), x :: xs) -> AnnotLam(x, a, add_args b xs body)
+            | (_, [x]) -> AnnotLam(x, ts, body)
+            | (_, []) -> body
+            | (_, _) -> raise (TypeErr ("Cannot match args: " ^ (String.concat ", " args )
+                     ^ " with typesig " ^ pshow_typesig ts))
+          in
+          let fixed = forall_to_typelam ts args body in
+          let args_fixed = add_args (fst fixed) args body in
+          let fixed_2 = forall_to_typelam ts args args_fixed in
+          check ctx (snd fixed_2) ts;
           assume_typ ctx id ts
+       (*
+         assume the type is correct
+        *)
        | Extern(id, ts) ->
           assume_typ ctx id ts
      in

@@ -43,6 +43,7 @@ let mangle str =
   |> List.map Char.code
   |> List.map mangle_c
   |> String.concat ""
+  |> (^) "Khasmc_"
 
 let mbox s = "[" ^ "\"" ^ mangle s ^ "\"" ^ "]"
 
@@ -71,12 +72,12 @@ let prelude = kha_prefix ^
                  |}
                 ^
                   gen_lua_binops [
-                      ("__kadd", "+");
-                      ("__ksub", "-");
-                      ("__kdiv", "/");
-                      ("__kmul", "*");
-                      ("__kpow", "^");
-                      ("__keq", "==")
+                      ("_Kadd", "+");
+                      ("_Ksub", "-");
+                      ("_Kdiv", "/");
+                      ("_Kmul", "*");
+                      ("_Kpow", "^");
+                      ("_Keq", "==")
                     ]
                 ^ {|
 
@@ -93,13 +94,12 @@ let prelude = kha_prefix ^
                    return tostring(o)
                    end
                    end
-                   function __kshow(x) print(dump(x)) end
+                   function _Kshow(x) print(dump(x)) end
                    
                    |}
 
-let postlude = {|
-_K["6D61696E"]()
-|}
+let postlude =
+  "\n\n\n" ^ kprefix (mangle "main") ^ "()"
 
 let maybe_bottom s =
   if s = "()" then "" else s
