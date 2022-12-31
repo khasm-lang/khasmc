@@ -1,0 +1,19 @@
+extern _Kadd : ∀a, a -> a -> a
+ extern _Ksub : ∀a, a -> a -> a
+ extern _Kdiv : ∀a, a -> a -> a
+ extern _Kmul : ∀a, a -> a -> a
+ extern _Kpow : ∀a, a -> a -> a
+ extern _Keq : ∀a, a -> a -> bool
+
+ extern _Kshow : ∀a, a -> ()
+
+let (+) : ∀a, a -> () = _Kadd
+let (-) : ∀a, a -> () = _Ksub
+let (/) : ∀a, a -> () = _Kdiv
+let ( * ) : ∀a, a -> () = _Kmul
+let ( ** ) : ∀a, a -> () = _Kpow
+let (=) : ∀a, a -> () = _Keq
+
+let (|>) x f
+    : ∀a b, a -> (a -> b) -> b
+    = f x
