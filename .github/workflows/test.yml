@@ -18,7 +18,7 @@ jobs:
       - run: opam install -y menhir 
       - run: opam install -y core
       - run: opam install -y fmt
-      - run: eval $(opam env)
-      - run: dune exec khasmc test/stdlib.kha test/fib.kha
+      - run: opam env
+      - run: opam exec -- dune exec khasmc test/stdlib.kha test/fib.kha
       - run: sudo apt install -y lua5.4
       - run: echo "Lua:" && lua out.lua
