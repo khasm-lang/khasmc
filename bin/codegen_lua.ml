@@ -150,7 +150,12 @@ and codegen_expr ctx expr =
      ^ " end )"
      
   | Join(a, b) ->
-     kha_prefix ";" ^ "(" ^ codegen_expr ctx a ^ ", " ^ codegen_expr ctx b ^ ")"
+     (kha_prefix ";")
+     ^ "(" 
+     ^ (codegen_expr ctx a)
+     ^ ", " 
+     ^ (codegen_expr ctx b)
+     ^ ")"
   | Inst(_, _) ->
      raise (Impossible "INST codegen_expr")
   | AnnotLam(i, _, e)
