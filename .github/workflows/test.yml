@@ -20,5 +20,6 @@ jobs:
       - run: opam exec -- dune build
       - run: opam exec -- dune exec khasmc test/stdlib.kha test/fib.kha
       - run: sudo apt install -y lua5.4
-      - run: echo "Lua:" && lua out.lua
       - run: echo "Source:" && cat out.lua
+      - run: echo "Lua:" && lua out.lua
+
