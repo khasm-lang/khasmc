@@ -151,11 +151,11 @@ and codegen_expr ctx expr =
      
   | Join(a, b) ->
      (kprefix ";")
-     ^ "(" 
+     ^ "(function() " 
      ^ (codegen_expr ctx a)
-     ^ ", " 
+     ^ " end, function() " 
      ^ (codegen_expr ctx b)
-     ^ ")"
+     ^ " end)"
   | Inst(_, _) ->
      raise (Impossible "INST codegen_expr")
   | AnnotLam(i, _, e)
