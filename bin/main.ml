@@ -69,5 +69,6 @@ let _ =
   in
   Debug.log_debug_stdout true;
   print_endline ("\nStatus: " ^ succ);
+  print_endline ("Used " ^ string_of_int !uniq ^ " typvars and " ^ string_of_int !muniq ^ " metavars");
   Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t);
   ()
