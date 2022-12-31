@@ -10,9 +10,9 @@ jobs:
       - run: sudo apt install -y opam
       - run: opam init
       - run: eval $(opam env)
-      - run: opam install dune
-      - run: opam install ppx_deriving
-      - run: opam install batteries
+      - run: opam install -y dune
+      - run: opam install -y ppx_deriving
+      - run: opam install -y batteries
       - run: eval $(opam env)
       - run: dune exec khasmc test/stdlib.kha test/fib.kha
       - run: echo "Lua:" && lua out.lua
