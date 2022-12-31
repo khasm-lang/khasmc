@@ -5,8 +5,8 @@ jobs:
   check-bats-version:
     runs-on: ubuntu-latest
     steps:
-      - run: apt install ocaml
-      - run: apt install lua
+      - run: sudo apt install -y ocaml
+      - run: sudo apt install -y lua
       - run: opam install dune
       - run: opam install ppx_deriving
       - run: opam install batteries
