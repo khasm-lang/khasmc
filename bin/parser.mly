@@ -314,11 +314,10 @@ expr11:
 expr12:
   | b=base {Base(b)}
 
+
 siglet:
-  | SIG; t = typesig; IN; LET; b = letid; args=list(T_IDENT); eq=EQ_OP; e = expr
-    {
-      TopAssign((b, t),(b, args, e))
-    }
+  | LET; b = letid; args=list(T_IDENT); col=COL_OP; t=typesig; eq=EQ_OP; e=expr
+{ TopAssign((b, t), (b, args, e)) }
 
 toplevel:
   | a = siglet {a}
