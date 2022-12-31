@@ -9,7 +9,7 @@ let unique () = let x = !uniq in
                x
 
 let munique () = let x = !muniq in
-                 muniq := !muniq + 1
+                 muniq := !muniq + 1;
 x
 
 let reset_uniq () = uniq := 0
