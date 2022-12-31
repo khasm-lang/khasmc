@@ -1,0 +1,20 @@
+name: test
+run-name: ${{ github.actor }} is testing
+on: [push]
+jobs:
+  check-bats-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+      - run: apt install ocaml
+      - run: apt install lua
+      - run: opam install dune
+      - run: opam install ppx_deriving
+eval $(opam env)
+      - run: opam install batteries
+      - run: eval $(opam env)
+      - run: dune exec khasmc test/stdlib.kha test/fib.kha
+      - run: echo "Lua:" && lua out.lua
