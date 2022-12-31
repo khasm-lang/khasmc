@@ -273,7 +273,6 @@ and unify ?(loop) ctx l r =
 
    *)
   debug "\n\nUNIFY";
-  debug (show_unify_ctx ctx);
   let l = lift_ts l in
   let r = lift_ts r in
   debug (pshow_typesig l);
@@ -339,6 +338,7 @@ and unify ?(loop) ctx l r =
   in
   let res = (fst res, lift_ts (snd res)) in
   debug "\n\nUNIFY RESULT:";
+  debug (show_unify_ctx (fst res));
   debug (pshow_typesig (snd res));
   res
 
