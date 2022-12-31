@@ -5,14 +5,10 @@ jobs:
   check-bats-version:
     runs-on: ubuntu-latest
     steps:
-      - run: sudo apt install -y ocaml
+      - uses: ocaml/setup-ocaml@v2
       - run: sudo apt install -y lua5.4
-      - run: sudo apt install -y opam
-      - run: opam init
-      - run: eval $(opam env)
       - run: opam install -y dune
       - run: opam install -y ppx_deriving
       - run: opam install -y batteries
-      - run: eval $(opam env)
       - run: dune exec khasmc test/stdlib.kha test/fib.kha
       - run: echo "Lua:" && lua out.lua
