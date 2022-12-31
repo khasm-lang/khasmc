@@ -12,13 +12,10 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: 5.x.x
-      - run: opam install -y ppx_deriving 
-      - run: opam install -y batteries 
-      - run: opam install -y ppx_deriving_yojson 
-      - run: opam install -y menhir 
-      - run: opam install -y core
-      - run: opam install -y fmt
+      - run: opam install . --deps-only
       - run: opam env
+      - run: ls -lah
+      - run: opam exec -- dune build
       - run: opam exec -- dune exec khasmc test/stdlib.kha test/fib.kha
       - run: sudo apt install -y lua5.4
       - run: echo "Lua:" && lua out.lua
