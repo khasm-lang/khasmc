@@ -124,9 +124,9 @@ let rec codegen_base ctx e =
     | Float(i)
     -> i
   | Str(s) -> "\"" ^ s ^ "\""
-  | Tuple(t) -> "{"
+  | Tuple(t) -> "({"
                 ^ String.concat ", " (List.map (codegen_expr ctx) t)
-                ^ "}"
+                ^ "})"
   | True -> "true"
   | False -> "false"
 
