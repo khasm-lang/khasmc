@@ -150,7 +150,7 @@ and codegen_expr ctx expr =
      ^ " end )"
      
   | Join(a, b) ->
-     (kha_prefix ";")
+     (kprefix ";")
      ^ "(" 
      ^ (codegen_expr ctx a)
      ^ ", " 
