@@ -10,8 +10,8 @@ jobs:
 
       - name: Use OCaml
         uses: ocaml/setup-ocaml@v2
-          with:
-            ocaml-compiler: 5.x.x
+        with:
+          ocaml-compiler: 5.x.x
       - run: sudo apt install -y lua5.4
       - run: opam install -y .
       - run: opam exec -- dune exec khasmc test/stdlib.kha test/fib.kha
