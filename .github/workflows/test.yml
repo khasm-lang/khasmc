@@ -13,6 +13,6 @@ jobs:
         with:
           ocaml-compiler: 5.x.x
       - run: sudo apt install -y lua5.4
-      - run: opam install -y ppx_deriving batteries
+      - run: opam install -y ppx_deriving batteries ppx_deriving_yojson menhir
       - run: opam exec -- dune exec khasmc test/stdlib.kha test/fib.kha
       - run: echo "Lua:" && lua out.lua
