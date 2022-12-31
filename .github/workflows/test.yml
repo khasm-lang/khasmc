@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: sudo apt install -y ocaml
-      - run: sudo apt install -y lua
+      - run: sudo apt install -y lua5.4
       - run: opam install dune
       - run: opam install ppx_deriving
       - run: opam install batteries
