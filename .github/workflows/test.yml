@@ -8,6 +8,7 @@ jobs:
       - run: sudo apt install -y ocaml
       - run: sudo apt install -y lua5.4
       - run: sudo apt install -y opam
+      - run: opam init
       - run: eval $(opam env)
       - run: opam install dune
       - run: opam install ppx_deriving
