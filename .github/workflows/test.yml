@@ -11,7 +11,7 @@ jobs:
       - name: Use OCaml
         uses: ocaml/setup-ocaml@v2
         with:
-          ocaml-compiler: 5.x.x
+          ocaml-compiler: 4.x.x
       - run: opam install . --deps-only
       - run: opam install menhir ppx_deriving_yojson core batteries
       - run: opam env
