@@ -13,7 +13,6 @@ jobs:
       - run: apt install lua
       - run: opam install dune
       - run: opam install ppx_deriving
-eval $(opam env)
       - run: opam install batteries
       - run: eval $(opam env)
       - run: dune exec khasmc test/stdlib.kha test/fib.kha
