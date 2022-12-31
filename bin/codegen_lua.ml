@@ -69,6 +69,8 @@ let prelude = kha_prefix ^
                  _K["if"] = function(c, e1, e2)
                  if c then return e1() else return e2() end
                  end
+
+_K[";"] = function(a, b) a(); return b() end
                  |}
                 ^
                   gen_lua_binops [
@@ -148,7 +150,7 @@ and codegen_expr ctx expr =
      ^ " end )"
      
   | Join(a, b) ->
-     codegen_expr ctx a ^ " ; " ^ codegen_expr ctx b
+     kha_prefix ";" ^ "(codegen_expr ctx a ^ ", " ^ codegen_expr ctx b ^ ")"
   | Inst(_, _) ->
      raise (Impossible "INST codegen_expr")
   | AnnotLam(i, _, e)
