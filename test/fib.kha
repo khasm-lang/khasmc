@@ -11,4 +11,17 @@ let fib n : int -> int =
     else if n = 1 then n
     else (fib (n - 1) + fib (n - 2))
 
-let main () : () -> () = show (fib 10)
+let quad a b c 
+    : float -> float -> float -> (float * float)
+    =
+    let dis = ((b ** 2.0) + 4.0 * a * c)) ** 0.5 in
+    let nb = 0.0 - b in
+    ((nb + dis) / (2.0 * a), (nb - dis) / (2.0 * a))
+
+let main () : () -> () = 
+    show "Fib 10:";
+    show (fib 10);
+    show "Quadratic x^2 + 5x";
+    let q = (quad 1.0 5.0 0.0) in
+    show (q.0);
+    show (q.1)
