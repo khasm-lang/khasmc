@@ -6,7 +6,7 @@ extern _Kadd : ∀a, a -> a -> a
  extern _Keq : ∀a, a -> a -> bool
 
  extern _Kshow : ∀a, a -> ()
-
+let show : ∀a, a -> () = _Kshow
 let (+) : ∀a, a -> () = _Kadd
 let (-) : ∀a, a -> () = _Ksub
 let (/) : ∀a, a -> () = _Kdiv
