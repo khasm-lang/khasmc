@@ -13,7 +13,7 @@ jobs:
         with:
           ocaml-compiler: 5.x.x
       - run: opam install . --deps-only
-      - run: opam install menhir ppx_deriving_yojson
+      - run: opam install menhir ppx_deriving_yojson core
       - run: opam env
       - run: ls -lah bin 
       - run: opam exec -- dune build
