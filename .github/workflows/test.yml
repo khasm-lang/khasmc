@@ -13,8 +13,9 @@ jobs:
         with:
           ocaml-compiler: 5.x.x
       - run: opam install . --deps-only
+      - run: opam install menhir ppx_deriving_yojson
       - run: opam env
-      - run: ls -lah
+      - run: ls -lah bin 
       - run: opam exec -- dune build
       - run: opam exec -- dune exec khasmc test/stdlib.kha test/fib.kha
       - run: sudo apt install -y lua5.4
