@@ -14,7 +14,7 @@
 (package
  (name khasmc)
  (synopsis "Compiler for khasm programming language")
- (depends ocaml dune fmt ppx_deriving)
+ (depends ocaml dune fmt ppx_deriving batteries menhir ppx_deriving.show ppx_deriving_yojson)
  (tags
   ("compiler" "khasm" "programming language")))
 
