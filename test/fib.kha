@@ -8,11 +8,9 @@ let fib n : int -> int = 6
 
 
 let quad a b c 
-    : float -> float -> float -> (float * float)
+    : float -> float -> float -> float * float
     =
-    let dis = ((b ** 2.0) + 4.0 * a * c)) ** 0.5 in
-    let nb = 0.0 - b in
-    ((nb + dis) / (2.0 * a), (nb - dis) / (2.0 * a))
+    (a, b)
 
 let fib n : int -> int =
     if n = 0 then n
