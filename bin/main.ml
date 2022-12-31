@@ -1,4 +1,4 @@
-
+open Batteries
 open Lexing
 open Uniq_typevars
 open Typecheck
