@@ -21,5 +21,14 @@ jobs:
       - run: opam exec -- dune exec khasmc test/stdlib.kha test/fib.kha
       - run: sudo apt install -y lua5.4
       - run: echo "Source:" && cat out.lua
+
+      - uses: actions/checkout@v3
+      - uses: JohnnyMorganz/stylua-action@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: latest # NOTE: we recommend pinning to a specific version in case of formatting changes
+          # CLI arguments
+          args: out.lua
+      - run: cat out.lua
       - run: echo "Lua:" && lua out.lua
 
