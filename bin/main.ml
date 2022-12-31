@@ -30,7 +30,6 @@ let rec normalise files =
      (
        Filename.basename x
        |> Filename.chop_extension
-       |> BatString.capitalize
      )  :: normalise xs
 
 
