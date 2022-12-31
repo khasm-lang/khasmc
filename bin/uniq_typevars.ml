@@ -2,9 +2,15 @@ open Ast
 
 let uniq = ref 0
 
+let muniq = ref 0
+
 let unique () = let x = !uniq in
                uniq := !uniq + 1;
                x
+
+let munique () = let x = !muniq in
+                 muniq := !muniq + 1
+x
 
 let reset_uniq () = uniq := 0
 
@@ -12,7 +18,7 @@ let get_uniq () =
   (string_of_int (unique ())) ^ "_t"
 
 let get_meta () =
-  "$m" ^ (string_of_int (unique ()))
+  "$m" ^ (string_of_int (munique ()))
 
 let get_uniq_with s =
   (string_of_int (unique ())) ^ s
