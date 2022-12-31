@@ -7,12 +7,12 @@ extern _Kadd : ∀a, a -> a -> a
 
  extern _Kshow : ∀a, a -> ()
 let show : ∀a, a -> () = _Kshow
-let (+) : ∀a, a -> () = _Kadd
-let (-) : ∀a, a -> () = _Ksub
-let (/) : ∀a, a -> () = _Kdiv
-let ( * ) : ∀a, a -> () = _Kmul
-let ( ** ) : ∀a, a -> () = _Kpow
-let (=) : ∀a, a -> () = _Keq
+let (+) : ∀a, a -> a -> a = _Kadd
+let (-) : ∀a, a -> a -> a = _Ksub
+let (/) : ∀a, a -> a -> a = _Kdiv
+let ( * ) : ∀a, a -> a -> a = _Kmul
+let ( ** ) : ∀a, a -> a -> a = _Kpow
+let (=) : ∀a, a -> a -> a = _Keq
 
 let (|>) x f
     : ∀a b, a -> (a -> b) -> b
