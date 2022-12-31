@@ -22,7 +22,6 @@ jobs:
       - run: sudo apt install -y lua5.4
       - run: echo "Source:" && cat out.lua
 
-      - uses: actions/checkout@v3
       - uses: JohnnyMorganz/stylua-action@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
