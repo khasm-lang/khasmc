@@ -153,7 +153,7 @@ and codegen_expr ctx expr =
      raise (Impossible "INST codegen_expr")
   | AnnotLam(i, _, e)
     | Lam(i, e) ->
-     "function" ^ paren (maybe_bottom i) ^ " return " ^ codegen_expr ctx e ^ " end\n"
+     "function" ^ paren (maybe_bottom i) ^ " return " ^ codegen_expr ctx e ^ " end"
   | TypeLam(_, e) ->
      codegen_expr ctx e
   | TupAccess(e, i) -> paren (codegen_expr ctx e) ^ "["
