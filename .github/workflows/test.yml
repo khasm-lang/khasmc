@@ -5,10 +5,13 @@ jobs:
   check-bats-version:
     runs-on: ubuntu-latest
     steps:
-      - uses: ocaml/setup-ocaml@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Use OCaml ${{ matrix.ocaml-compiler }}
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
       - run: sudo apt install -y lua5.4
-      - run: opam install -y dune
-      - run: opam install -y ppx_deriving
-      - run: opam install -y batteries
-      - run: dune exec khasmc test/stdlib.kha test/fib.kha
+      - run: opam install -y .
+      - run: opam exec -- dune exec khasmc test/stdlib.kha test/fib.kha
       - run: echo "Lua:" && lua out.lua
