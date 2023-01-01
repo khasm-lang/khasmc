@@ -29,4 +29,5 @@ let main () : () -> () =
     show "Quadratic x^2 + 5x";
     let q = (quad 1.0 5.0 0.0) in
     show (q.0);
-    show (q.1)
+    show (q.1);
+    show q
