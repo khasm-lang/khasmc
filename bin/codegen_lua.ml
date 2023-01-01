@@ -140,8 +140,13 @@ and codegen_expr ctx expr =
      paren (codegen_expr ctx a) ^ paren (codegen_expr ctx b)
   | AnnotLet(a, _, e1, e2) 
     | LetIn(a, e1, e2) ->
-     a ^ " = " ^ codegen_expr ctx e1
-     ^ "; " ^ codegen_expr ctx e2
+     "(function( 
+     ^ maybe_bottom a 
+     ^ ") return " 
+     ^ codegen_expr ctx e2 
+     ^ " end)( " 
+     ^ codegen_expr ctx e1 
+     ^ " )"
   | IfElse(c, e1, e2) ->
      (* use the _K["if"] helper in the prelude *)
      kha_prefix ^ {|["if"]( |} ^ paren (codegen_expr ctx c)
