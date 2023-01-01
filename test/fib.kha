@@ -25,9 +25,9 @@ let fib n : int -> int =
 
 let main () : () -> () = 
     show "Fib 10:";
-    show (fib 10);
+    show $ fib 10;
     show "Quadratic x^2 + 5x";
     let q = (quad 1.0 5.0 0.0) in
-    show (q.0);
-    show (q.1);
+    show $ q.0;
+    show $ q.1;
     show q
