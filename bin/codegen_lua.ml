@@ -140,7 +140,7 @@ and codegen_expr ctx expr =
      paren (codegen_expr ctx a) ^ paren (codegen_expr ctx b)
   | AnnotLet(a, _, e1, e2) 
     | LetIn(a, e1, e2) ->
-     "(function( 
+     "(function( "
      ^ maybe_bottom a 
      ^ ") return " 
      ^ codegen_expr ctx e2 
