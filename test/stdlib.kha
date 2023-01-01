@@ -17,3 +17,11 @@ let (=) : ∀a, a -> a -> bool = _Keq
 let (|>) x f
     : ∀a b, a -> (a -> b) -> b
     = f x
+
+let ($) f x 
+    : ∀a b, (a -> b) -> a -> b 
+    = f x
+
+let (%) f g x
+    : ∀a b c, (b -> c) -> (a -> b) -> a -> c
+    = f (g x)
