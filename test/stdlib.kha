@@ -25,3 +25,7 @@ let ($) f x
 let (%) f g x
     : ∀a b c, (b -> c) -> (a -> b) -> a -> c
     = f (g x)
+
+let (%>) f g x
+    : ∀a b c, (a -> b) -> (b -> c) -> a -> c
+    = g (f x)
