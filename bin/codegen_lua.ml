@@ -38,12 +38,16 @@ let chars_of_string s =
 
 let mangle_c c = List.nth table c
 
+(*
 let mangle str =
   chars_of_string str
   |> List.map Char.code
   |> List.map mangle_c
   |> String.concat ""
   |> (^) "Khasmc_"
+*)
+
+let mangle str = "Khasmc " ^ str
 
 let mbox s = "[" ^ "\"" ^ mangle s ^ "\"" ^ "]"
 
