@@ -272,7 +272,7 @@ and unify ?(loop) ctx l r =
     logic for both sides lol)
 
    *)
-  debug "\n\nUNIFY";
+  debug "\n\n(\nUNIFY";
   let l = lift_ts l in
   let r = lift_ts r in
   debug (pshow_typesig l);
@@ -340,6 +340,7 @@ and unify ?(loop) ctx l r =
   debug "\n\nUNIFY RESULT:";
   debug (show_unify_ctx (fst res));
   debug (pshow_typesig (snd res));
+  debug "\n)\n";
   res
 
 let rec apply_unify ctx tp =
@@ -373,7 +374,7 @@ and infer ctx tm =
   (*
     infer the type of a term
    *)
-  debug "\n\nINFER";
+  debug "\n\n(\nINFER";
   debug (show_kexpr tm);
   let res = match tm with
   | Base(x) -> infer_base ctx x
@@ -470,33 +471,37 @@ and infer ctx tm =
   debug (show_kexpr tm);
   debug ":";
   debug (pshow_typesig res);
+  debug "\n)\n";
   res 
 
 and check ctx tm tp =
   (*
     check a type against a term
    *)
-  debug "\n\nCHECK";
+  debug "\n\n(\nCHECK";
   debug (show_kexpr tm);
   debug (pshow_typesig tp); 
-  match (tm, tp) with
-  | (Lam(id, bd), TSMap(a, b)) ->
-     ignore (check (assume_typ ctx id a) bd b);
+  begin
+    match (tm, tp) with
+    | (Lam(id, bd), TSMap(a, b)) ->
+      ignore (check (assume_typ ctx id a) bd b);
 
-  | (TypeLam(a, b), TSForall(fv, bd)) ->
-     let typ' = subs bd fv (TSBase(a)) in
-     ignore (check ctx b typ');
+     | (TypeLam(a, b), TSForall(fv, bd)) ->
+         let typ' = subs bd fv (TSBase(a)) in
+         ignore (check ctx b typ');
 
-  | (LetIn(id, e1, e2), bd) ->
-     let bdtyp = (infer ctx e1) in
-     ignore (check (assume_typ ctx id bdtyp) e2 bd);
+     | (LetIn(id, e1, e2), bd) ->
+        let bdtyp = (infer ctx e1) in
+        ignore (check (assume_typ ctx id bdtyp) e2 bd);
 
-  | (Base(Tuple(x)), TSTuple(ts)) ->
-     List.iter2 (fun x y -> ignore (check ctx x y)) x ts;
+      | (Base(Tuple(x)), TSTuple(ts)) ->
+        List.iter2 (fun x y -> ignore (check ctx x y)) x ts;
 
-  | (term, exp) ->
-     let actual = (infer ctx term) in
-     ignore (unify (empty_unify_ctx ()) ( actual) exp)
+     | (term, exp) ->
+        let actual = (infer ctx term) in
+        ignore (unify (empty_unify_ctx ()) ( actual) exp);
+  end;
+  debug "\n)\n CHECK END"
 
 
 
