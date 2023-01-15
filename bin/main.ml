@@ -4,6 +4,8 @@ open Uniq_typevars
 open Typecheck
 open Exp
 open Ast
+open Hash
+
 let print_error_position lexbuf =
   let pos = lexbuf.lex_curr_p in
   Fmt.str "Line: %d, Position: %d" pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
@@ -67,7 +69,7 @@ let _ =
     | UnifyErr(x) -> ("Caught UnifyErr:\n" ^ x)
     end
   in
-  Debug.log_debug_stdout true;
+  Debug.log_debug_stdout false;
   print_endline ("\nStatus: " ^ succ);
   print_endline ("Used " ^ string_of_int !uniq ^ " typvars and " ^ string_of_int !muniq ^ " metavars");
   Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t);

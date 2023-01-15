@@ -7,6 +7,11 @@ depends: [
   "ocaml"
   "dune" {>= "3.3"}
   "fmt"
+  "ppx_deriving"
+  "batteries"
+  "menhir"
+  "ppx_deriving.show"
+  "ppx_deriving_yojson"
   "odoc" {with-doc}
 ]
 build: [

@@ -1,6 +1,7 @@
 open Exp
 open Ast
 open Uniq_typevars
+open Hash
 open Debug
 
 type ctx = {
@@ -359,8 +360,6 @@ let rec apply_unify ctx tp =
   | TSTuple(t) -> TSTuple(List.map (apply_unify ctx) t)
 
 
-
-
 let rec infer_base ctx tm =
   match tm with
   | Ident(i) -> lookup ctx i
@@ -472,6 +471,7 @@ and infer ctx tm =
   debug ":";
   debug (pshow_typesig res);
   debug "\n)\n";
+  bind_node tm res;
   res 
 
 and check ctx tm tp =
@@ -501,6 +501,7 @@ and check ctx tm tp =
         let actual = (infer ctx term) in
         ignore (unify (empty_unify_ctx ()) ( actual) exp);
   end;
+  bind_node tm tp;
   debug "\n)\n CHECK END"
 
 
