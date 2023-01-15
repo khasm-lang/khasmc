@@ -18,3 +18,5 @@ let show_table () =
 
 let get_type_str node =
   pshow_typesig (get_type node)
+
+let gst = get_type_str

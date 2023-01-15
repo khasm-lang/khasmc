@@ -58,10 +58,13 @@ let _ =
         After the following, all code is assumed to have correct types.
        *)
       typecheck_program_list programs;
+      print_endline "\n\nLua:";
       let out = Codegen_lua.codegen names programs in
-      let fp = open_out "out.lua" in
-      Printf.fprintf fp "%s" out;
-      "success"
+      print_endline out;
+      print_endline "\n\nKavern:";
+      let kavern = Backend.codegen names programs in
+      print_endline kavern;
+      "Success"
     with
     | TypeErr(x) -> ("Caught TypeErr:\n" ^ x)
     | NotFound(x) -> ("Caught NotFound:\n" ^ x)
