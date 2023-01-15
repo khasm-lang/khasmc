@@ -361,14 +361,17 @@ let rec apply_unify ctx tp =
 
 
 let rec infer_base ctx tm =
-  match tm with
-  | Ident(i) -> lookup ctx i
-  | Int(_) -> TSBase("int")
-  | Float(_) -> TSBase("float")
-  | Str(_) -> TSBase("string")
-  | Tuple(l) -> TSTuple(List.map (fun x -> (infer ctx x)) l)
-  | True | False -> TSBase("bool")
-
+  let typ =
+    match tm with
+    | Ident(i) -> lookup ctx i
+    | Int(_) -> TSBase("int")
+    | Float(_) -> TSBase("float")
+    | Str(_) -> TSBase("string")
+    | Tuple(l) -> TSTuple(List.map (fun x -> (infer ctx x)) l)
+    | True | False -> TSBase("bool")
+  in
+  bind_node tm typ;
+  typ
 and infer ctx tm =
   (*
     infer the type of a term
@@ -504,16 +507,7 @@ and check ctx tm tp =
   bind_node tm tp;
   debug "\n)\n CHECK END"
 
-
-
-let rec typecheck_toplevel_list ctx tl =
-  match tl with
-  | [] -> ctx
-  | x :: xs ->
-     let ctx' =
-       match x with
-       | TopAssign((id, ts), (_, args, body)) ->
-          (*
+(*
             The purpose of this is to transform arguments into
             typelams and annotlams so that you can do
             sig ∀a b, a -> (a -> b) -> b in
@@ -530,25 +524,36 @@ let rec typecheck_toplevel_list ctx tl =
             f x
             
            *)
-          let rec forall_to_typelam ts args body =
-            match (ts, args) with
-            | (TSForall(fv, bd), _ :: xs) ->
-               let tmp = forall_to_typelam bd xs body in
-               (fst tmp, TypeLam(fv, snd tmp))
-            | _ -> (lift_ts ts, body)
-          in
-          let rec add_args ts args body =
-            match (ts, args) with
-            | (TSMap(a, b), x :: xs) -> AnnotLam(x, a, add_args b xs body)
-            | (_, [x]) -> AnnotLam(x, ts, body)
-            | (_, []) -> body
-            | (_, _) -> raise (TypeErr ("Cannot match args: " ^ (String.concat ", " args )
-                     ^ " with typesig " ^ pshow_typesig ts))
-          in
-          let fixed = forall_to_typelam ts args body in
-          let args_fixed = add_args (fst fixed) args body in
-          let fixed_2 = forall_to_typelam ts args args_fixed in
-          check ctx (snd fixed_2) ts;
+let rec forall_to_typelam ts args body =
+  match (ts, args) with
+  | (TSForall(fv, bd), _ :: xs) ->
+     let tmp = forall_to_typelam bd xs body in
+     (fst tmp, TypeLam(fv, snd tmp))
+  | _ -> (lift_ts ts, body)
+
+let rec add_args ts args body =
+  match (ts, args) with
+  | (TSMap(a, b), x :: xs) -> AnnotLam(x, a, add_args b xs body)
+  | (_, [x]) -> AnnotLam(x, ts, body)
+  | (_, []) -> body
+  | (_, _) -> raise (TypeErr ("Cannot match args: " ^ (String.concat ", " args )
+                              ^ " with typesig " ^ pshow_typesig ts))
+
+let conv_ts_args_body_to_typelams ts args body =
+  let fixed = forall_to_typelam ts args body in
+  let args_fixed = add_args (fst fixed) args body in
+  let fixed_2 = forall_to_typelam ts args args_fixed in
+  snd fixed_2
+
+let rec typecheck_toplevel_list ctx tl =
+  match tl with
+  | [] -> ctx
+  | x :: xs ->
+     let ctx' =
+       match x with
+       | TopAssign((id, ts), (_, args, body)) ->
+          let fixed = conv_ts_args_body_to_typelams ts args body in
+          check ctx fixed ts;
           assume_typ ctx id ts
        (*
          assume the type is correct
