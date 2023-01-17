@@ -32,59 +32,22 @@ let rec pshow_typesig ts =
 
 let str_of_typesig x = pshow_typesig x
 
+type info = {
+    id: int;
+  }
+[@@deriving show {with_path=false}]
 
-type fident =
-  | Bot of string
-  | Mod of string * fident (* mod.x *)
-  | Struc of string * fident (* struc:x *)
-[@@deriving show {with_path = false}, eq]
+let dummy_info () = {id = -1}
 
+let idgen = ref 0
+let getid () =
+  let tmp = !idgen in 
+	    idgen := tmp + 1;
+	    tmp
+let mkinfo () = {id = getid()}
 
+open Fident
 
-let rec unqual x =
-  match x with
-  | Bot(y) -> y
-  | Mod(_, y) -> unqual y
-  | Struc(_, y) -> unqual y
-
-exception Impossible of string 
-
-let fullident_ensure_str x =
-  match x with
-  | Str.Text(y) -> y
-  | Str.Delim(_) -> raise (Impossible("fullident_ensure_str"))
-
-let fullident_ensure_delim x =
-  match x with
-  | Str.Text(_) -> raise (Impossible("fullident_ensure_delim"))
-  | Str.Delim(y) -> y
-
-let rec build_fullident x =
-  match x with
-  | [] -> raise (Impossible("build_fullident 1"))
-  | [y] -> Bot(fullident_ensure_str y)
-  | y1 :: y2 :: ys ->
-     match fullident_ensure_delim y2 with
-     | ":" -> Struc(fullident_ensure_str y1, build_fullident ys)
-     | "." -> Mod(fullident_ensure_str y1, build_fullident ys)
-     | _ -> raise (Impossible("build_fullident 2"))
-       
-let process_fullident s =
-  let reg = Str.regexp "([:] | [.])" in
-  let whole = Str.full_split reg s in
-  build_fullident whole
-
-let rec mod_from_list l e =
-  match l with
-  | [x] -> Mod(x, Bot(e))
-  | x :: xs -> Mod(x, mod_from_list xs e)
-  | [] -> Bot(e)
-
-let rec str_of_fident f =
-  match f with
-  | Bot(x) -> x
-  | Mod(x, y) -> x ^ "." ^ str_of_fident y
-  | Struc(x, y) -> x ^ ":" ^ str_of_fident y
 
 type kident = string
 [@@deriving show {with_path = false}]
@@ -95,7 +58,7 @@ type tdecl = kident * typesig
 
 
 type kbase =
-  | Ident of kident
+  | Ident of info * kident
   | Int of string
   | Float of string
   | Str of string
@@ -115,17 +78,17 @@ and binop = string
 
 
 and kexpr =
-  | Base of kbase
-  | FCall of kexpr * kexpr
-  | LetIn of kident * kexpr * kexpr
-  | IfElse of kexpr * kexpr * kexpr
-  | Join of kexpr * kexpr (* expr1; expr2; expr3, rightassoc*)
-  | Inst of kexpr * typesig
-  | Lam of kident * kexpr
-  | TypeLam of kident * kexpr
-  | TupAccess of kexpr * int
-  | AnnotLet of kident * typesig * kexpr * kexpr
-  | AnnotLam of kident * typesig * kexpr
+  | Base of info * kbase
+  | FCall of info * kexpr * kexpr
+  | LetIn of info *  kident * kexpr * kexpr
+  | IfElse of info *  kexpr * kexpr * kexpr
+  | Join of info *  kexpr * kexpr (* expr1; expr2; expr3, rightassoc*)
+  | Inst of info *  kexpr * typesig
+  | Lam of  info * kident * kexpr
+  | TypeLam of  info * kident * kexpr
+  | TupAccess of  info * kexpr * int
+  | AnnotLet of  info * kident * typesig * kexpr * kexpr
+  | AnnotLam of  info * kident * typesig * kexpr
 
 
 [@@deriving show {with_path = false}]

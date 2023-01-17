@@ -1,7 +1,20 @@
 %{
     open Ast
-    let unOp x y = FCall(Base(Ident(x)), y)
-    let binOp x o z = FCall(FCall(Base(Ident(o)), x) , z )
+
+    
+
+let unOp x y = FCall(mkinfo(),
+		     Base(mkinfo(),
+			  Ident(mkinfo(),
+				x)), y)
+    let binOp x o z = FCall(mkinfo(),
+			    FCall(mkinfo(),
+				  Base(mkinfo(),
+				       Ident(mkinfo(),
+					     o)), x) , z )
+
+
+    
 %}
 
 %token <string> T_IDENT
@@ -165,7 +178,7 @@ typesig:
 base:
   | t = T_IDENT
     {
-      Ident(t)
+      Ident(mkinfo(), t)
 	   (*FIDENT SUPPORT NEEDED HERE*)
     }
   | t = T_INT   {Int(t)}
@@ -200,12 +213,12 @@ letid_h:
 
 
 parenexpr:
-  | b = base {Base(b)}
+  | b = base {Base(mkinfo(), b)}
   | LPAREN; e = expr RPAREN {e}
 
 fexpr:
   | LPAREN; e = expr; RPAREN {e}
-  | t = T_IDENT {Base(Ident(t))}
+  | t = T_IDENT {Base(mkinfo(), Ident(mkinfo(), t))}
 
 expr:
   | e=expr1 {e}
@@ -221,8 +234,8 @@ expr2:
       let rec tmp x y =
 	match y with
 	| [] -> failwith "parsing failure expr2"
-        | [k] -> FCall(x, k)
-        | k :: ks -> FCall(tmp x ks, k)
+        | [k] -> FCall(mkinfo(), x, k)
+        | k :: ks -> FCall(mkinfo(), tmp x ks, k)
       in
       tmp f (List.rev e)
     }
@@ -266,15 +279,16 @@ expr9:
   | e=expr10 {e}
 
 expr10:
-  | IF; e1=expr; THEN; e2=expr; ELSE; e3=expr {IfElse(e1, e2, e3)}
+  | IF; e1=expr; THEN; e2=expr; ELSE; e3=expr {IfElse
+						 (mkinfo(), e1, e2, e3)}
   | LET; t=letid; args=list(T_IDENT); EQ_OP; e1=expr; IN; e2=expr
     {
       let rec tmp x y =
 	match x with
 	| [] -> y
-	| x :: xs -> Lam(x, tmp xs y)
+	| x :: xs -> Lam(mkinfo(), x, tmp xs y)
       in
-      LetIn(t, tmp args e1, e2)
+      LetIn(mkinfo(), t, tmp args e1, e2)
     }
   | LET; i=letid; args=list(T_IDENT); COL_OP; t=typesig;
     EQ_OP; e1=expr; IN; e2=expr;
@@ -282,37 +296,37 @@ expr10:
       let rec tmp x y =
 	match x with
 	| [] -> y
-	| x :: xs -> Lam(x, tmp xs y)
+	| x :: xs -> Lam(mkinfo(), x, tmp xs y)
       in
-      AnnotLet(i, t, tmp args e1, e2)
+      AnnotLet(mkinfo(), i, t, tmp args e1, e2)
     }
   | FUN; a=T_IDENT; COL_OP; t=typesig; LAM_TO; e=expr
     {
       let rec helper ts id ex =
 	match ts with
-	| TSForall(fv, bd) -> TypeLam(fv, helper bd id ex)
-        | _ -> AnnotLam(id, ts, ex)
+	| TSForall(fv, bd) -> TypeLam(mkinfo(), fv, helper bd id ex)
+        | _ -> AnnotLam(mkinfo(), id, ts, ex)
       in
       helper t a e 
     }
   | TFUN; a=T_IDENT; COL_OP; t=typesig; LAM_TO; e=expr
     {
-      AnnotLam(a, t, e)
+      AnnotLam(mkinfo(), a, t, e)
     }
   | TFUN; a=T_IDENT; LAM_TO; e=expr
     {
-      TypeLam(a, e)
+      TypeLam(mkinfo(), a, e)
     }
   | LPAREN; e=expr; RPAREN {e}
-  | e=expr; DOT; t=T_INT {TupAccess(e, int_of_string t)}
+  | e=expr; DOT; t=T_INT {TupAccess(mkinfo(), e, int_of_string t)}
   | e=expr11 {e}
 
 expr11:
-  | e1=expr; SEMICOLON; e2=expr {Join(e1, e2)}
+  | e1=expr; SEMICOLON; e2=expr {Join(mkinfo(), e1, e2)}
   | e=expr12 {e}
 
 expr12:
-  | b=base {Base(b)}
+  | b=base {Base(mkinfo(), b)}
 
 
 siglet:

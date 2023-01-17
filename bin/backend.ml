@@ -46,7 +46,7 @@ let add_bind scp id bd =
 
 let get_bind scp str = List.assoc str scp
 
-let paren x = " (" ^ x ^ ") "
+let paren x = "\n(" ^ x ^ ")"
 let brack x = " [" ^ x ^ "] "
 let brace x = " {" ^ x ^ "} "
 
@@ -58,10 +58,37 @@ let rec join_on s xs =
 
 let (<|) f x = f x
 
+(*
+
+
+
+  the grammar of this is basically
+
+  toplevel: (extern | assign)*
+
+  extern: (extern {typ} id)
+
+  assign: (tlet {typ} id (args) (expr))
+
+  expr:
+  | ident: (bound {typ} id)
+  | val: (int/float/string val)
+  | tuple: (tuple (expr)* )
+  | bools
+  | fcall: (fcall (expr) (expr))
+  | let: (let {typ} id (e1) (e2))
+  | tupacc: (tupaccess int (e))
+  | lam: (lam {typ} id (e))
+  | typlam: (typelam t (e))
+  | seq: (seq {typ} (expr)* )
+  | ifelse: (ifelse {typ} (cond) (e1) (e2))
+*)
+
+
 let rec codegen_base b scope =
   match b with
-  | Ident(t) ->
-     "bound " ^ brace (gst b) ^
+  | Ident(inf, t) ->
+     "bound " ^ brace (gst inf) ^
        begin
          try
            List.assoc t scope.binds
@@ -71,7 +98,7 @@ let rec codegen_base b scope =
   | Int(s) -> "int " ^ s |> paren
   | Float(s) -> "float "  ^ s |> paren
   | Str(s) -> "string \"" ^ s ^ "\"" |> paren
-  | Tuple(ex) -> "tuple " ^ brace (gst b)
+  | Tuple(ex) -> "tuple "
                  ^ join_on " "
                      (List.map (fun x -> codegen_expr x scope) ex)
                  |> paren
@@ -80,25 +107,25 @@ let rec codegen_base b scope =
 
 and codegen_expr ex scope =
   match ex with
-  | Base(k) -> codegen_base k scope
-  | FCall(f, x) -> "fcall " ^ codegen_expr f scope
+  | Base(_, k) -> codegen_base k scope
+  | FCall(_, f, x) -> "fcall " ^ codegen_expr f scope
                    ^ codegen_expr x scope |> paren
-  | AnnotLet(l, _, e1, e2)
-    | LetIn(l, e1, e2) -> "let " ^ brace (gst ex) ^ mangle l
+  | AnnotLet(inf, l, _, e1, e2)
+    | LetIn(inf, l, e1, e2) -> "let " ^ brace (gst inf) ^ mangle l
                           ^ codegen_expr e1 scope
                           ^ codegen_expr e2 scope |> paren
-  | Join(e1, e2) -> "seq " ^ brace (gst ex) ^ codegen_expr e1 scope
+  | Join(inf, e1, e2) -> "seq " ^ brace (gst inf) ^ codegen_expr e1 scope
                     ^ codegen_expr e2 scope |> paren
-  | Inst(_, _) -> raise <| Impossible "INST"
-  | IfElse(c, e1, e2) -> "ifelse " ^ brace (gst ex)
+  | Inst(_, _, _) -> raise <| Impossible "INST"
+  | IfElse(inf, c, e1, e2) -> "ifelse " ^ brace (gst inf)
                          ^ codegen_expr c scope ^ codegen_expr e1 scope
                          ^ codegen_expr e2 scope |> paren
-  | Lam(l, e)
-    | AnnotLam(l, _, e) -> "lam " ^ brace (gst ex) ^ mangle l
+  | Lam(inf, l, e)
+    | AnnotLam(inf, l, _, e) -> "lam " ^ brace (gst inf) ^ mangle l
                            ^ codegen_expr e scope |> paren
-  | TupAccess(e, i) -> "tupaccess " ^ string_of_int i
+  | TupAccess(_, e, i) -> "tupaccess " ^ string_of_int i
                        ^ codegen_expr e scope |> paren
-  | TypeLam(t, e) -> "typelam " ^ t ^ codegen_expr e scope |> paren
+  | TypeLam(_, t, e) -> "typelam " ^ t ^ codegen_expr e scope |> paren
     
 let codegen_assign a e scope =
   let (id, ts) = a in
@@ -106,9 +133,9 @@ let codegen_assign a e scope =
   let body' = conv_ts_args_body_to_typelams ts args body in
   begin
     "tlet "
+    ^ brace (pshow_typesig ts)
     ^ mangle id ^ " "
     ^ paren (join_on " " (List.map mangle args))
-    ^ brace (pshow_typesig ts)
     ^ paren (codegen_expr body' scope)
     |> paren
   end
@@ -125,7 +152,7 @@ let rec codegen_program p s =
      let scp'str = match x with
        | TopAssign(a, e) -> (add_bind scp (fst a) (mangle (fst a)),
                              codegen_assign a e scp)
-       | Extern(id, ts) -> (add_bind scp id id, "\n(extern " ^ id ^ brace (pshow_typesig ts) ^ ")\n")
+       | Extern(id, ts) -> (add_bind scp id id, "\n(extern " ^ brace (pshow_typesig ts) ^ id ^ ")\n")
      in
      snd scp'str ^ codegen_program (Program(xs)) (Some(fst scp'str))
      
