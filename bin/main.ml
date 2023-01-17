@@ -58,9 +58,8 @@ let _ =
         After the following, all code is assumed to have correct types.
        *)
       typecheck_program_list programs;
-      print_endline "\n\nLua:";
-      let out = Codegen_lua.codegen names programs in
-      print_endline out;
+      List.iter (fun x -> print_endline (show_program x)) programs;
+      Hash.show_table ();
       print_endline "\n\nKavern:";
       let kavern = Backend.codegen names programs in
       print_endline kavern;

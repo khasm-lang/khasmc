@@ -363,15 +363,17 @@ let rec apply_unify ctx tp =
 let rec infer_base ctx tm =
   let typ =
     match tm with
-    | Ident(i) -> lookup ctx i
+    | Ident(info, i) -> let typ = lookup ctx i in
+                        bni info typ;
+                        typ
     | Int(_) -> TSBase("int")
     | Float(_) -> TSBase("float")
     | Str(_) -> TSBase("string")
     | Tuple(l) -> TSTuple(List.map (fun x -> (infer ctx x)) l)
     | True | False -> TSBase("bool")
   in
-  bind_node tm typ;
   typ
+
 and infer ctx tm =
   (*
     infer the type of a term
@@ -379,8 +381,8 @@ and infer ctx tm =
   debug "\n\n(\nINFER";
   debug (show_kexpr tm);
   let res = match tm with
-  | Base(x) -> infer_base ctx x
-  | FCall(f, x) ->
+  | Base(inf, x) -> (inf, infer_base ctx x)
+  | FCall(inf, f, x) ->
      debug "\n\nFCALL";
      debug (show_kexpr f);
      debug (show_kexpr x);
@@ -408,7 +410,7 @@ and infer ctx tm =
        match inst_r with
        | TSMap(a, b) ->
           let res = unify (empty_unify_ctx()) a inst_l in
-          apply_unify (fst res) b
+          (inf, apply_unify (fst res) b)
        | tp -> raise (TypeErr ("Cannot apply \n"
                               ^ show_kexpr x
                               ^ " to \n"
@@ -419,62 +421,64 @@ and infer ctx tm =
   (*
     try and infer/check one side against the other and vice versa
    *)
-  | IfElse(c, e1, e2) ->
+  | IfElse(inf, c, e1, e2) ->
      ignore (check ctx c (TSBase("bool")));
      begin
        try
          let typ = infer ctx e1 in
          ignore (check ctx e2 (typ));
-         ( typ)
+         (inf, typ)
        with
        | TypeErr(_) ->
           let typ = infer ctx e2 in
           ignore (check ctx e1 ( typ));
-          (typ)
+          (inf, typ)
      end
-  | LetIn(id, e1, e2) ->
+  | LetIn(inf, id, e1, e2) ->
      begin
        let bodytyp =  (infer ctx e1) in
        let intyp = (infer (assume_typ ctx id bodytyp) e2) in
-       intyp
+       (inf, intyp)
      end
-  | Join(a, b) ->
+  | Join(inf, a, b) ->
      ignore (check ctx a TSBottom);
-     ((infer ctx b))
-  | Inst(_, _) ->
+     (inf, (infer ctx b))
+  | Inst(_, _, _) ->
      raise (TypeErr "UNREACHABLE")
-  | TypeLam(t, b) ->
+  | TypeLam(inf, t, b) ->
      let bodytyp = (infer ctx b) in
-     (TSForall(t, bodytyp))
-  | TupAccess(expr, i) ->
+     (inf, TSForall(t, bodytyp))
+  | TupAccess(inf, expr, i) ->
      begin
        match (infer ctx expr) with
-       | TSTuple(t) -> List.nth t i
+       | TSTuple(t) -> (inf, List.nth t i)
        | _ -> raise (TypeErr (
                          "can't tuple access non-tuple:\n"
                          ^ show_kexpr expr
                 ))
      end
-  | AnnotLet(id, ts, e1, e2) ->
+  | AnnotLet(inf, id, ts, e1, e2) ->
      ignore (check ctx e1 ts);
      let ctx' = assume_typ ctx id ts in
-     ((infer ctx' e2))
-  | AnnotLam(id, ts, e) ->
+     (inf, (infer ctx' e2))
+  | AnnotLam(inf, id, ts, e) ->
      let out = (infer (assume_typ ctx id ts) e) in
-     (TSMap(ts, out))
+     (inf, TSMap(ts, out))
   | _ -> raise (TypeErr (
                     "Cannot infer:\n"
                     ^ show_kexpr tm
                     ^ "\nMaybe add annotations?"
            ))
   in
+  let inf = fst res in
+  let res = snd res in
   let res = lift_ts res in
   debug "\n\nINFER RES:";
   debug (show_kexpr tm);
   debug ":";
   debug (pshow_typesig res);
   debug "\n)\n";
-  bind_node tm res;
+  bni inf res;
   res 
 
 and check ctx tm tp =
@@ -484,27 +488,30 @@ and check ctx tm tp =
   debug "\n\n(\nCHECK";
   debug (show_kexpr tm);
   debug (pshow_typesig tp); 
-  begin
+  let inf = begin
     match (tm, tp) with
-    | (Lam(id, bd), TSMap(a, b)) ->
-      ignore (check (assume_typ ctx id a) bd b);
-
-     | (TypeLam(a, b), TSForall(fv, bd)) ->
+    | (Lam(inf, id, bd), TSMap(a, b)) ->
+       ignore (check (assume_typ ctx id a) bd b);
+       Some(inf)
+     | (TypeLam(inf, a, b), TSForall(fv, bd)) ->
          let typ' = subs bd fv (TSBase(a)) in
          ignore (check ctx b typ');
-
-     | (LetIn(id, e1, e2), bd) ->
+        Some(inf)
+     | (LetIn(inf, id, e1, e2), bd) ->
         let bdtyp = (infer ctx e1) in
         ignore (check (assume_typ ctx id bdtyp) e2 bd);
-
-      | (Base(Tuple(x)), TSTuple(ts)) ->
+        Some(inf)
+      | (Base(inf, Tuple(x)), TSTuple(ts)) ->
         List.iter2 (fun x y -> ignore (check ctx x y)) x ts;
-
+        Some(inf) 
      | (term, exp) ->
         let actual = (infer ctx term) in
         ignore (unify (empty_unify_ctx ()) ( actual) exp);
-  end;
-  bind_node tm tp;
+        None
+  end in
+  match inf with
+  | Some(inf) -> bni inf tp
+  | None -> ();
   debug "\n)\n CHECK END"
 
 (*
@@ -528,13 +535,14 @@ let rec forall_to_typelam ts args body =
   match (ts, args) with
   | (TSForall(fv, bd), _ :: xs) ->
      let tmp = forall_to_typelam bd xs body in
-     (fst tmp, TypeLam(fv, snd tmp))
+     (fst tmp, TypeLam(dummy_info(), fv, snd tmp))
   | _ -> (lift_ts ts, body)
 
 let rec add_args ts args body =
   match (ts, args) with
-  | (TSMap(a, b), x :: xs) -> AnnotLam(x, a, add_args b xs body)
-  | (_, [x]) -> AnnotLam(x, ts, body)
+  | (TSMap(a, b), x :: xs) -> AnnotLam
+                                (mkinfo(), x, a, add_args b xs body)
+  | (_, [x]) -> AnnotLam(mkinfo(), x, ts, body)
   | (_, []) -> body
   | (_, _) -> raise (TypeErr ("Cannot match args: " ^ (String.concat ", " args )
                               ^ " with typesig " ^ pshow_typesig ts))

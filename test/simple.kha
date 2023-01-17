@@ -1,3 +1,2 @@
-let main x : ∀a, a -> (a * a * a * a) =
-    let y = (x, x) in
-    (y, y)
+let tup x : ∀a, a -> (a, a) =
+    (x, x)
