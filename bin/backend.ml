@@ -130,7 +130,7 @@ and codegen_expr ex scope =
 let codegen_assign a e scope =
   let (id, ts) = a in
   let (_, args, body) = e in
-  let body' = conv_ts_args_body_to_typelams ts args body in
+  let body' = body in
   begin
     "tlet "
     ^ brace (pshow_typesig ts)

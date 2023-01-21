@@ -544,8 +544,10 @@ let rec add_args ts args body =
                                 (mkinfo(), x, a, add_args b xs body)
   | (_, [x]) -> AnnotLam(mkinfo(), x, ts, body)
   | (_, []) -> body
-  | (_, _) -> raise (TypeErr ("Cannot match args: " ^ (String.concat ", " args )
-                              ^ " with typesig " ^ pshow_typesig ts))
+  | (_, _) -> raise (TypeErr ("Cannot match args: "
+                              ^ (String.concat ", " args )
+                              ^ " with typesig "
+                              ^ pshow_typesig ts))
 
 let conv_ts_args_body_to_typelams ts args body =
   let fixed = forall_to_typelam ts args body in
@@ -559,8 +561,8 @@ let rec typecheck_toplevel_list ctx tl =
   | x :: xs ->
      let ctx' =
        match x with
-       | TopAssign((id, ts), (_, args, body)) ->
-          let fixed = conv_ts_args_body_to_typelams ts args body in
+       | TopAssign((id, ts), (_id, _args, body)) ->
+          let fixed = body in
           check ctx fixed ts;
           assume_typ ctx id ts
        (*
@@ -586,4 +588,4 @@ let rec typecheck_program_list_h pl ctx =
      let ctx'' = typecheck_program x ctx' in
      typecheck_program_list_h xs (Some (ctx''))
 
-let typecheck_program_list pl = typecheck_program_list_h pl None
+let typecheck_program_list pl = typecheck_program_list_h pl None; pl
