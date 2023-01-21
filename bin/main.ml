@@ -10,8 +10,6 @@ let print_error_position lexbuf =
   let pos = lexbuf.lex_curr_p in
   Fmt.str "Line: %d, Position: %d" pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
-
-
 let parseToAst filename =
   let file = open_in filename in
   let lexbuf = Lexing.from_channel file in
@@ -36,6 +34,11 @@ let rec normalise files =
      )  :: normalise xs
 
 
+let compile names asts =
+  asts
+  |> List.map Typelam_init.init_program
+  |> typecheck_program_list
+  |> Backend.codegen names
 
 
 let _ =
@@ -54,15 +57,8 @@ let _ =
       let files = List.tl list in (* make this better *)
       let programs = List.map parseToAst files in
       let names = normalise files in 
-      (*
-        After the following, all code is assumed to have correct types.
-       *)
-      typecheck_program_list programs;
-      List.iter (fun x -> print_endline (show_program x)) programs;
-      Hash.show_table ();
-      print_endline "\n\nKavern:";
-      let kavern = Backend.codegen names programs in
-      print_endline kavern;
+      let res = compile names programs in
+      print_endline res;
       "Success"
     with
     | TypeErr(x) -> ("Caught TypeErr:\n" ^ x)
