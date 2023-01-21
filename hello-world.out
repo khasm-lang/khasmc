@@ -1,3 +1,0 @@
-/* DEBUG: typesig for console.log */
-/* DEBUG: typesig for main */
-main = console.log("Hello, world!")
