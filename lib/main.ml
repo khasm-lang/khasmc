@@ -35,13 +35,17 @@ let rec normalise files =
 
 
 let compile names asts =
+  (*typcheck stage*)
   asts
   |> List.map Typelam_init.init_program
-  |> typecheck_program_list
+  |> typecheck_program_list;
+  (*codegen stage*)
+  asts
+  |> List.iter (fun x -> Debug.debug (show_program x)); asts
   |> Backend.codegen names
 
 
-let _ =
+let main_proc () =
   let () = Printexc.record_backtrace true in
   let argc = Array.length Sys.argv in
   if argc < 2 then
@@ -69,6 +73,6 @@ let _ =
   in
   Debug.log_debug_stdout false;
   print_endline ("\nStatus: " ^ succ);
-  print_endline ("Used " ^ string_of_int !uniq ^ " typvars and " ^ string_of_int !muniq ^ " metavars");
+  print_endline ("Used " ^ string_of_int !uniq ^ " typvars, " ^ string_of_int !muniq ^ " metavars and " ^ string_of_int (getid () - 1) ^ " nodes");
   Printf.printf "\nkhasmc done in %fs\n"  ((Unix.gettimeofday()) -. t);
   ()

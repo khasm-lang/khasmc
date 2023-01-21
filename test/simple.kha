@@ -1,2 +1,10 @@
-let tup x : ∀a, a -> (a, a) =
-    (x, x)
+extern (+) : forall a, a -> a -> a
+extern (-) : forall a, a -> a -> a
+extern add : int -> int -> int
+
+let incr x : int -> int = x + 1
+
+let subr x : int -> int = x - 1
+
+let add x y : int -> int -> int =
+    add (incr x) (subr y)

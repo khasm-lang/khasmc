@@ -1,6 +1,6 @@
 (executable
  (public_name khasmc)
- (name main)
+ (name cli)
  (libraries khasmc fmt batteries ppx_deriving core yojson ppx_deriving_yojson.runtime)
  (modes byte exe)
  (preprocess (pps ppx_deriving.show ppx_deriving.make ppx_deriving.eq))

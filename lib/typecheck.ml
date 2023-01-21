@@ -364,7 +364,6 @@ let rec infer_base ctx tm =
   let typ =
     match tm with
     | Ident(info, i) -> let typ = lookup ctx i in
-                        bni info typ;
                         typ
     | Int(_) -> TSBase("int")
     | Float(_) -> TSBase("float")
@@ -478,7 +477,6 @@ and infer ctx tm =
   debug ":";
   debug (pshow_typesig res);
   debug "\n)\n";
-  bni inf res;
   res 
 
 and check ctx tm tp =
@@ -509,9 +507,6 @@ and check ctx tm tp =
         ignore (unify (empty_unify_ctx ()) ( actual) exp);
         None
   end in
-  match inf with
-  | Some(inf) -> bni inf tp
-  | None -> ();
   debug "\n)\n CHECK END"
 
 (*
@@ -588,4 +583,4 @@ let rec typecheck_program_list_h pl ctx =
      let ctx'' = typecheck_program x ctx' in
      typecheck_program_list_h xs (Some (ctx''))
 
-let typecheck_program_list pl = typecheck_program_list_h pl None; pl
+let typecheck_program_list pl = typecheck_program_list_h pl None
