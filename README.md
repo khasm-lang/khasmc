@@ -29,13 +29,13 @@ Khasm, unlike OCaml, does not have toplevel execution, so the `main` function is
 
 ## The TODO List:
 
-[ ] Modules
-[ ] ADTs and pattern matching
-[ ] Stdlib work
-[ ] Backend rewrite - memoization 
-[ ] Exceptions
-[ ] Records
-[ ] Compiler options
-[ ] Typeclasses
-[ ] Typeclass proving
-[ ] Parser rewrite into recdec - maybe do earlier?
+- [ ] Modules
+- [ ] ADTs and pattern matching
+- [ ] Stdlib work
+- [ ] Backend rewrite - memoization 
+- [ ] Exceptions
+- [ ] Records
+- [ ] Compiler options
+- [ ] Typeclasses
+- [ ] Typeclass proving
+- [ ] Parser rewrite into recdec - maybe do earlier?
