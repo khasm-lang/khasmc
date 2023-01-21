@@ -1,14 +1,11 @@
-(lang dune 3.3)
+(lang dune 3.6)
 
 (name khasmc)
 
 (generate_opam_files true)
 
-;(source
-; (github username/reponame))
 
-
-(license LICENSE)
+(license MPL-2.0)
 
 
 (package
