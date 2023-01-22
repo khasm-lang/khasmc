@@ -1,10 +1,21 @@
 (library
  (name khasmc)
- (libraries fmt batteries ppx_deriving core yojson ppx_deriving_yojson.runtime)
- (preprocess (pps ppx_deriving.show ppx_deriving.make ppx_deriving.eq))
- (flags (:standard -warn-error -A -g -annot))
- (ocamlopt_flags (-g -annot)))
+ (libraries
+  fmt
+  batteries
+  ppx_deriving
+  core
+  yojson
+  ppx_deriving_yojson.runtime)
+ (preprocess
+  (pps ppx_deriving.show ppx_deriving.make ppx_deriving.eq))
+ (flags
+  (:standard -warn-error -A -g -annot))
+ (ocamlopt_flags
+  (-g -annot)))
+
 (ocamllex lexer)
+
 (menhir
  (modules parser)
  (flags --exn-carries-state))
