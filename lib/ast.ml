@@ -52,9 +52,6 @@ type kbase =
   | False
 [@@deriving show { with_path = false }]
 
-and unop = string [@@deriving show { with_path = false }]
-and binop = string [@@deriving show { with_path = false }]
-
 and kexpr =
   | Base of info * kbase
   | FCall of info * kexpr * kexpr

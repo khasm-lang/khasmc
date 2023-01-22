@@ -16,7 +16,7 @@ let string_of_chars chars =
 
 let chars_of_string s = List.init (String.length s) (String.get s)
 let mangle_c c = List.nth table c
-let mangle str = if str = "()" then "Khasmc_int.bottom" else "Khasmc." ^ str
+let mangle str = if str = "()" then "`bottom" else "Khasmc." ^ str
 
 type scope = { binds : (string * string) list }
 [@@deriving show { with_path = false }]
@@ -52,20 +52,14 @@ let gen ind x =
   | ident: (bound  id)
   | val: (int/float/string val)
   | tuple: (tuple (expr)* )
-  | bools
+  | bools (bool true/false)
   | fcall: (fcall (expr) (expr))
   | let: (let  id (e1) (e2))
   | tupacc: (tupaccess int (e))
   | lam: (lam  id (e))
-  | typlam: (typelam t (e))
   | seq: (seq  (expr)* )
   | ifelse: (ifelse  (cond) (e1) (e2))
 *)
-
-(*
-  The decl of the pprinter for types is in ast.ml, because
-  ocaml doesn't support recursive modules :(
- *)
 
 let rec codegen_base b scope ind =
   match b with

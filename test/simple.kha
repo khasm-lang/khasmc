@@ -1,10 +1,3 @@
-extern (+) : forall a, a -> a -> a
-extern (-) : forall a, a -> a -> a
-extern add : int -> int -> int
+extern console.log : ∀a, a -> ()
 
-let incr x : int -> int = x + 1
-
-let subr x : int -> int = x - 1
-
-let add x y : int -> int -> int =
-    add (incr x) (subr y)
+let main () : () -> () = console.log "Hello, world!"
