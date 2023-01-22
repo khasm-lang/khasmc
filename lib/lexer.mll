@@ -118,7 +118,9 @@ rule token = parse
      | NEWLINE { next_line lexbuf; token lexbuf}
      | INT { T_INT (Lexing.lexeme lexbuf) }
      | FLOAT { T_FLOAT (Lexing.lexeme lexbuf)}
-     | '"' {let buffer = Buffer.create 20 in T_STRING(stringl buffer lexbuf)}
+     | '"' {
+     let buffer = Buffer.create 20 in T_STRING(stringl buffer lexbuf)
+     }
      | FIDENT { T_IDENT (Lexing.lexeme lexbuf)} (*TODO: make modules work properly lol*)
      | "()" {T_IDENT "()"}
      | "." {DOT}

@@ -4,6 +4,9 @@
 
 (generate_opam_files true)
 
+(authors "wren")
+
+(maintainers "wren")
 
 (license MPL-2.0)
 
@@ -11,7 +14,7 @@
 (package
  (name khasmc)
  (synopsis "Compiler for khasm programming language")
- (depends ocaml dune fmt ppx_deriving batteries menhir ppx_deriving.show ppx_deriving_yojson)
+ (depends ocaml dune fmt ppx_deriving batteries menhir ppx_deriving.show ppx_deriving_yojson kavern)
  (tags
   ("compiler" "khasm" "programming language")))
 

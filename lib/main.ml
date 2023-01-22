@@ -64,12 +64,12 @@ let main_proc () =
     | NotImpl x -> "NOTIMPL:\n" ^ x
     | UnifyErr x -> "Caught UnifyErr:\n" ^ x
   in
-  Debug.log_debug_stdout false;
-  print_endline ("\nStatus: " ^ succ);
-  print_endline
+
+  Debug.debug ("\nStatus: " ^ succ);
+  Debug.debug
     ("Used " ^ string_of_int !uniq ^ " typvars, " ^ string_of_int !muniq
    ^ " metavars and "
     ^ string_of_int (getid () - 1)
     ^ " nodes");
-  Printf.printf "\nkhasmc done in %fs\n" (Unix.gettimeofday () -. t);
+  Debug.log_debug_stdout false;
   ()
