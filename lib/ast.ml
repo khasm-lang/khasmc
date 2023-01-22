@@ -68,7 +68,10 @@ and kexpr =
 
 and kass = kident * kident list * kexpr [@@deriving show { with_path = false }]
 
-and toplevel = TopAssign of tdecl * kass | Extern of kident * typesig
+and toplevel =
+  | TopAssign of tdecl * kass
+  | Extern of kident * typesig
+  | IntExtern of kident * kident * typesig
 [@@deriving show { with_path = false }]
 
 and program = Program of toplevel list [@@deriving show { with_path = false }]

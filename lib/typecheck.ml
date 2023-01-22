@@ -497,6 +497,7 @@ let rec typecheck_toplevel_list ctx tl =
          assume the type is correct
         *)
         | Extern (id, ts) -> assume_typ ctx id ts
+        | IntExtern (_, id, ts) -> assume_typ ctx id ts
       in
       typecheck_toplevel_list ctx' xs
 

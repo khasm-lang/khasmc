@@ -1,0 +1,12 @@
+internal_extern `int_add = (+) : ∀a, a -> a -> a
+
+internal_extern `print = print
+	       : ∀a, a -> ()
+
+let ($) f x : ∀a b, (a -> b) -> a -> b = f x
+let (|>) x f : ∀a b, a -> (a -> b) -> b = f x
+
+let main () : () -> () =
+    let a = 10 in
+    let b = 5 in 
+    print $ b |> (+) a

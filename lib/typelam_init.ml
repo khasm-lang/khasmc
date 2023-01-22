@@ -8,6 +8,7 @@ let init_toplevel t =
       TopAssign
         ((id, ts), (id, args, conv_ts_args_body_to_typelams ts args expr))
   | Extern (_, _) -> t
+  | IntExtern (_, _, _) -> t
 
 let init_program p =
   Program (List.map init_toplevel (match p with Program x -> x))
