@@ -21,11 +21,12 @@ let alpha = ['a'-'z' 'A'-'Z']
 let INT = (digit)+
 
 let start = ['a'-'z' 'A'-'Z' '_' '\'']
+
 let all = ['a'-'z' 'A'-'Z' '_' '\'' '0'-'9']
 
 let IDENT = start all*
 
-let FIDENT = start all* ((start all* | ':' | '.' )* start all *)? 
+let INTIDENT = '`' start all+
 
 
 let operator_chars = ['$'  '&'  '@'  '+'  '*'  '-'  '='  '>'  '<'  '?'  ':'  '!'  '.'  '%'  '~'  '|'  '/'  '['  ']'  '~' '^']
@@ -101,12 +102,13 @@ rule token = parse
      | "true"   {TRUE}
      | "false"  {FALSE}
      | "fun"    {FUN}
-     | "pfun"   {TFUN}
+     | "tfun"   {TFUN}
      | "nomangle" {NOMANGLE}
      | "inline" {INLINE}
      | "ignore" {IGNORE}
      | "forall" {FORALL}
      | "extern" {EXTERN}
+     | "internal_extern" {INTEXTERN}
      | "and" {LAND}
      | "or"  {LOR}
      | "∀" {FORALL}
@@ -121,7 +123,8 @@ rule token = parse
      | '"' {
      let buffer = Buffer.create 20 in T_STRING(stringl buffer lexbuf)
      }
-     | FIDENT { T_IDENT (Lexing.lexeme lexbuf)} (*TODO: make modules work properly lol*)
+     | INTIDENT {INTIDENT (Lexing.lexeme lexbuf)}
+     | IDENT {T_IDENT (Lexing.lexeme lexbuf)}
      | "()" {T_IDENT "()"}
      | "." {DOT}
      | eof {EOF}

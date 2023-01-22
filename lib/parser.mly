@@ -22,6 +22,8 @@ let unOp x y = FCall(mkinfo(),
 %token <string> T_INT
 %token <string> T_FLOAT
 %token <string> T_STRING
+%token <string> INTIDENT
+%token INTEXTERN
 %token TRUE
 %token FALSE
 %token ADD
@@ -119,7 +121,8 @@ let unOp x y = FCall(mkinfo(),
 
 
 %right SEMICOLON
-%left EQ_OP GT_OP LT_OP PIP_OP AND_OP DOL_OP
+%left DOL_OP
+%left EQ_OP GT_OP LT_OP PIP_OP AND_OP
 %right AT_OP CAR_OP
 %right COL_OP
 %left ADD_OP SUB_OP
@@ -187,6 +190,7 @@ base:
   | TRUE  {True}
   | FALSE {False}
   | LPAREN; s=separated_nonempty_list(COMMA, expr); RPAREN {Tuple(s)}
+  | LPAREN; t = letid_h; RPAREN {Ident(mkinfo(), t)}
 
 letid:
   | t = T_IDENT {t}
@@ -218,7 +222,7 @@ parenexpr:
 
 fexpr:
   | LPAREN; e = expr; RPAREN {e}
-  | t = T_IDENT {Base(mkinfo(), Ident(mkinfo(), t))}
+  | t = letid {Base(mkinfo(), Ident(mkinfo(), t))}
 
 expr:
   | e=expr1 {e}
@@ -336,6 +340,7 @@ siglet:
 toplevel:
   | a = siglet {a}
   | EXTERN; a=letid; COL_OP; t=typesig; {Extern(a, t)}
+  | INTEXTERN; a=INTIDENT; EQ_OP; b=letid; COL_OP; t=typesig {IntExtern(a, b, t)} 
 
 program:
   | a = nonempty_list(toplevel); EOF {Program(a)}

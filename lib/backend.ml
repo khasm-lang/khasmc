@@ -124,6 +124,7 @@ let rec codegen_program p s =
         | TopAssign (a, e) ->
             (add_bind scp (fst a) (mangle (fst a)), codegen_assign a e scp)
         | Extern (id, _) -> (add_bind scp id id, "\n(extern " ^ id ^ ")\n")
+        | IntExtern (int, id, _) -> (add_bind scp id int, "")
       in
       snd scp'str ^ codegen_program (Program xs) (Some (fst scp'str))
 

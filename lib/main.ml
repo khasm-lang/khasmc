@@ -71,5 +71,4 @@ let main_proc () =
    ^ " metavars and "
     ^ string_of_int (getid () - 1)
     ^ " nodes");
-  Debug.log_debug_stdout false;
-  ()
+  if succ <> "Success" then Debug.log_debug_stdout true else ()
