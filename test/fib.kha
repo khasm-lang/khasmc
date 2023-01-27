@@ -5,7 +5,5 @@ let rec fib n : int -> int =
     if Stdlib.(=) n 1 then n else
     Stdlib.(+) (fib (Stdlib.(-) n 1)) (fib (Stdlib.(-) n 2))
 
-let main () : () -> ()
-    =
-    Stdlib.print
-    (fib 10)
+let main () : () -> () =
+    Stdlib.print (fib 10)
