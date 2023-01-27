@@ -4,13 +4,30 @@ open Uniq_typevars
 open Hash
 open Debug
 
-type ctx = { binds : (kident * typesig) list }
+type ctx = { binds : (kident * typesig) list; modules : (kident * ctx) list }
 [@@deriving show { with_path = false }]
 
 let empty_typ_ctx () =
-  { binds = [ (*hardcode in that () is bottom*) ("()", TSBottom) ] }
+  {
+    binds = [ (*hardcode in that () is bottom*) ("()", TSBottom) ];
+    modules = [];
+  }
 
-let assume_typ ctx id ts = { binds = (id, make_uniq_ts ts None) :: ctx.binds }
+let assume_typ ctx id ts =
+  { ctx with binds = (id, make_uniq_ts ts None) :: ctx.binds }
+
+let lookup ctx x =
+  match List.find_opt (fun y -> fst y = x) ctx.binds with
+  | None -> raise (NotFound (x ^ " not found in ctx"))
+  | Some x -> snd x
+
+let rec lookup_mod ctx mods var =
+  match mods with
+  | [] -> lookup ctx var
+  | x :: xs -> (
+      match List.assoc_opt x ctx.modules with
+      | None -> raise (NotFound ("module " ^ x ^ " not found in ctx"))
+      | Some y -> lookup_mod y xs var)
 
 let rec occurs_ts s ts =
   (* checks whether a variable s is free in ts *)
@@ -66,11 +83,6 @@ let rec lift_ts ts =
      ∀a, a -> a
   *)
   match lift_ts_h ts with t, false -> t | t, true -> lift_ts t
-
-let lookup ctx x =
-  match List.find_opt (fun y -> fst y = x) ctx.binds with
-  | None -> raise (NotFound (x ^ " not found in ctx"))
-  | Some x -> snd x
 
 let rec subs typ nm newt =
   match typ with
@@ -307,7 +319,7 @@ let rec apply_unify ctx tp =
 let rec infer_base ctx tm =
   let typ =
     match tm with
-    | Ident (info, i) ->
+    | Ident (_, i) ->
         let typ = lookup ctx i in
         typ
     | Int _ -> TSBase "int"
@@ -397,6 +409,9 @@ and infer ctx tm =
     | AnnotLam (inf, id, ts, e) ->
         let out = infer (assume_typ ctx id ts) e in
         (inf, TSMap (ts, out))
+    | ModAccess (inf, path, id) ->
+        let typ = lookup_mod ctx path id in
+        (inf, typ)
     | _ ->
         raise
           (TypeErr
@@ -493,11 +508,26 @@ let rec typecheck_toplevel_list ctx tl =
             let fixed = body in
             check ctx fixed ts;
             assume_typ ctx id ts
+        | TopAssignRec ((id, ts), (_id, _args, body)) ->
+            let fixed = body in
+            (*
+            to check a recursive,            
+            we assume the type is correct within the expr first
+          *)
+            let ctx' = assume_typ ctx id ts in
+            check ctx' fixed ts;
+            ctx'
         (*
          assume the type is correct
         *)
         | Extern (id, ts) -> assume_typ ctx id ts
         | IntExtern (_, id, ts) -> assume_typ ctx id ts
+        | SimplModule (nm, bd) ->
+            let modctx = typecheck_toplevel_list ctx bd in
+            { ctx with modules = (nm, modctx) :: ctx.modules }
+        | Bind (id, mods, ed) ->
+            let typ = lookup_mod ctx mods ed in
+            assume_typ ctx id typ
       in
       typecheck_toplevel_list ctx' xs
 

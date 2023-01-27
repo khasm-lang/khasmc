@@ -64,6 +64,8 @@ rule token = parse
      | ")" {RPAREN}
      | "{" {LBRACE}
      | "}" {RBRACE}
+     | "[" {LBRACK}
+     | "]" {RBRACK}
      | "true" {TRUE}
      | "false" {FALSE}
      | "\\" {BSLASH}
@@ -98,7 +100,9 @@ rule token = parse
      | "while" 	{WHILE}
      | "for" 	{FOR}
      | "let"    {LET}
+     | "rec" 	{REC}
      | "in"     {IN}
+     | "end"    {END}
      | "true"   {TRUE}
      | "false"  {FALSE}
      | "fun"    {FUN}
@@ -109,8 +113,12 @@ rule token = parse
      | "forall" {FORALL}
      | "extern" {EXTERN}
      | "internal_extern" {INTEXTERN}
+     | "bind" {BIND}
      | "and" {LAND}
      | "or"  {LOR}
+     | "module" {MODULE}
+     | "struct" {STRUCT}
+     | "functor" {FUNCTOR}
      | "∀" {FORALL}
      | "λ" {FUN}
      | "Λ" {TFUN}

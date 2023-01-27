@@ -32,13 +32,16 @@ let rec normalise files =
       :: normalise xs
 
 let compile names asts =
-  let asts' = asts |> List.map Complexity.init_program in
+  let asts' =
+    asts |> List.map Complexity.init_program |> List.map2 Modules.wrap_in names
+  in
 
   (*typcheck stage*)
   asts' |> List.map Typelam_init.init_program |> typecheck_program_list;
   (*codegen stage*)
   asts' |> List.iter (fun x -> Debug.debug (show_program x));
-  asts |> Backend.codegen names
+
+  asts' |> Backend.codegen names
 
 let main_proc () =
   let () = Printexc.record_backtrace true in

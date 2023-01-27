@@ -1,33 +1,11 @@
-(*
-    Compile with:
-    dune exec khasmc test/stdlib.kha test/fib.kha
-*)
+(* Uses the stdlib. *)
 
-(* this is a hack to get recursion working *)
-let fib n : int -> int = 6
+let rec fib n : int -> int =
+    if Stdlib.(=) n 0 then n else 
+    if Stdlib.(=) n 1 then n else
+    Stdlib.(+) (fib (Stdlib.(-) n 1)) (fib (Stdlib.(-) n 2))
 
-
-let quad a b c 
-    : float -> float -> float -> float * float
+let main () : () -> ()
     =
-    let dis : float = ((b ** 2.0) + 4.0 * a * c) ** 0.5 in
-    let nb : float = 0.0 - b in
-    let ta: float = 2.0 * a in
-    (
-        ((nb + dis) / ta),
-        ((nb - dis) / ta)
-    )
-
-let fib n : int -> int =
-    if n = 0 then n
-    else if n = 1 then n
-    else (fib (n - 1) + fib (n - 2))
-
-let main () : () -> () = 
-    show "Fib 10:";
-    show $ fib 10;
-    show "Quadratic x^2 + 5x";
-    let q = (quad 1.0 5.0 0.0) in
-    show $ q.0;
-    show $ q.1;
-    show q
+    Stdlib.print
+    (fib 10)

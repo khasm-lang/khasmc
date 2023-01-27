@@ -15,7 +15,8 @@ let cmpget expr =
   | TypeLam (inf, _, _)
   | TupAccess (inf, _, _)
   | AnnotLet (inf, _, _, _, _)
-  | AnnotLam (inf, _, _, _) ->
+  | AnnotLam (inf, _, _, _)
+  | ModAccess (inf, _, _) ->
       inf.complex
 
 let init_base b =
@@ -60,14 +61,21 @@ let rec init_expr expr =
   | AnnotLam (inf, id, ts, e) ->
       let b = init_expr e in
       AnnotLam (cmpset inf (cmpget b), id, ts, b)
+  | ModAccess (inf, exp, id) ->
+      ModAccess (cmpset inf (List.length exp + 1), exp, id)
 
-let init_toplevel t =
+let rec init_toplevel t =
   match t with
   | Extern (_, _) -> t
   | IntExtern (_, _, _) -> t
+  | Bind (_, _, _) -> t
+  | TopAssignRec (a, (id, args, body)) ->
+      let body' = init_expr body in
+      TopAssignRec (a, (id, args, body'))
   | TopAssign (a, (id, args, body)) ->
       let body' = init_expr body in
       TopAssign (a, (id, args, body'))
+  | SimplModule (a, bd) -> SimplModule (a, List.map init_toplevel bd)
 
 let init_program p =
   match p with Program x -> Program (List.map init_toplevel x)

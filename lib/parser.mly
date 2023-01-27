@@ -35,6 +35,7 @@ let unOp x y = FCall(mkinfo(),
 %token AND
 %token DOT
 %token PERCENT
+
 %token AT
 %token HASH
 %token GT
@@ -49,21 +50,25 @@ let unOp x y = FCall(mkinfo(),
 %token THEN
 %token ELSE
 %token WHILE
+
 %token FOR
 %token RETURN
 %token IN
 %token LET
+%token REC
 %token COLON
 %token SEMICOLON
 %token EOF
 %token TS_TO
 %token LAM_TO
 %token IGNORE
+
 %token FORALL
 %token SIG
 %token TILDE
 %token FUN
 %token TFUN
+%token END
 
 %token<string> BANG_OP
 %token<string> TILDE_OP
@@ -89,6 +94,11 @@ let unOp x y = FCall(mkinfo(),
 %token<string> AND_OP
 %token<string> DOL_OP
 
+%token MODULE
+%token STRUCT
+%token FUNCTOR
+
+%token BIND
 
 %token LAND
 %token LOR
@@ -129,6 +139,8 @@ let unOp x y = FCall(mkinfo(),
 %left MUL_OP DIV_OP MOD_OP
 %right POW_OP
 %nonassoc TILDE_OP BANG_OP
+%left DOT
+
 
 %right KTYPE
 
@@ -222,7 +234,24 @@ parenexpr:
 
 fexpr:
   | LPAREN; e = expr; RPAREN {e}
+  | m = module_acc {m}
   | t = letid {Base(mkinfo(), Ident(mkinfo(), t))}
+
+mod_acc_h:
+  | DOT; m=letid {m}
+
+module_acc:
+  | i = T_IDENT; m = nonempty_list(mod_acc_h);
+    {
+      let rev = List.rev m in
+      match rev with
+      | [] -> failwith "impossible"
+      | [x] -> ModAccess(mkinfo(), [i], x)
+      | x :: xs ->
+	 let rest = i :: List.rev xs in
+	 ModAccess(mkinfo(), rest, x)
+    }
+
 
 expr:
   | e=expr1 {e}
@@ -230,6 +259,7 @@ expr:
 expr1:
   | b=BANG_OP; e=expr {unOp b e} %prec BANG_OP
   | t=TILDE_OP; e=expr {unOp t e} %prec TILDE_OP
+  | m=module_acc {m}
   | e=expr2 {e}
 
 expr2:
@@ -294,7 +324,7 @@ expr10:
       in
       LetIn(mkinfo(), t, tmp args e1, e2)
     }
-  | LET; i=letid; args=list(T_IDENT); COL_OP; t=typesig;
+  | LET; i=T_IDENT; args=list(T_IDENT); COL_OP; t=typesig;
     EQ_OP; e1=expr; IN; e2=expr;
     {
       let rec tmp x y =
@@ -322,7 +352,7 @@ expr10:
       TypeLam(mkinfo(), a, e)
     }
   | LPAREN; e=expr; RPAREN {e}
-  | e=expr; DOT; t=T_INT {TupAccess(mkinfo(), e, int_of_string t)}
+  | e=expr; LBRACK; t=T_INT; RBRACK {TupAccess(mkinfo(), e, int_of_string t)}
   | e=expr11 {e}
 
 expr11:
@@ -332,15 +362,24 @@ expr11:
 expr12:
   | b=base {Base(mkinfo(), b)}
 
+bind:
+  | BIND; l=letid; EQ_OP; e = T_IDENT; {Bind(l, [], e)}
+
+module_decl:
+  | MODULE; s=T_IDENT; EQ_OP;
+    STRUCT; b=nonempty_list(toplevel); END {SimplModule(s, b)}
 
 siglet:
-  | LET; b = letid; args=list(T_IDENT); col=COL_OP; t=typesig; eq=EQ_OP; e=expr
-{ TopAssign((b, t), (b, args, e)) }
+  | LET; b = T_IDENT; args=list(T_IDENT); col=COL_OP; t=typesig; eq=EQ_OP; e=expr
+    { TopAssign((b, t), (b, args, e)) }
+  | LET; REC; b=T_IDENT; args=list(T_IDENT); COL_OP; t=typesig; EQ_OP; e=expr {TopAssignRec((b, t), (b, args, e))}
 
 toplevel:
+  | a = module_decl {a}
   | a = siglet {a}
-  | EXTERN; a=letid; COL_OP; t=typesig; {Extern(a, t)}
-  | INTEXTERN; a=INTIDENT; EQ_OP; b=letid; COL_OP; t=typesig {IntExtern(a, b, t)} 
+  | a = bind {a}
+  | EXTERN; a=T_IDENT; COL_OP; t=typesig; {Extern(a, t)}
+  | INTEXTERN; a=INTIDENT; EQ_OP; b=T_IDENT; COL_OP; t=typesig {IntExtern(a, b, t)} 
 
 program:
   | a = nonempty_list(toplevel); EOF {Program(a)}
