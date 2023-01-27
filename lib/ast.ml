@@ -64,14 +64,18 @@ and kexpr =
   | TupAccess of info * kexpr * int
   | AnnotLet of info * kident * typesig * kexpr * kexpr
   | AnnotLam of info * kident * typesig * kexpr
+  | ModAccess of info * kident list * kident
 [@@deriving show { with_path = false }]
 
 and kass = kident * kident list * kexpr [@@deriving show { with_path = false }]
 
 and toplevel =
   | TopAssign of tdecl * kass
+  | TopAssignRec of tdecl * kass
   | Extern of kident * typesig
   | IntExtern of kident * kident * typesig
+  | SimplModule of kident * toplevel list
+  | Bind of kident * kident list * kident
 [@@deriving show { with_path = false }]
 
 and program = Program of toplevel list [@@deriving show { with_path = false }]

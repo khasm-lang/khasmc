@@ -1,0 +1,9 @@
+internal_extern `print = print : ∀a, a -> ()
+internal_extern `int_add = add : ∀a, a -> a -> a
+
+
+bind test = add
+
+bind (+) = test
+
+let main () : () -> () = print (1 + 2)
