@@ -6,23 +6,19 @@ open Exp
 open Ast
 open Hash
 
+let read_file file = BatFile.with_file_in file BatIO.read_all
+
 let print_error_position lexbuf =
   let pos = lexbuf.lex_curr_p in
   Fmt.str "Line: %d, Position: %d" pos.pos_lnum (pos.pos_cnum - pos.pos_bol + 1)
 
 let parseToAst filename =
-  let file = open_in filename in
-  let lexbuf = Lexing.from_channel file in
-  try
-    let result = Parser.program Lexer.token lexbuf in
-    close_in file;
-    result
-  with Parser.Error x ->
-    let error_msg =
-      Fmt.str "%s: syntax error in state %d@." (print_error_position lexbuf) x
-    in
-    print_endline ("Parse error: " ^ error_msg);
-    exit 1
+  let file = read_file filename in
+  let lexbuf = Lexing.from_string file in
+  Lexing.set_filename lexbuf filename;
+  let _ = Parser.test Lexer.token lexbuf file in
+  let result = Parser.program Lexer.token lexbuf file in
+  result
 
 let rec normalise files =
   match files with

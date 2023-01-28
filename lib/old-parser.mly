@@ -35,6 +35,7 @@ let unOp x y = FCall(mkinfo(),
 %token AND
 %token DOT
 %token PERCENT
+
 %token AT
 %token HASH
 %token GT
@@ -49,6 +50,7 @@ let unOp x y = FCall(mkinfo(),
 %token THEN
 %token ELSE
 %token WHILE
+
 %token FOR
 %token RETURN
 %token IN
@@ -60,6 +62,7 @@ let unOp x y = FCall(mkinfo(),
 %token TS_TO
 %token LAM_TO
 %token IGNORE
+
 %token FORALL
 %token SIG
 %token TILDE
@@ -69,15 +72,21 @@ let unOp x y = FCall(mkinfo(),
 
 %token<string> BANG_OP
 %token<string> TILDE_OP
+
 %token<string> POW_OP
+
 %token<string> MUL_OP
 %token<string> DIV_OP
 %token<string> MOD_OP
+
 %token<string> ADD_OP
 %token<string> SUB_OP
+
 %token<string> COL_OP
+
 %token<string> CAR_OP
 %token<string> AT_OP
+
 %token<string> EQ_OP
 %token<string> LT_OP
 %token<string> GT_OP
@@ -88,12 +97,16 @@ let unOp x y = FCall(mkinfo(),
 %token MODULE
 %token STRUCT
 %token FUNCTOR
+
 %token BIND
+
 %token LAND
 %token LOR
+
 %token NOMANGLE
 %token INLINE
 %token EXTERN
+
 %token LBRACE
 %token RBRACE
 %token LBRACK

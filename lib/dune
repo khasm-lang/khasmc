@@ -15,7 +15,3 @@
   (-g -annot)))
 
 (ocamllex lexer)
-
-(menhir
- (modules parser)
- (flags --exn-carries-state))
