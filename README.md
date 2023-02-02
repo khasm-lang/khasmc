@@ -40,3 +40,9 @@ Khasm, unlike OCaml, does not have toplevel execution, so the `main` function is
 - [ ] Typeclasses
 - [ ] Typeclass proving
 - [ ] Parser rewrite into recdec - maybe do earlier?
+
+# Notes:
+
+- Khasm is currently moving away from an independent backend, previously called kavern.
+- Khasm is currently undergoing a parser rewrite, in the #parser branch.
+- Khasm is in extreme beta. Please do not use Khasm for any major project or programs.
