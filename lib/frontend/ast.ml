@@ -37,8 +37,6 @@ let getid () =
 
 let mkinfo () = { id = getid (); complex = -1 }
 
-open Fident
-
 type kident = string [@@deriving show { with_path = false }]
 type tdecl = kident * typesig [@@deriving show { with_path = false }]
 

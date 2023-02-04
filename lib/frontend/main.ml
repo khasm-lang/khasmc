@@ -16,7 +16,6 @@ let parseToAst filename =
   let file = read_file filename in
   let lexbuf = Lexing.from_string file in
   Lexing.set_filename lexbuf filename;
-  let _ = Parser.test Lexer.token lexbuf file in
   let result = Parser.program Lexer.token lexbuf file in
   result
 
