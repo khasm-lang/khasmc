@@ -18,7 +18,7 @@ let rec pshow_typesig ts =
   | TSBottom -> "()"
   | TSBase x -> x
   | TSMeta x -> x
-  | TSApp (x, y) -> brac (pshow_typesig x) ^ y
+  | TSApp (x, y) -> brac (pshow_typesig x) ^ " " ^ y
   | TSMap (x, y) -> brac (pshow_typesig x) ^ " -> " ^ brac (pshow_typesig y)
   | TSForall (x, y) -> "∀" ^ x ^ ", " ^ pshow_typesig y
   | TSTuple x -> brac (by_sep (List.map pshow_typesig x) ", ")
