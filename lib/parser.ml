@@ -65,6 +65,7 @@ type token =
   | PIP_OP of string
   | AND_OP of string
   | DOL_OP of string
+  | BINARY_OP
   | MODULE
   | STRUCT
   | FUNCTOR
@@ -176,6 +177,31 @@ let nonempty l exp state =
 
 let rec nop () = ()
 
+and get_ident state =
+  match pop state with
+  | T_IDENT s -> s
+  | x -> error state x [ T_IDENT "example" ]
+
+and get_binop state =
+  match pop state with
+  | POW_OP s
+  | MUL_OP s
+  | DIV_OP s
+  | MOD_OP s
+  | ADD_OP s
+  | SUB_OP s
+  | COL_OP s
+  | CAR_OP s
+  | AT_OP s
+  | EQ_OP s
+  | LT_OP s
+  | GT_OP s
+  | PIP_OP s
+  | AND_OP s
+  | DOL_OP s ->
+      s
+  | x -> error state x [ BINARY_OP ]
+
 and parse_type_tuple state =
   let lhs = parse_type state in
   match pop state with
@@ -183,16 +209,38 @@ and parse_type_tuple state =
   | RPAREN -> lhs :: []
   | x -> error state x [ COMMA; RPAREN ]
 
-and parse_type_helper state =
+and parse_type_mulop state =
+  let lhs = parse_type state in
   match pop state with
-  | T_IDENT s -> if s = "()" then TSBottom else TSBase s
-  | LPAREN -> (
-      let lhs = parse_type state in
-      match pop state with
-      | RPAREN -> lhs
-      | COMMA -> TSTuple (lhs :: parse_type_tuple state)
-      | x -> error state x [ RPAREN; COMMA ])
-  | x -> error state x [ T_IDENT "example"; LPAREN ]
+  | MUL_OP "*" -> lhs :: parse_type_tuple state
+  | RPAREN -> lhs :: []
+  | x -> error state x [ MUL_OP "*"; RPAREN ]
+
+and parse_type_tuple_2 state =
+  let lhs = parse_type state in
+  match pop state with
+  | COMMA -> lhs :: parse_type_tuple state
+  | MUL_OP "*" -> lhs :: parse_type_mulop state
+  | RPAREN -> lhs :: []
+  | x -> error state x [ COMMA; RPAREN; MUL_OP "*" ]
+
+and parse_type_helper state =
+  let first =
+    match pop state with
+    | T_IDENT s -> if s = "()" then TSBottom else TSBase s
+    | LPAREN -> (
+        let lhs = parse_type state in
+        match pop state with
+        | RPAREN -> lhs
+        | COMMA | MUL_OP "*" -> TSTuple (lhs :: parse_type_tuple_2 state)
+        | x -> error state x [ RPAREN; COMMA; MUL_OP "*" ])
+    | x -> error state x [ T_IDENT "example"; LPAREN ]
+  in
+  match peek state 1 with
+  | T_IDENT s ->
+      toss state;
+      TSApp (first, s)
+  | _ -> first
 
 and parse_type_pratt state =
   let lhs = parse_type_helper state in
@@ -218,9 +266,61 @@ and parse_type state =
       help idents
   | _ -> parse_type_pratt state
 
+and parse_expr state = raise @@ Todo "pratt parserrrrrrrrrr"
+
+and parse_let state =
+  let names = id_list state in
+  let id, args =
+    match names with
+    | x :: xs -> (x, xs)
+    | [] -> error state (pop state) [ T_IDENT "example" ]
+  in
+  let ts =
+    match pop state with
+    | COL_OP ":" -> parse_type state
+    | x -> error state x [ COL_OP ":" ]
+  in
+  let expr =
+    match pop state with
+    | EQ_OP "=" -> parse_expr state
+    | x -> error state x [ EQ_OP "=" ]
+  in
+  ((id, ts), (id, args, expr))
+
+and parse_let_norm state =
+  match peek state 1 with
+  | REC ->
+      toss state;
+      let (id, ts), (_id, args, expr) = parse_let state in
+      TopAssignRec ((id, ts), (id, args, expr))
+  | _ ->
+      let (id, ts), (_id, args, expr) = parse_let state in
+      TopAssign ((id, ts), (id, args, expr))
+
+and parse_module state =
+  let name =
+    match pop state with
+    | T_IDENT s -> s
+    | x -> error state x [ T_IDENT "example" ]
+  in
+  (match pop state with
+  | EQ_OP "=" -> toss state
+  | x -> error state x [ EQ_OP "=" ]);
+  (match pop state with STRUCT -> toss state | x -> error state x [ STRUCT ]);
+  let top = parse_toplevel_list state in
+  SimplModule (name, top)
+
 and parse_toplevel_list state =
-  let tok = pop state in
-  []
+  let first =
+    match pop state with
+    | LET -> Some (parse_let_norm state)
+    | MODULE -> Some (parse_module state)
+    | BIND -> Some (parse_bind state)
+    | EXTERN -> Some (parse_extern state)
+    | INTEXTERN -> Some (parse_intextern state)
+    | _ -> None
+  in
+  match first with Some x -> x :: parse_toplevel_list state | None -> []
 
 and program token lexbuf file =
   let state = new_state token lexbuf file in
