@@ -331,12 +331,36 @@ and parse_base state =
         | COMMA -> Base (mkinfo (), Tuple (e' :: parse_tuple state))
         | RPAREN -> e'
         | x -> error state x [ COMMA; RPAREN ])
-    | T_IDENT s -> Base (mkinfo (), Ident (mkinfo (), s))
+    | T_IDENT s -> (
+        match peek state 1 with
+        | DOT -> (
+            let rec helper state =
+              let id = get_ident state in
+              match peek state 1 with
+              | DOT ->
+                  toss state;
+                  id :: helper state
+              | _ -> []
+            in
+            toss state;
+            let l = s :: helper state in
+            let rev = List.rev l in
+            match rev with
+            | x :: xs -> ModAccess (mkinfo (), List.rev xs, x)
+            | [] -> raise @@ Impossible "parse_base")
+        | _ -> Base (mkinfo (), Ident (mkinfo (), s)))
     | T_INT s -> Base (mkinfo (), Int s)
     | T_FLOAT s -> Base (mkinfo (), Float s)
     | T_STRING s -> Base (mkinfo (), Str s)
     | TRUE -> Base (mkinfo (), True)
     | FALSE -> Base (mkinfo (), False)
+    | IF ->
+        let cond = parse_expr state in
+        expect state THEN;
+        let e1 = parse_expr state in
+        expect state ELSE;
+        let e2 = parse_expr state in
+        IfElse (mkinfo (), cond, e1, e2)
     | x ->
         error state x
           [
@@ -350,7 +374,14 @@ and parse_base state =
             FALSE;
           ]
   in
-  b
+
+  match peek state 1 with
+  | DOT -> (
+      toss state;
+      match pop state with
+      | T_INT s -> TupAccess (mkinfo (), b, int_of_string s)
+      | x -> error state x [ T_INT "1" ])
+  | _ -> b
 
 and parse_expr_h state res prec =
   let op = get_binop_peek state in

@@ -16,7 +16,6 @@
     }
   let incr_by lexbuf =
     let len = String.length (Lexing.lexeme lexbuf) in
-    print_endline (string_of_int len);
     let pos = lexbuf.lex_curr_p in
     lexbuf.lex_curr_p <-
     {

@@ -319,8 +319,9 @@ let rec apply_unify ctx tp =
 let rec infer_base ctx tm =
   let typ =
     match tm with
-    | Ident (_, i) ->
+    | Ident (inf, i) ->
         let typ = lookup ctx i in
+        Hash.add_typ inf.id typ;
         typ
     | Int _ -> TSBase "int"
     | Float _ -> TSBase "float"
@@ -420,6 +421,7 @@ and infer ctx tm =
   let inf = fst res in
   let res = snd res in
   let res = lift_ts res in
+  Hash.add_typ inf.id res;
   debug "\n\nINFER RES:";
   debug (show_kexpr tm);
   debug ":";
@@ -455,7 +457,11 @@ and check ctx tm tp =
         ignore (unify (empty_unify_ctx ()) actual exp);
         None
   in
-  debug "\n)\n CHECK END"
+  match inf with
+  | Some s -> Hash.add_typ s.id tp
+  | None ->
+      ();
+      debug "\n)\n CHECK END"
 
 (*
             The purpose of this is to transform arguments into
