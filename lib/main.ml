@@ -16,21 +16,49 @@ let parseToAst filename =
   let result = Parser.program Lexer.token lexbuf file in
   result
 
+
+let dast1 = ref false
+let dast2 = ref false
+let ins = [] ref
+let outs = "" ref
+
+let usage = "khasmc [-dump_ast1] [-dump_ast2] <file1> [<file2>] ... -o output"
+
+type cliargs = {
+    dump_ast1: bool;
+    dump_ast2: bool;
+    files: string list;
+    out: string;
+  }
+
+let speclist =
+  [
+    ("-dump_ast1", Arg.set dast1, "Dump first AST");
+    ("-dump_ast2", Arg.set dast2, "Dump second AST");
+    ("-o", Arg.set_string outs, "Output file");
+  ]
+let generic s = ins := s :: !ins
+
+let parse_args () = 
+  Arg.parse speclist generic usage;
+  {
+    dump_ast1 = !dast1;
+    dump_ast2 = !dast2;
+    files: !ins;
+    out: !outs;
+  }
+
+
 let main_proc () =
-  let () = Printexc.record_backtrace true in
-  let argc = Array.length Sys.argv in
-  if argc < 2 then (
-    print_endline "USAGE: ./khasmc <file>";
-    exit 1);
-  print_endline "";
+  Printexc.record_backtrace true;
+  let args = parse_args () in
   let succ =
     try
-      let list = Array.to_list Sys.argv in
-      let files = List.tl list in
+      let files = args.files in
       (* make this better *)
       let programs = List.map parseToAst files in
       let names = normalise files in
-      let res = compile names programs in
+      let res = compile names programs args in
       print_endline res;
       "Success"
     with
