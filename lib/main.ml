@@ -6,6 +6,7 @@ open Exp
 open Ast
 open Hash
 open Process
+open Args
 
 let read_file file = BatFile.with_file_in file BatIO.read_all
 
@@ -16,42 +17,21 @@ let parseToAst filename =
   let result = Parser.program Lexer.token lexbuf file in
   result
 
-
-let dast1 = ref false
-let dast2 = ref false
-let ins = [] ref
-let outs = "" ref
-
-let usage = "khasmc [-dump_ast1] [-dump_ast2] <file1> [<file2>] ... -o output"
-
-type cliargs = {
-    dump_ast1: bool;
-    dump_ast2: bool;
-    files: string list;
-    out: string;
-  }
-
 let speclist =
   [
-    ("-dump_ast1", Arg.set dast1, "Dump first AST");
-    ("-dump_ast2", Arg.set dast2, "Dump second AST");
-    ("-o", Arg.set_string outs, "Output file");
+    ("--dump-ast1", Arg.Set dast1, "Dump first AST");
+    ("--dump-ast2", Arg.Set dast2, "Dump second AST");
+    ("-o", Arg.Set_string outs, "Output file");
   ]
-let generic s = ins := s :: !ins
 
-let parse_args () = 
+let parse_args () =
   Arg.parse speclist generic usage;
-  {
-    dump_ast1 = !dast1;
-    dump_ast2 = !dast2;
-    files: !ins;
-    out: !outs;
-  }
-
+  { dump_ast1 = !dast1; dump_ast2 = !dast2; files = !ins; out = !outs }
 
 let main_proc () =
   Printexc.record_backtrace true;
   let args = parse_args () in
+  print_endline (show_cliargs args);
   let succ =
     try
       let files = args.files in

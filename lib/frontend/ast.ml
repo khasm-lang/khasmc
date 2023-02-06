@@ -77,3 +77,42 @@ and toplevel =
 [@@deriving show { with_path = false }]
 
 and program = Program of toplevel list [@@deriving show { with_path = false }]
+
+let base_subs i b x y =
+  match b with
+  | Ident (i', b') -> if b' = x then Base (i, Ident (i', y)) else Base (i, b)
+  | _ -> Base (i, b)
+
+let rec esubs expr x y =
+  match expr with
+  | Base (i, b) -> base_subs i b x y
+  | FCall (i, f, x') -> FCall (i, esubs f x y, esubs x' x y)
+  | LetIn (i, id, e1, e2) ->
+      if id <> x then LetIn (i, id, esubs e1 x y, esubs e2 x y) else expr
+  | AnnotLet (i, id, ts, e1, e2) ->
+      if id <> x then AnnotLet (i, id, ts, esubs e1 x y, esubs e2 x y) else expr
+  | IfElse (i, c, e1, e2) -> IfElse (i, esubs c x y, esubs e1 x y, esubs e2 x y)
+  | Join (info, e1, e2) -> Join (info, esubs e1 x y, esubs e2 x y)
+  | Lam (i, x', e) -> if x' <> x then Lam (i, x', esubs e x y) else expr
+  | TypeLam (i, t, e) -> TypeLam (i, t, esubs e x y)
+  | TupAccess (i, e, i') -> TupAccess (i, esubs e x y, i')
+  | AnnotLam (i, x', ts, e) ->
+      if x' <> x then AnnotLam (i, x', ts, esubs e x y) else expr
+  | ModAccess _ -> expr
+  | Inst _ -> expr
+
+let getinfo expr =
+  match expr with
+  | Base (inf, _)
+  | FCall (inf, _, _)
+  | LetIn (inf, _, _, _)
+  | IfElse (inf, _, _, _)
+  | Join (inf, _, _)
+  | Inst (inf, _, _)
+  | Lam (inf, _, _)
+  | TypeLam (inf, _, _)
+  | TupAccess (inf, _, _)
+  | AnnotLet (inf, _, _, _, _)
+  | AnnotLam (inf, _, _, _)
+  | ModAccess (inf, _, _) ->
+      inf

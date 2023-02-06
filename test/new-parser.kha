@@ -1,3 +1,5 @@
-let y : int = 1
+let y : int = 10
 
-let x : int = y
+let x : int =
+    let y = 10 in
+    y

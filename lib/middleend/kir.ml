@@ -9,6 +9,15 @@ let pp_transtable runtime table =
       Ppx_deriving_runtime.Format.fprintf runtime "%s\n" y)
     !table
 
+let print_transtable table =
+  print_endline "Transtable:";
+  Hashtbl.iter
+    (fun x y ->
+      Printf.printf "%s: " (string_of_int x);
+      Printf.printf "%s\n" y)
+    !table;
+  print_endline "Done with transtable.\n"
+
 let empty_transtable () = ref @@ Hashtbl.create ~random:true 10
 let rint = ref 0
 
@@ -37,7 +46,7 @@ type kirexpr =
   | Call of kirtype * kirexpr * kirexpr
   | Seq of kirtype * kirexpr * kirexpr
   | TupAcc of kirtype * kirexpr * int
-  | Lam of kirtype * kirexpr
+  | Lam of kirtype * kirval * kirexpr
   | IfElse of kirtype * kirexpr * kirexpr * kirexpr
 [@@deriving show { with_path = false }]
 

@@ -361,6 +361,15 @@ and parse_base state =
         expect state ELSE;
         let e2 = parse_expr state in
         IfElse (mkinfo (), cond, e1, e2)
+    | LET ->
+        let var = get_ident state in
+        (match pop state with
+        | EQ_OP "=" -> ()
+        | x -> error state x [ EQ_OP "=" ]);
+        let first = parse_expr state in
+        expect state IN;
+        let second = parse_expr state in
+        LetIn (mkinfo (), var, first, second)
     | x ->
         error state x
           [
