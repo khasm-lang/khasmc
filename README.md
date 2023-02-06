@@ -2,7 +2,7 @@
 
 The compiler for the khasm programming lanugage.
 
-[![](https://tokei.rs/b1/github/XAMPPRocky/tokei)](https://github.com/khasm-lang/khasmc).
+[![](https://tokei.rs/b1/github/khasm-lang/khasmc)](https://github.com/khasm-lang/khasmc).
 
 
 ## What is khasm?
