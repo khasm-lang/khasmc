@@ -6,17 +6,28 @@ let rec normalise files =
      |> Batteries.String.capitalize)
       :: normalise xs
 
-let compile names asts =
+let compile names asts args =
   let asts' =
     asts |> List.map Complexity.init_program |> List.map2 Modules.wrap_in names
   in
-
+  
+  if args.dump_ast1 then
+    asts' |> List.iter (fun x -> Debug.debug (Ast.show_program x))
+  else
+    ();
+  
   (*typcheck stage*)
   asts'
   |> List.map Typelam_init.init_program
   |> Typecheck.typecheck_program_list;
+  
   (*codegen stage*)
-  asts' |> List.iter (fun x -> Debug.debug (Ast.show_program x));
-  asts' |> Translateftm.front_to_middle |> fun x ->
-  print_endline (Kir.show_kirprog x);
+  
+  let kir = asts' |> Translateftm.front_to_middle in
+  
+  if args.dump_ast2 then
+    print_endline (Kir.show_kirprog kir)
+  else
+    ();
+    
   "done"
