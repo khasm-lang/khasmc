@@ -40,7 +40,7 @@ let rec ftm_toplevel table top prefix =
   match top with
   | Ast.TopAssign ((id, ts), (_, args, body)) ->
       let body' = Typecheck.conv_ts_args_body_to_typelams ts args body in
-      let id = Kir.add_to_tbl id table in
+      let id = Kir.add_to_tbl (prefix ^ id) table in
       ([ Kir.Let (ts, id, ftm_expr (Kir.empty_transtable ()) body') ], table)
   | Ast.SimplModule (id, top') ->
       fold_tup_flat (fun x y -> ftm_toplevel x y (id ^ ".")) table top'
