@@ -30,17 +30,16 @@ Khasm, unlike OCaml, does not have toplevel execution, so the `main` function is
 
 ## The TODO List:
 
-- [ ] Modules
+- [X] Modules (Half done)
 - [ ] ADTs and pattern matching
 - [ ] Stdlib work
-- [ ] Backend rewrite - memoization 
+- [X] Backend rewrite - In progress on #middleend 
 - [ ] Exceptions
 - [ ] Records
 - [ ] Compiler options
 - [ ] Typeclasses
 - [ ] Typeclass proving
-- [ ] Parser rewrite into recdec - maybe do earlier?
-
+- [X] Parser rewrite into recdec
 # Notes:
 
 - Khasm is currently moving away from an independent backend, previously called kavern.
