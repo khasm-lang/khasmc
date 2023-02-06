@@ -2,9 +2,6 @@
 
 The compiler for the khasm programming lanugage.
 
-[![](https://tokei.rs/b1/github/khasm-lang/khasmc)](https://github.com/khasm-lang/khasmc).
-
-
 ## What is khasm?
 
 Khasm is an experimental programming language based on the System-F type system, with the goal of being rather polymorphic, and rather fast, utilising memoization.
