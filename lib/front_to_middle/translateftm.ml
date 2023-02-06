@@ -23,34 +23,16 @@ let rec fold_tup f s l =
       (c :: a, d)
 
 let rec ftm_base (tbl : (int, string) Hashtbl.t ref) base =
-  match base with
-  | Ast.Ident (info, str) ->
-      let id =
-        match Kir.get_from_tbl str tbl with
-        | Some s -> s
-        | None -> Kir.add_to_tbl str tbl
-      in
-      Kir.Val (Hash.get_typ info.id, id)
-  | Ast.Int s -> Kir.Int s
+  raise @@ Todo "ftm_base"
 
-and ftm_expr tbl expr =
-  match expr with Ast.Base (_, kbase) -> ftm_base tbl kbase
+and ftm_expr tbl expr = raise @@ Todo "ftm_expr"
 
-let rec ftm_toplevel table top prefix =
-  match top with
-  | Ast.TopAssign ((id, ts), (_, args, body)) ->
-      let body' = Typecheck.conv_ts_args_body_to_typelams ts args body in
-      let id = Kir.add_to_tbl (prefix ^ id) table in
-      ([ Kir.Let (ts, id, ftm_expr (Kir.empty_transtable ()) body') ], table)
-  | Ast.SimplModule (id, top') ->
-      fold_tup_flat (fun x y -> ftm_toplevel x y (id ^ ".")) table top'
-  | x ->
-      print_endline (Ast.show_toplevel x);
-      raise @@ Impossible "huh"
+let rec ftm_toplevel table top prefix = raise @@ Todo "ftm_toplevel"
 
 let rec ftm table prog =
   match prog with
-  | Ast.Program tl -> fold_tup_flat (fun x y -> ftm_toplevel x y "") table tl
+  | Ast.Program tl ->
+      fold_tup_flat (fun x y -> ftm_toplevel x y "") table (List.rev tl)
 
 let front_to_middle proglist =
   let a, b = fold_tup ftm (Kir.empty_transtable ()) proglist in
