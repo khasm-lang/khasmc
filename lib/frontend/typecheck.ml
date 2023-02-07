@@ -16,11 +16,13 @@ let empty_typ_ctx () =
 let assume_typ ctx id ts =
   { ctx with binds = (id, make_uniq_ts ts None) :: ctx.binds }
 
+(** Looks up a value in a context *)
 let lookup ctx x =
   match List.find_opt (fun y -> fst y = x) ctx.binds with
   | None -> raise (NotFound (x ^ " not found in ctx"))
   | Some x -> snd x
 
+(** Looks up a value, with modules *)
 let rec lookup_mod ctx mods var =
   match mods with
   | [] -> lookup ctx var
@@ -29,6 +31,7 @@ let rec lookup_mod ctx mods var =
       | None -> raise (NotFound ("module " ^ x ^ " not found in ctx"))
       | Some y -> lookup_mod y xs var)
 
+(** Checks whether a variable is free in a context *)
 let rec occurs_ts s ts =
   (* checks whether a variable s is free in ts *)
   match ts with
@@ -71,6 +74,7 @@ let rec lift_ts_h t =
       let hm = List.map lift_ts_h t in
       (TSTuple (List.map fst hm), List.mem true (List.map snd hm))
 
+(** lifts types like ∀a, a -> (∀b, b) to ∀a b, a -> b *)
 let rec lift_ts ts =
   (* lifts types like
      ∀a, a -> (∀b, b)
@@ -84,6 +88,7 @@ let rec lift_ts ts =
   *)
   match lift_ts_h ts with t, false -> t | t, true -> lift_ts t
 
+(** Substitutes forall vars within a type *)
 let rec subs typ nm newt =
   match typ with
   | TSBottom -> TSBottom
@@ -101,11 +106,13 @@ type unify_ctx = { metas : (string * typesig) list }
 let empty_unify_ctx () = { metas = [] }
 let get_meta_opt ctx m = List.find_opt (fun x -> fst x = m) ctx.metas
 
+(** Looks up meta variables in a context *)
 let lookup_meta ctx m =
   match List.find_opt (fun x -> fst x = m) ctx.metas with
   | Some x -> Some (snd x)
   | None -> None
 
+(** Instantiates foralls with metavars *)
 let rec inst_meta tp orig meta =
   match tp with
   | TSBottom -> TSBottom
@@ -117,6 +124,7 @@ let rec inst_meta tp orig meta =
       if f = orig then tp else TSForall (f, inst_meta x orig meta)
   | TSTuple t -> TSTuple (List.map (fun x -> inst_meta x orig meta) t)
 
+(** Instantiate all toplevel foralls *)
 let rec inst_all ts =
   match ts with
   | TSForall (fv, bd) ->
@@ -130,10 +138,12 @@ let rec inst_all ts =
   | TSMeta x -> TSMeta x
   | TSTuple t -> TSTuple (List.map inst_all t)
 
+(** Unique list tools *)
 let uniq_cons x xs = if List.mem x xs then xs else x :: xs
 let mk_uniq_list xs = List.fold_right uniq_cons xs []
 let combine_uniq x y = mk_uniq_list (x @ y)
 
+(** Combines two context, ensuring no conflicts *)
 let combine ctx1 ctx2 =
   let rec helper a b =
     match a with
@@ -154,6 +164,7 @@ let combine ctx1 ctx2 =
   in
   { metas = helper ctx1.metas ctx2.metas }
 
+(** Unifies a list *)
 let rec unify_list ctx l1 l2 =
   match (l1, l2) with
   | [], [] -> (ctx, [])
@@ -218,6 +229,7 @@ return RHS(f) : float
   returns a tuple of env, typ 
  *)
 
+(** Unifies two types, solving all needed metavars. *) 
 and unify ?loop ctx l r =
   (*
     unification takes something with metavariables, eg
@@ -306,6 +318,7 @@ and unify ?loop ctx l r =
   debug "\n)\n";
   res
 
+(** Applies a unify_ctx to a type *)
 let rec apply_unify ctx tp =
   match tp with
   | TSBottom -> TSBottom
@@ -316,6 +329,7 @@ let rec apply_unify ctx tp =
   | TSForall (f, x) -> TSForall (f, apply_unify ctx x)
   | TSTuple t -> TSTuple (List.map (apply_unify ctx) t)
 
+(** Infers the type of a base *)
 let rec infer_base ctx tm =
   let typ =
     match tm with
@@ -331,6 +345,7 @@ let rec infer_base ctx tm =
   in
   typ
 
+(** Infers the type of a term *)
 and infer ctx tm =
   (*
     infer the type of a term
@@ -429,6 +444,7 @@ and infer ctx tm =
   debug "\n)\n";
   res
 
+(** Checks a type against a term *)
 and check ctx tm tp =
   (*
     check a type against a term
@@ -463,7 +479,28 @@ and check ctx tm tp =
       ();
       debug "\n)\n CHECK END"
 
-(*
+(** See conv_args_body_to_typelams *)
+let rec forall_to_typelam ts args body =
+  match (ts, args) with
+  | TSForall (fv, bd), _ :: xs ->
+      let tmp = forall_to_typelam bd xs body in
+      (fst tmp, TypeLam (dummy_info (), fv, snd tmp))
+  | _ -> (lift_ts ts, body)
+
+(** See conv_args_body_to_typelams *)
+let rec add_args ts args body =
+  match (ts, args) with
+  | TSMap (a, b), x :: xs -> AnnotLam (mkinfo (), x, a, add_args b xs body)
+  | _, [ x ] -> AnnotLam (mkinfo (), x, ts, body)
+  | _, [] -> body
+  | _, _ ->
+      raise
+        (TypeErr
+           ("Cannot match args: " ^ String.concat ", " args ^ " with typesig "
+          ^ pshow_typesig ts))
+          
+          
+(**
             The purpose of this is to transform arguments into
             typelams and annotlams so that you can do
             sig ∀a b, a -> (a -> b) -> b in
@@ -480,30 +517,13 @@ and check ctx tm tp =
             f x
             
            *)
-let rec forall_to_typelam ts args body =
-  match (ts, args) with
-  | TSForall (fv, bd), _ :: xs ->
-      let tmp = forall_to_typelam bd xs body in
-      (fst tmp, TypeLam (dummy_info (), fv, snd tmp))
-  | _ -> (lift_ts ts, body)
-
-let rec add_args ts args body =
-  match (ts, args) with
-  | TSMap (a, b), x :: xs -> AnnotLam (mkinfo (), x, a, add_args b xs body)
-  | _, [ x ] -> AnnotLam (mkinfo (), x, ts, body)
-  | _, [] -> body
-  | _, _ ->
-      raise
-        (TypeErr
-           ("Cannot match args: " ^ String.concat ", " args ^ " with typesig "
-          ^ pshow_typesig ts))
-
 let conv_ts_args_body_to_typelams ts args body =
   let fixed = forall_to_typelam ts args body in
   let args_fixed = add_args (fst fixed) args body in
   let fixed_2 = forall_to_typelam ts args args_fixed in
   snd fixed_2
 
+(** Typecheck a list of toplevel elems *)
 let rec typecheck_toplevel_list ctx tl =
   match tl with
   | [] -> ctx
@@ -517,9 +537,9 @@ let rec typecheck_toplevel_list ctx tl =
         | TopAssignRec ((id, ts), (_id, _args, body)) ->
             let fixed = body in
             (*
-            to check a recursive,            
-            we assume the type is correct within the expr first
-          *)
+              to check a recursive,            
+              we assume the type is correct within the expr first
+            *)
             let ctx' = assume_typ ctx id ts in
             check ctx' fixed ts;
             ctx'
@@ -528,18 +548,24 @@ let rec typecheck_toplevel_list ctx tl =
         *)
         | Extern (id, ts) -> assume_typ ctx id ts
         | IntExtern (_, id, ts) -> assume_typ ctx id ts
+        (*
+          Add the module to a new ctx that's part of ctx.modules
+        *)
         | SimplModule (nm, bd) ->
             let modctx = typecheck_toplevel_list ctx bd in
             { ctx with modules = (nm, modctx) :: ctx.modules }
+         (* assume typ *)
         | Bind (id, mods, ed) ->
             let typ = lookup_mod ctx mods ed in
             assume_typ ctx id typ
       in
       typecheck_toplevel_list ctx' xs
 
+(** Typecheck program *)
 let typecheck_program p ctx =
   match p with Program tl -> typecheck_toplevel_list ctx tl
 
+(** Typecheck program list *)
 let rec typecheck_program_list_h pl ctx =
   let ctx' = match ctx with Some x -> x | None -> empty_typ_ctx () in
   match pl with
@@ -548,4 +574,5 @@ let rec typecheck_program_list_h pl ctx =
       let ctx'' = typecheck_program x ctx' in
       typecheck_program_list_h xs (Some ctx'')
 
+(** Helper *)
 let typecheck_program_list pl = typecheck_program_list_h pl None
