@@ -133,7 +133,7 @@ module ParserState = struct
     let offset = !(!state.lex_buf).lex_curr_p in
     let split = String.split_on_char '\n' !state.file in
     parse_error split offset actual follow_set;
-    exit 1
+    raise @@ ParseError
 
   let pop state =
     match !(!state.buffer) with
@@ -259,7 +259,7 @@ and parse_type_helper state =
         | RPAREN -> lhs
         | COMMA | MUL_OP "*" -> TSTuple (lhs :: parse_type_tuple_2 state)
         | x -> error state x [ RPAREN; COMMA; MUL_OP "*" ])
-    | x -> error state x [ T_IDENT "example"; LPAREN ]
+    | x -> error state x [ T_IDENT "example1"; LPAREN ]
   in
   match peek state 1 with
   | T_IDENT s ->
@@ -280,7 +280,7 @@ and parse_type state =
   match peek state 1 with
   | FORALL ->
       toss state;
-      let idents = nonempty (id_list state) (T_IDENT "example") state in
+      let idents = nonempty (id_list state) (T_IDENT "example2") state in
       expect state COMMA;
       let rec help idents =
         match idents with
@@ -319,6 +319,12 @@ and parse_tuple state =
   | RPAREN -> b :: []
   | x -> error state x [ COMMA; RPAREN ]
 
+and parse_funccall_try b state =
+  match peek state 1 with
+  | LPAREN | T_IDENT _ | T_INT _ | T_FLOAT _ | T_STRING _ ->
+      FCall (mkinfo (), b, parse_base state)
+  | _ -> b
+
 and parse_base state =
   let b =
     match pop state with
@@ -326,11 +332,14 @@ and parse_base state =
         FCall
           (mkinfo (), Base (mkinfo (), Ident (mkinfo (), s)), parse_base state)
     | LPAREN -> (
-        let e' = parse_expr state in
-        match pop state with
-        | COMMA -> Base (mkinfo (), Tuple (e' :: parse_tuple state))
-        | RPAREN -> e'
-        | x -> error state x [ COMMA; RPAREN ])
+        match peek state 1 with
+        | RPAREN -> Base (mkinfo (), Ident (mkinfo (), "()"))
+        | _ -> (
+            let e' = parse_expr state in
+            match pop state with
+            | COMMA -> Base (mkinfo (), Tuple (e' :: parse_tuple state))
+            | RPAREN -> e'
+            | x -> error state x [ COMMA; RPAREN ]))
     | T_IDENT s -> (
         match peek state 1 with
         | DOT -> (
@@ -354,22 +363,6 @@ and parse_base state =
     | T_STRING s -> Base (mkinfo (), Str s)
     | TRUE -> Base (mkinfo (), True)
     | FALSE -> Base (mkinfo (), False)
-    | IF ->
-        let cond = parse_expr state in
-        expect state THEN;
-        let e1 = parse_expr state in
-        expect state ELSE;
-        let e2 = parse_expr state in
-        IfElse (mkinfo (), cond, e1, e2)
-    | LET ->
-        let var = get_ident state in
-        (match pop state with
-        | EQ_OP "=" -> ()
-        | x -> error state x [ EQ_OP "=" ]);
-        let first = parse_expr state in
-        expect state IN;
-        let second = parse_expr state in
-        LetIn (mkinfo (), var, first, second)
     | x ->
         error state x
           [
@@ -381,6 +374,8 @@ and parse_base state =
             T_FLOAT "1.0";
             TRUE;
             FALSE;
+            IF;
+            LET;
           ]
   in
 
@@ -390,7 +385,29 @@ and parse_base state =
       match pop state with
       | T_INT s -> TupAccess (mkinfo (), b, int_of_string s)
       | x -> error state x [ T_INT "1" ])
-  | _ -> b
+  | _ -> parse_funccall_try b state
+
+and parse_compound state =
+  match peek state 1 with
+  | IF ->
+      toss state;
+      let cond = parse_expr state in
+      expect state THEN;
+      let e1 = parse_expr state in
+      expect state ELSE;
+      let e2 = parse_expr state in
+      IfElse (mkinfo (), cond, e1, e2)
+  | LET ->
+      toss state;
+      let var = get_ident state in
+      (match pop state with
+      | EQ_OP "=" -> ()
+      | x -> error state x [ EQ_OP "=" ]);
+      let first = parse_expr state in
+      expect state IN;
+      let second = parse_expr state in
+      LetIn (mkinfo (), var, first, second)
+  | _ -> parse_base state
 
 and parse_expr_h state res prec =
   let op = get_binop_peek state in
@@ -410,7 +427,7 @@ and parse_expr_h state res prec =
       else res
 
 and parse_expr state =
-  let lhs = parse_base state in
+  let lhs = parse_compound state in
   parse_expr_h state lhs 0
 
 and parse_let state =
@@ -448,28 +465,23 @@ and parse_module state =
     | T_IDENT s -> s
     | x -> error state x [ T_IDENT "example" ]
   in
-  (match pop state with
-  | EQ_OP "=" -> toss state
-  | x -> error state x [ EQ_OP "=" ]);
-  (match pop state with STRUCT -> toss state | x -> error state x [ STRUCT ]);
+  (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
+  (match pop state with STRUCT -> () | x -> error state x [ STRUCT ]);
   let top = parse_toplevel_list state in
+  expect state END;
   SimplModule (name, top)
 
 and parse_bind state =
   expect state LPAREN;
   let op = get_binop state in
   expect state RPAREN;
-  (match pop state with
-  | EQ_OP "=" -> toss state
-  | x -> error state x [ EQ_OP "=" ]);
+  (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
   let name = get_ident state in
   Bind (op, [], name)
 
 and parse_extern state =
   let nm = get_ident state in
-  (match pop state with
-  | EQ_OP "=" -> toss state
-  | x -> error state x [ EQ_OP "=" ]);
+  (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
   let ts = parse_type state in
   Extern (nm, ts)
 
@@ -477,30 +489,41 @@ and parse_intextern state =
   let nm =
     match pop state with INTIDENT s -> s | x -> error state x [ EQ_OP "=" ]
   in
-  (match pop state with
-  | EQ_OP "=" -> toss state
-  | x -> error state x [ EQ_OP "=" ]);
+  (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
   let id = get_ident state in
-  (match pop state with
-  | COL_OP ":" -> toss state
-  | x -> error state x [ COL_OP ":" ]);
+  (match pop state with COL_OP ":" -> () | x -> error state x [ COL_OP ":" ]);
   let ts = parse_type state in
   IntExtern (nm, id, ts)
 
 and parse_toplevel_list state =
   let first =
-    match pop state with
-    | LET -> Some (parse_let_norm state)
-    | MODULE -> Some (parse_module state)
-    | BIND -> Some (parse_bind state)
-    | EXTERN -> Some (parse_extern state)
-    | INTEXTERN -> Some (parse_intextern state)
+    match peek state 1 with
+    | LET ->
+        toss state;
+        Some (parse_let_norm state)
+    | MODULE ->
+        toss state;
+        Some (parse_module state)
+    | BIND ->
+        toss state;
+        Some (parse_bind state)
+    | EXTERN ->
+        toss state;
+        Some (parse_extern state)
+    | INTEXTERN ->
+        toss state;
+        Some (parse_intextern state)
     | EOF -> None
-    | x -> error state x [ LET; MODULE; BIND; EXTERN; INTEXTERN ]
+    | _ -> None
   in
   match first with Some x -> x :: parse_toplevel_list state | None -> []
 
 and program token lexbuf file =
+  let token' buf =
+    let t' = token buf in
+    print_endline (show_token t');
+    t'
+  in
   let state = new_state token lexbuf file in
   Program (parse_toplevel_list state)
 

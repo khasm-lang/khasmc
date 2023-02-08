@@ -4,14 +4,11 @@ open Uniq_typevars
 open Hash
 open Debug
 
-type ctx = { binds : (kident * typesig) list; modules : (kident * ctx) list }
+type ctx = { binds : (kident * typesig) list }
 [@@deriving show { with_path = false }]
 
 let empty_typ_ctx () =
-  {
-    binds = [ (*hardcode in that () is bottom*) ("()", TSBottom) ];
-    modules = [];
-  }
+  { binds = [ (*hardcode in that () is bottom*) ("()", TSBottom) ] }
 
 let assume_typ ctx id ts =
   { ctx with binds = (id, make_uniq_ts ts None) :: ctx.binds }
@@ -20,14 +17,6 @@ let lookup ctx x =
   match List.find_opt (fun y -> fst y = x) ctx.binds with
   | None -> raise (NotFound (x ^ " not found in ctx"))
   | Some x -> snd x
-
-let rec lookup_mod ctx mods var =
-  match mods with
-  | [] -> lookup ctx var
-  | x :: xs -> (
-      match List.assoc_opt x ctx.modules with
-      | None -> raise (NotFound ("module " ^ x ^ " not found in ctx"))
-      | Some y -> lookup_mod y xs var)
 
 let rec occurs_ts s ts =
   (* checks whether a variable s is free in ts *)
@@ -410,9 +399,8 @@ and infer ctx tm =
     | AnnotLam (inf, id, ts, e) ->
         let out = infer (assume_typ ctx id ts) e in
         (inf, TSMap (ts, out))
-    | ModAccess (inf, path, id) ->
-        let typ = lookup_mod ctx path id in
-        (inf, typ)
+    | ModAccess (_inf, _path, _id) ->
+        raise @@ Impossible "modules in typechecking expr"
     | _ ->
         raise
           (TypeErr
@@ -528,11 +516,10 @@ let rec typecheck_toplevel_list ctx tl =
         *)
         | Extern (id, ts) -> assume_typ ctx id ts
         | IntExtern (_, id, ts) -> assume_typ ctx id ts
-        | SimplModule (nm, bd) ->
-            let modctx = typecheck_toplevel_list ctx bd in
-            { ctx with modules = (nm, modctx) :: ctx.modules }
-        | Bind (id, mods, ed) ->
-            let typ = lookup_mod ctx mods ed in
+        | SimplModule (_nm, _bd) ->
+            raise @@ Impossible "Modules in typechecking"
+        | Bind (id, _, ed) ->
+            let typ = lookup ctx ed in
             assume_typ ctx id typ
       in
       typecheck_toplevel_list ctx' xs
