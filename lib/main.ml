@@ -31,7 +31,6 @@ let parse_args () =
 let main_proc () =
   Printexc.record_backtrace true;
   let args = parse_args () in
-  print_endline (show_cliargs args);
   let succ =
     try
       let files = args.files in
@@ -46,9 +45,8 @@ let main_proc () =
     | NotFound x -> "Caught NotFound:\n" ^ x
     | NotImpl x -> "NOTIMPL:\n" ^ x
     | UnifyErr x -> "Caught UnifyErr:\n" ^ x
-    | _ -> "Caught Something :P"
+    | Impossible x -> "IMPOSSIBLE: " ^ x
   in
-
   Debug.debug ("\nStatus: " ^ succ);
   Debug.debug
     ("Used " ^ string_of_int !uniq ^ " typvars, " ^ string_of_int !muniq

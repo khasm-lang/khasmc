@@ -10,7 +10,10 @@ let rec normalise files =
 
 let compile names asts args =
   let asts' =
-    asts |> List.map Complexity.init_program |> List.map2 Modules.wrap_in names
+    asts
+    |> List.map Complexity.init_program
+    |> List.map2 Modules.wrap_in names
+    |> Elim_modules.elim
   in
 
   if args.dump_ast1 then
