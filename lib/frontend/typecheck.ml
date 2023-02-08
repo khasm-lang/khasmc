@@ -128,6 +128,7 @@ let rec inst_all ts =
 
 (** Unique list tools *)
 let uniq_cons x xs = if List.mem x xs then xs else x :: xs
+
 let mk_uniq_list xs = List.fold_right uniq_cons xs []
 let combine_uniq x y = mk_uniq_list (x @ y)
 
@@ -217,7 +218,7 @@ return RHS(f) : float
   returns a tuple of env, typ 
  *)
 
-(** Unifies two types, solving all needed metavars. *) 
+(** Unifies two types, solving all needed metavars. *)
 and unify ?loop ctx l r =
   (*
     unification takes something with metavariables, eg
@@ -485,8 +486,7 @@ let rec add_args ts args body =
         (TypeErr
            ("Cannot match args: " ^ String.concat ", " args ^ " with typesig "
           ^ pshow_typesig ts))
-          
-          
+
 (**
             The purpose of this is to transform arguments into
             typelams and annotlams so that you can do
@@ -535,22 +535,10 @@ let rec typecheck_toplevel_list ctx tl =
         *)
         | Extern (id, ts) -> assume_typ ctx id ts
         | IntExtern (_, id, ts) -> assume_typ ctx id ts
-<<<<<<< HEAD
         | SimplModule (_nm, _bd) ->
             raise @@ Impossible "Modules in typechecking"
         | Bind (id, _, ed) ->
             let typ = lookup ctx ed in
-=======
-        (*
-          Add the module to a new ctx that's part of ctx.modules
-        *)
-        | SimplModule (nm, bd) ->
-            let modctx = typecheck_toplevel_list ctx bd in
-            { ctx with modules = (nm, modctx) :: ctx.modules }
-         (* assume typ *)
-        | Bind (id, mods, ed) ->
-            let typ = lookup_mod ctx mods ed in
->>>>>>> a599bc8a1bec5fdbcd0f91869347b7edb213655c
             assume_typ ctx id typ
       in
       typecheck_toplevel_list ctx' xs
