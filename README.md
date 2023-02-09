@@ -44,4 +44,4 @@ Khasm, unlike OCaml, does not have toplevel execution, so the `main` function is
 
 - Khasm is currently moving away from an independent backend, previously called kavern.
 - Khasm is currently undergoing a parser rewrite, in the #parser branch.
-- Khasm is in extreme beta. Please do not use Khasm for any major project or programs.
+- Khasm isn't even in β yet - it's probably closer to being in γ. Please do not use Khasm for any major project or programs.
