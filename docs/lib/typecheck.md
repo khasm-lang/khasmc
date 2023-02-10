@@ -10,12 +10,12 @@ type: `Ast.program list -> ()`
 
 desc:
 
-Typechecks a list of khasm programs - These must be formatted in a spesfic way, produced by the earlier parts of the compiler. 
+Typechecks a list of khasm programs - These must be formatted in a spec way, produced by the earlier parts of the compiler. 
 If this function returns, the program list is validly typed.
 
 throws: UnifyErr, TypeErr, NotFound, Impossible
 
-### `check term type`
+### `check ctx term type`
 
 type: `ctx -> Ast.expr -> Ast.typesig -> ()`
 
@@ -25,7 +25,7 @@ Checks a term has a type. If this returns, the term has that type.
 
 throws: TypeErr, UnifyErr
 
-### `infer term`
+### `infer ctx term`
 
 type: `ctx -> Ast.expr -> Ast.typesig`
 
@@ -34,3 +34,13 @@ desc:
 Attempts to infer the type of an expression.
 
 throws: TypeErr, UnifyErr
+
+### `unify ?loop ctx l r`
+
+type `?bool -> unifyctx -> Ast.typesig -> Ast.typesig`
+
+desc:
+
+Unifys two types.
+
+throws: UnifyErr
