@@ -187,6 +187,9 @@ and get_ident state =
   | T_IDENT s -> s
   | x -> error state x [ T_IDENT "example" ]
 
+and get_ident_peek state =
+  match peek state 1 with T_IDENT s -> Some s | _ -> None
+
 and get_binop state =
   match pop state with
   | POW_OP s
@@ -226,6 +229,20 @@ and get_binop_peek state =
   | DOL_OP s ->
       Some s
   | _ -> None
+
+and get_ident_or_binop state =
+  match get_ident_peek state with
+  | Some s ->
+      toss state;
+      s
+  | None -> (
+      match peek state 1 with
+      | LPAREN ->
+          toss state;
+          let t = get_binop state in
+          expect state RPAREN;
+          t
+      | x -> error state x [ LPAREN; T_IDENT "example module" ])
 
 and parse_type_tuple state =
   let lhs = parse_type state in
@@ -319,73 +336,67 @@ and parse_tuple state =
   | RPAREN -> b :: []
   | x -> error state x [ COMMA; RPAREN ]
 
+and parse_funccall b state =
+  let b2 = parse_base state in
+  let f = FCall (mkinfo (), b, b2) in
+  parse_funccall_try f state
+
 and parse_funccall_try b state =
   match peek state 1 with
   | LPAREN | T_IDENT _ | T_INT _ | T_FLOAT _ | T_STRING _ ->
-      FCall (mkinfo (), b, parse_base state)
+      parse_funccall b state
   | _ -> b
 
 and parse_base state =
-  let b =
-    match pop state with
-    | BANG_OP s | TILDE_OP s ->
-        FCall
-          (mkinfo (), Base (mkinfo (), Ident (mkinfo (), s)), parse_base state)
-    | LPAREN -> (
-        match peek state 1 with
-        | RPAREN -> Base (mkinfo (), Ident (mkinfo (), "()"))
-        | _ -> (
-            let e' = parse_expr state in
-            match pop state with
-            | COMMA -> Base (mkinfo (), Tuple (e' :: parse_tuple state))
-            | RPAREN -> e'
-            | x -> error state x [ COMMA; RPAREN ]))
-    | T_IDENT s -> (
-        match peek state 1 with
-        | DOT -> (
-            let rec helper state =
-              let id = get_ident state in
-              match peek state 1 with
-              | DOT ->
-                  toss state;
-                  id :: helper state
-              | _ -> []
-            in
-            toss state;
-            let l = s :: helper state in
-            let rev = List.rev l in
-            match rev with
-            | x :: xs -> ModAccess (mkinfo (), List.rev xs, x)
-            | [] -> raise @@ Impossible "parse_base")
-        | _ -> Base (mkinfo (), Ident (mkinfo (), s)))
-    | T_INT s -> Base (mkinfo (), Int s)
-    | T_FLOAT s -> Base (mkinfo (), Float s)
-    | T_STRING s -> Base (mkinfo (), Str s)
-    | TRUE -> Base (mkinfo (), True)
-    | FALSE -> Base (mkinfo (), False)
-    | x ->
-        error state x
-          [
-            BANG_OP "!";
-            TILDE_OP "~";
-            LPAREN;
-            T_IDENT "example";
-            T_INT "10";
-            T_FLOAT "1.0";
-            TRUE;
-            FALSE;
-            IF;
-            LET;
-          ]
-  in
-
-  match peek state 1 with
-  | DOT -> (
-      toss state;
-      match pop state with
-      | T_INT s -> TupAccess (mkinfo (), b, int_of_string s)
-      | x -> error state x [ T_INT "1" ])
-  | _ -> parse_funccall_try b state
+  match pop state with
+  | BANG_OP s | TILDE_OP s ->
+      FCall (mkinfo (), Base (mkinfo (), Ident (mkinfo (), s)), parse_base state)
+  | LPAREN -> (
+      match peek state 1 with
+      | RPAREN -> Base (mkinfo (), Ident (mkinfo (), "()"))
+      | _ -> (
+          let e' = parse_expr state in
+          match pop state with
+          | COMMA -> Base (mkinfo (), Tuple (e' :: parse_tuple state))
+          | RPAREN -> e'
+          | x -> error state x [ COMMA; RPAREN ]))
+  | T_IDENT s -> (
+      match peek state 1 with
+      | DOT -> (
+          let rec helper state =
+            let id = get_ident_or_binop state in
+            match peek state 1 with
+            | DOT ->
+                toss state;
+                id :: helper state
+            | _ -> [ id ]
+          in
+          toss state;
+          let l = s :: helper state in
+          let rev = List.rev l in
+          match rev with
+          | x :: xs -> ModAccess (mkinfo (), List.rev xs, x)
+          | [] -> raise @@ Impossible "parse_base")
+      | _ -> Base (mkinfo (), Ident (mkinfo (), s)))
+  | T_INT s -> Base (mkinfo (), Int s)
+  | T_FLOAT s -> Base (mkinfo (), Float s)
+  | T_STRING s -> Base (mkinfo (), Str s)
+  | TRUE -> Base (mkinfo (), True)
+  | FALSE -> Base (mkinfo (), False)
+  | x ->
+      error state x
+        [
+          BANG_OP "!";
+          TILDE_OP "~";
+          LPAREN;
+          T_IDENT "example";
+          T_INT "10";
+          T_FLOAT "1.0";
+          TRUE;
+          FALSE;
+          IF;
+          LET;
+        ]
 
 and parse_compound state =
   match peek state 1 with
@@ -407,7 +418,15 @@ and parse_compound state =
       expect state IN;
       let second = parse_expr state in
       LetIn (mkinfo (), var, first, second)
-  | _ -> parse_base state
+  | _ -> (
+      let b = parse_base state in
+      match peek state 1 with
+      | DOT -> (
+          toss state;
+          match pop state with
+          | T_INT s -> TupAccess (mkinfo (), b, int_of_string s)
+          | x -> error state x [ T_INT "1" ])
+      | _ -> parse_funccall_try b state)
 
 and parse_expr_h state res prec =
   let op = get_binop_peek state in

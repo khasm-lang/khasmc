@@ -21,12 +21,23 @@ let speclist =
   [
     ("--dump-ast1", Arg.Set dast1, "Dump first AST");
     ("--dump-ast2", Arg.Set dast2, "Dump second AST");
+    ("--dump-ast3", Arg.Set dast3, "Dump third AST");
+    ("--table", Arg.Set table, "Show type table");
     ("-o", Arg.Set_string outs, "Output file");
+    ("--debug", Arg.Set debug, "Debug");
   ]
 
 let parse_args () =
   Arg.parse speclist generic usage;
-  { dump_ast1 = !dast1; dump_ast2 = !dast2; files = !ins; out = !outs }
+  {
+    dump_ast1 = !dast1;
+    dump_ast2 = !dast2;
+    files = !ins;
+    out = !outs;
+    dump_ast3 = !dast3;
+    debug = !debug;
+    table = !table;
+  }
 
 let main_proc () =
   Printexc.record_backtrace true;
@@ -41,11 +52,15 @@ let main_proc () =
       print_endline res;
       "Success"
     with
+    (*
     | TypeErr x -> "Caught TypeErr:\n" ^ x
     | NotFound x -> "Caught NotFound:\n" ^ x
     | NotImpl x -> "NOTIMPL:\n" ^ x
     | UnifyErr x -> "Caught UnifyErr:\n" ^ x
     | Impossible x -> "IMPOSSIBLE: " ^ x
+    *)
+    | Impossible x ->
+      "weird"
   in
   Debug.debug ("\nStatus: " ^ succ);
   Debug.debug
@@ -53,5 +68,5 @@ let main_proc () =
    ^ " metavars and "
     ^ string_of_int (getid () - 1)
     ^ " nodes");
-  Hash.print_table ();
-  if succ <> "Success" then Debug.log_debug_stdout true else ()
+  if args.table then Hash.print_table () else ();
+  if args.debug then Debug.log_debug_stdout true else ()
