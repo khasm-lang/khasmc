@@ -86,7 +86,6 @@ let rec ftm_toplevel table top =
       let id', tbl' = Kir.add_to_tbl id table in
       (Kir.Extern (ts, id', id), tbl')
   | Ast.Bind (id, _, nm) ->
-      print_endline ("binding " ^ id ^ " and " ^ nm);
       let id', tbl' = Kir.add_to_tbl id table in
       let v, _name = Kir.get_from_tbl nm tbl' in
       (Kir.Bind (id', v), tbl')
@@ -103,7 +102,6 @@ let rec ftm table prog =
       (a, b)
 
 let front_to_middle proglist =
-  List.iter (fun x -> print_endline @@ Ast.show_program x) proglist;
   let a, b = fold_tup ftm (Kir.empty_transtable ()) (List.rev proglist) in
   let a' = List.rev @@ List.flatten a in
   (b, a')
