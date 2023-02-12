@@ -9,6 +9,7 @@ let rec normalise files =
       :: normalise xs
 
 let compile names asts args =
+  print_endline "";
   if args.dump_ast1 then
     asts |> List.iter (fun x -> print_endline (Ast.show_program x))
   else ();
