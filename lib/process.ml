@@ -9,14 +9,17 @@ let rec normalise files =
       :: normalise xs
 
 let compile names asts args =
+  if args.dump_ast1 then
+    asts |> List.iter (fun x -> print_endline (Ast.show_program x))
+  else ();
   let asts' =
     asts
     |> List.map Complexity.init_program
     |> List.map2 Modules.wrap_in names
-    |> Elim_modules.elim
+    |> List.rev |> Elim_modules.elim
   in
 
-  if args.dump_ast1 then
+  if args.dump_ast2 then
     asts' |> List.iter (fun x -> print_endline (Ast.show_program x))
   else ();
 
@@ -28,6 +31,6 @@ let compile names asts args =
   (*codegen stage*)
   let kir = asts' |> Translateftm.front_to_middle in
 
-  if args.dump_ast2 then print_endline (Kir.show_kirprog kir) else ();
+  if args.dump_ast3 then print_endline (Kir.show_kirprog kir) else ();
 
   "done"

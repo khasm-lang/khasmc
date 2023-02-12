@@ -19,26 +19,26 @@ bind (-) = isub
 bind (/) = idiv
 bind ( * ) = imul
 
-let pipe x f
+let pipe x0 f1
     : ∀a b, a -> (a -> b) -> b
-    = f x
+    = f1 x0
 
 bind (|>) = pipe
 
-let apply f x 
+let apply f2 x3
     : ∀a b, (a -> b) -> a -> b 
-    = f x
+    = f2 x3
 
 bind ($) = apply
 
-let compose f g x
+let compose f4 g5 x6
     : ∀a b c, (b -> c) -> (a -> b) -> a -> c
-    = f (g x)
+    = f4 (g5 x6)
 
 bind (%) = compose
 
-let rcompose f g x
+let rcompose f7 g8 x9
     : ∀a b c, (a -> b) -> (b -> c) -> a -> c
-    = g (f x)
+    = g8 (f7 x9)
 
 bind (%>) = rcompose

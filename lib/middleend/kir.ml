@@ -1,40 +1,30 @@
+open Exp
+
 type kirtype = Ast.typesig [@@deriving show { with_path = false }]
 type kirval = int [@@deriving show { with_path = false }]
-type transtable = (int, string) Hashtbl.t ref
+type transtable = (int * string) list [@@deriving show { with_path = false }]
 
-let pp_transtable runtime table =
-  Hashtbl.iter
-    (fun x y ->
-      Ppx_deriving_runtime.Format.fprintf runtime "%s: " (string_of_int x);
-      Ppx_deriving_runtime.Format.fprintf runtime "%s\n" y)
-    !table
-
-let print_transtable table =
-  print_endline "Transtable:";
-  Hashtbl.iter
-    (fun x y ->
-      Printf.printf "%s: " (string_of_int x);
-      Printf.printf "%s\n" y)
-    !table;
-  print_endline "Done with transtable.\n"
-
-let empty_transtable () = ref @@ Hashtbl.create ~random:true 10
-let rint = ref 0
+let empty_transtable () = (-1, "") :: []
+let rint = ref 1
 
 let get_random_num () =
   let tmp = !rint in
   rint := !rint + 1;
   tmp
 
-let add_to_tbl id tbl =
-  let random = get_random_num () in
-  Hashtbl.add !tbl random id;
-  random
+let add_to_tbl str tbl =
+  let random = if str = "main" then 0 else get_random_num () in
+  let tbl' = (random, str) :: tbl in
+  (random, tbl')
 
 let get_from_tbl str tbl =
-  match Hashtbl.to_seq !tbl |> Seq.find (fun x -> snd x = str) with
-  | Some (a, _) -> Some a
-  | None -> None
+  match List.find_opt (fun x -> snd x = str) tbl with
+  | Some s -> s
+  | None -> raise @@ NotFound (str ^ " not found in table")
+
+let add_alias_to_tbl str1 str2 tbl =
+  let id, _ = get_from_tbl str2 tbl in
+  (id, (id, str1) :: tbl)
 
 type kirexpr =
   | Val of kirtype * kirval
@@ -50,10 +40,25 @@ type kirexpr =
   | IfElse of kirtype * kirexpr * kirexpr * kirexpr
 [@@deriving show { with_path = false }]
 
+let rec kirexpr_typ k =
+  match k with
+  | Val (t, _) -> t
+  | Int _ -> Ast.TSBase "int"
+  | Float _ -> Ast.TSBase "float"
+  | Str _ -> Ast.TSBase "string"
+  | Bool _ -> Ast.TSBase "bool"
+  | Tuple (t, _) -> t
+  | Call (t, _, _) -> t
+  | Seq (t, _, _) -> t
+  | TupAcc (t, _, _) -> t
+  | Lam (t, _, _) -> t
+  | IfElse (t, _, _, _) -> t
+
 type kirtop =
   | Let of kirtype * kirval * kirexpr
   | LetRec of kirtype * kirval * kirexpr
-  | Extern of kirtype * kirval
+  | Extern of kirtype * kirval * string
+  | Bind of kirval * kirval
 [@@deriving show { with_path = false }]
 
 type kirprog = transtable * kirtop list [@@deriving show { with_path = false }]
