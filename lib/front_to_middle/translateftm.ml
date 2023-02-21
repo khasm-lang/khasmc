@@ -46,8 +46,7 @@ and ftm_expr tbl expr =
       let id', tbl' = Kir.add_to_tbl a tbl in
       let b1 = ftm_expr tbl e1 in
       let b2 = ftm_expr tbl' e2 in
-      let lam = Kir.Lam (Hash.get_typ id.id, id', b2) in
-      Kir.Call (Hash.get_typ id.id, lam, b1)
+      Kir.Let (Hash.get_typ id.id, id', b1, b2)
   | Ast.AnnotLam (_, a, _, e) | Ast.Lam (_, a, e) ->
       let id', tbl' = Kir.add_to_tbl a tbl in
       let b = ftm_expr tbl' e in
