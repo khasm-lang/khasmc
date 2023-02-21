@@ -212,7 +212,7 @@ return RHS(f) : float
 ```
 
 
- *)
+*)
 
 (*
   returns a tuple of env, typ 

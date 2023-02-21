@@ -63,10 +63,12 @@ let main_proc () =
       "weird"
   in
   Debug.debug ("\nStatus: " ^ succ);
-  Debug.debug
+  print_endline
     ("Used " ^ string_of_int !uniq ^ " typvars, " ^ string_of_int !muniq
-   ^ " metavars and "
+   ^ " metavars, "
     ^ string_of_int (getid () - 1)
-    ^ " nodes");
+    ^ " stage 1 nodes, "
+    ^ string_of_int (Kir.get_random_num () - 1)
+    ^ " stage 2 nodes.");
   if args.table then Hash.print_table () else ();
   if args.debug then Debug.log_debug_stdout true else ()

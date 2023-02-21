@@ -37,6 +37,7 @@ type kirexpr =
   | Seq of kirtype * kirexpr * kirexpr
   | TupAcc of kirtype * kirexpr * int
   | Lam of kirtype * kirval * kirexpr
+  | Let of kirtype * kirval * kirexpr * kirexpr
   | IfElse of kirtype * kirexpr * kirexpr * kirexpr
 [@@deriving show { with_path = false }]
 
@@ -52,6 +53,7 @@ let rec kirexpr_typ k =
   | Seq (t, _, _) -> t
   | TupAcc (t, _, _) -> t
   | Lam (t, _, _) -> t
+  | Let (t, _, _, _) -> t
   | IfElse (t, _, _, _) -> t
 
 type kirtop =
