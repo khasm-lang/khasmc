@@ -14,4 +14,4 @@
  (flags
   (:standard -warn-error -A -g -annot))
  (ocamlopt_flags
-  (-g -annot)))
+  (-g -annot -afl-instrument)))

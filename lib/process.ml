@@ -3,10 +3,12 @@ open Args
 let rec normalise files =
   match files with
   | [] -> []
-  | x :: xs ->
-      (Filename.basename x |> Filename.chop_extension
-     |> Batteries.String.capitalize)
-      :: normalise xs
+  | x :: xs -> (
+      try
+        (Filename.basename x |> Filename.chop_extension
+       |> Batteries.String.capitalize)
+        :: normalise xs
+      with _ -> Batteries.String.capitalize x :: normalise xs)
 
 let compile names asts args =
   print_endline "";

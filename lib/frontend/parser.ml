@@ -544,7 +544,8 @@ and program token lexbuf file =
     t'
   in
   let state = new_state token lexbuf file in
-  Program (parse_toplevel_list state)
+  let tmp = parse_toplevel_list state in
+  if tmp = [] then raise ParseError else Program tmp
 
 let test token lexbuf file =
   let token' buf =

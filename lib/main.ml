@@ -1,5 +1,6 @@
 open Batteries
 open Lexing
+open Lexer
 open Uniq_typevars
 open Typecheck
 open Exp
@@ -56,6 +57,9 @@ let main_proc () =
     | NotFound x -> "Caught NotFound:\n" ^ x
     | NotImpl x -> "NOTIMPL:\n" ^ x
     | UnifyErr x -> "Caught UnifyErr:\n" ^ x
+    | SyntaxError x -> "LexerErr:\n" ^ x
+    | Parser.ParseError -> "ParseError\n"
+    | Lexer.EOF x -> "EOF:\n" ^ x
   in
   Debug.debug ("\nStatus: " ^ succ);
   print_endline

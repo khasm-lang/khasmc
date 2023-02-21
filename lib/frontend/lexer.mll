@@ -161,5 +161,5 @@ and stringl buffer = parse
  | "\\n" { Buffer.add_char buffer '\n'; stringl buffer lexbuf }	
  | '\\' '"' { Buffer.add_char buffer '"'; stringl buffer lexbuf }	
  | '\\' '\\' { Buffer.add_char buffer '\\'; stringl buffer lexbuf }
- | eof { raise End_of_file }
+ | eof { raise @@ EOF "unexpected EOF" }
  | _ as char { Buffer.add_char buffer char; stringl buffer lexbuf }	
