@@ -52,15 +52,10 @@ let main_proc () =
       print_endline res;
       "Success"
     with
-    (*
     | TypeErr x -> "Caught TypeErr:\n" ^ x
     | NotFound x -> "Caught NotFound:\n" ^ x
     | NotImpl x -> "NOTIMPL:\n" ^ x
     | UnifyErr x -> "Caught UnifyErr:\n" ^ x
-    | Impossible x -> "IMPOSSIBLE: " ^ x
-    *)
-    | Impossible x ->
-      "weird"
   in
   Debug.debug ("\nStatus: " ^ succ);
   Debug.debug
