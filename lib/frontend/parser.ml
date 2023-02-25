@@ -418,6 +418,22 @@ and parse_compound state =
       expect state IN;
       let second = parse_expr state in
       LetIn (mkinfo (), var, first, second)
+  | FUN ->
+      toss state;
+      let v = get_ident state in
+      (match pop state with
+      | COL_OP ":" -> ()
+      | x -> error state x [ COL_OP ":" ]);
+      let typ = parse_type state in
+      (match pop state with LAM_TO -> () | x -> error state x [ LAM_TO ]);
+      let expr = parse_expr state in
+      Ast.AnnotLam (mkinfo (), v, typ, expr)
+  | TFUN ->
+      toss state;
+      let v = get_ident state in
+      (match pop state with LAM_TO -> () | x -> error state x [ COL_OP ":" ]);
+      let expr = parse_expr state in
+      Ast.TypeLam (mkinfo (), v, expr)
   | _ -> (
       let b = parse_base state in
       match peek state 1 with

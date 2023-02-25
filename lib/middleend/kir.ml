@@ -41,6 +41,15 @@ type kirexpr =
   | IfElse of kirtype * kirexpr * kirexpr * kirexpr
 [@@deriving show { with_path = false }]
 
+type kirtop =
+  | Let of kirtype * kirval * kirexpr
+  | LetRec of kirtype * kirval * kirexpr
+  | Extern of kirtype * kirval * string
+  | Bind of kirval * kirval
+[@@deriving show { with_path = false }]
+
+type kirprog = transtable * kirtop list [@@deriving show { with_path = false }]
+
 let rec kirexpr_typ k =
   match k with
   | Val (t, _) -> t
@@ -55,12 +64,3 @@ let rec kirexpr_typ k =
   | Lam (t, _, _) -> t
   | Let (t, _, _, _) -> t
   | IfElse (t, _, _, _) -> t
-
-type kirtop =
-  | Let of kirtype * kirval * kirexpr
-  | LetRec of kirtype * kirval * kirexpr
-  | Extern of kirtype * kirval * string
-  | Bind of kirval * kirval
-[@@deriving show { with_path = false }]
-
-type kirprog = transtable * kirtop list [@@deriving show { with_path = false }]
