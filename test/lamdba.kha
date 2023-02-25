@@ -1,0 +1,6 @@
+let interesting : ∀a b, a -> b -> a =
+    tfun a =>
+    tfun b =>
+    fun x : a =>
+    fun y : b =>
+    x
