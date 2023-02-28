@@ -1,10 +1,16 @@
 # Khasmc
 
-The compiler for the khasm programming lanugage.
+The compiler for the khasm programming language.
+
+## NOTE:
+
+Khasm and khasmc are still in pre-β development.
+The below partially writes like it is a currently working language - it is not.
+Consider the below, for the moment, a wishlist for what this language will hopefully eventually look like.
 
 ## What is khasm?
 
-Khasm is an experimental programming language based on the System-F type system, with the goal of being rather polymorphic, and rather fast, utilising memoization.
+Khasm is an experimental lazy programming language based on the System-F type system, with the goal of being rather polymorphic, and rather fast, utilising memoization.
 
 ### The System-F type system
 
@@ -12,6 +18,8 @@ The System-F type system is a higher level type system that allows the expressio
 
 ```ocaml
 let apply_to_tuple f a b = (f a, f b)
+where
+typeof(a) <> typeof(b)
 ```
 Here, the type of `apply_to_tuple` would be `∀a b, (∀c, c -> c) -> a -> b -> (a, b)`, which cannot be expressed in the default type systems of OCaml or Haskell, due to the nested forall. However, the tradeoff is that you cannot have proper type inference.
 
@@ -28,20 +36,25 @@ let main () : () -> () =
 ```
 Khasm, unlike OCaml, does not have toplevel execution, so the `main` function is the entry point. It must always have type `() -> ()`.
 
+## Goals:
+
+- Builtin memoization to allow for writing fast code without needing complex hand optimisation
+- Builtin proofing of typeclasses to allow for a seamlessly correct experience
+- A large standard library, to allow for easy usage
+- Uniqueness types, to correctly model IO and similar in the lazy context of khasm.
+- The full power of the ML module and System-F type systems
+
 ## The TODO List:
 
-- [X] Modules (Half done)
 - [ ] ADTs and pattern matching
 - [ ] Stdlib work
-- [X] Backend rewrite - In progress on #middleend 
+- [X] Backend rewrite - In progress
 - [ ] Exceptions
 - [ ] Records
-- [ ] Compiler options
 - [ ] Typeclasses
 - [ ] Typeclass proving
-- [X] Parser rewrite into recdec
+- [ ] Uniqueness typing
+
 # Notes:
 
-- Khasm is currently moving away from an independent backend, previously called kavern.
-- Khasm is currently undergoing a parser rewrite, in the #parser branch.
-- Khasm isn't even in β yet - it's probably closer to being in γ. Please do not use Khasm for any major project or programs.
+- Khasm isn't even in β yet - it's probably closer to being in γ or something :P. Please do not use Khasm for any major project or programs.

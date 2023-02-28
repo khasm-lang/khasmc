@@ -36,4 +36,8 @@ let compile names asts args =
 
   if args.dump_ast3 then print_endline (Kir.show_kirprog kir) else ();
 
+  let kir' = kir |> Lamlift.lambda_lift in
+
+  if args.dump_ast3 then print_endline (Kir.show_kirprog kir') else ();
+
   "done"
