@@ -63,8 +63,9 @@ and llift_expr ctx dolift expr =
         let ctx' = add_bound ctx v ts in
         let added1, e' = llift_expr ctx' true e in
         let added2, get = gen_lams ctx.frees e' in
-        let final = Let (ts, v, get) in
-        let asval = Val (ts, v) in
+        let random = get_random_num () in
+        let final = Let (ts, random, Lam (ts, v, get)) in
+        let asval = Val (ts, random) in
         let call = gen_fcall ctx.frees asval in
         ((final :: added1) @ added2, call)
       else
@@ -108,9 +109,15 @@ let%test "Basic Lambda Lifting" =
   in
   let after =
     [
-      Let (TSBottom, 1, Val (TSBottom, 1));
+      Let (TSBottom, 1, Lam (TSBottom, 1, Val (TSBottom, 1)));
       Let (TSBottom, 0, Call (TSBottom, Val (TSBottom, 1), Int "10"));
     ]
   in
   let (), before' = lambda_lift ((), before) in
-  before' = after
+  if before' = after then true
+  else (
+    print_endline "BEFORE: ";
+    List.iter print_endline @@ List.map show_kirtop before';
+    print_endline "AFTER: ";
+    List.iter print_endline @@ List.map show_kirtop after;
+    false)
