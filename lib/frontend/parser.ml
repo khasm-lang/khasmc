@@ -343,7 +343,7 @@ and parse_funccall b state =
 
 and parse_funccall_try b state =
   match peek state 1 with
-  | LPAREN | T_IDENT _ | T_INT _ | T_FLOAT _ | T_STRING _ ->
+  | LPAREN | T_IDENT _ | T_INT _ | T_FLOAT _ | T_STRING _ | TRUE | FALSE ->
       parse_funccall b state
   | _ -> b
 
@@ -562,12 +562,3 @@ and program token lexbuf file =
   let state = new_state token lexbuf file in
   let tmp = parse_toplevel_list state in
   if tmp = [] then raise ParseError else Program tmp
-
-let test token lexbuf file =
-  let token' buf =
-    let t' = token buf in
-    print_endline (show_token t');
-    t'
-  in
-  let state = new_state token' lexbuf file in
-  print_endline (show_kexpr @@ parse_expr state)

@@ -23,9 +23,8 @@ let rec gen_lams ctx'frees inner =
   | x :: xs ->
       let v, ts = x in
       let a, b = gen_lams xs inner in
-      print_endline "loop?";
-      print_endline (show_kirexpr b);
-      let c, d = llift_expr (ctxwith ctx'frees) b in
+      let full = Lam (ts, v, b) in
+      let c, d = llift_expr (ctxwith ctx'frees) false full in
       (a @ c, d)
 
 and gen_fcall ctx'frees inner =
@@ -36,49 +35,45 @@ and gen_fcall ctx'frees inner =
       let t = gen_fcall xs inner in
       Call (kirexpr_typ t, t, Val (ts, v))
 
-and llift_expr ctx expr =
-  print_endline "\n\nDEBUG:";
-  print_endline (show_lamctx ctx);
-  print_endline (show_kirexpr expr);
-  print_endline "DONE;\n";
+and llift_expr ctx dolift expr =
   match expr with
   | Val (_, _) | Int _ | Float _ | Str _ | Bool _ -> ([], expr)
   | Tuple (ts, expr) ->
-      let tmp = List.map (llift_expr ctx) expr in
+      let tmp = List.map (llift_expr ctx true) expr in
       let a, b = deconstruct_assoc_list tmp in
       (List.flatten a, Tuple (ts, b))
   | Call (ts, e1, e2) ->
-      let a, b = llift_expr ctx e1 in
-      let c, d = llift_expr ctx e2 in
+      let a, b = llift_expr ctx true e1 in
+      let c, d = llift_expr ctx true e2 in
       (a @ c, Call (ts, b, d))
   | Seq (ts, e1, e2) ->
-      let a, b = llift_expr ctx e1 in
-      let c, d = llift_expr ctx e2 in
+      let a, b = llift_expr ctx true e1 in
+      let c, d = llift_expr ctx true e2 in
       (a @ c, Seq (ts, b, d))
   | TupAcc (ts, ex, i) ->
-      let a, b = llift_expr ctx ex in
+      let a, b = llift_expr ctx true ex in
       (a, TupAcc (ts, b, i))
   | Let (ts, v, e1, e2) ->
       let ctx' = add_bound ctx v (kirexpr_typ e1) in
-      let a, b = llift_expr ctx e1 in
-      let c, d = llift_expr ctx' e2 in
+      let a, b = llift_expr ctx true e1 in
+      let c, d = llift_expr ctx' true e2 in
       (a @ c, Let (ts, v, b, d))
   | Lam (ts, v, e) ->
-      let ctx' = add_bound ctx v ts in
-      let added1, e' = llift_expr ctx' e in
-      print_endline "huh?";
-      print_endline (show_kirexpr e');
-      let added2, get = gen_lams ctx.frees e' in
-      let final = Let (ts, v, get) in
-      let asval = Val (ts, v) in
-      let call = gen_fcall ctx.frees asval in
-      print_endline "weird?";
-      print_endline (show_kirexpr call);
-      ((final :: added1) @ added2, call)
+      if dolift then
+        let ctx' = add_bound ctx v ts in
+        let added1, e' = llift_expr ctx' true e in
+        let added2, get = gen_lams ctx.frees e' in
+        let final = Let (ts, v, get) in
+        let asval = Val (ts, v) in
+        let call = gen_fcall ctx.frees asval in
+        ((final :: added1) @ added2, call)
+      else
+        let added, inner = llift_expr ctx dolift e in
+        (added, Lam (ts, v, inner))
   | IfElse (ts, e1, e2, e3) ->
-      let a, b = llift_expr ctx e1 in
-      let c, d = llift_expr ctx e2 in
-      let e, f = llift_expr ctx e3 in
+      let a, b = llift_expr ctx true e1 in
+      let c, d = llift_expr ctx true e2 in
+      let e, f = llift_expr ctx true e3 in
       (a @ c @ e, IfElse (ts, b, d, f))
 
 let rec llift_top top =
@@ -86,10 +81,10 @@ let rec llift_top top =
   | Extern (_, _, _) -> ([], top)
   | Bind (_, _) -> ([], top)
   | Let (ts, v, exp) ->
-      let added, n = llift_expr (emptyctx ()) exp in
+      let added, n = llift_expr (emptyctx ()) false exp in
       (added, Let (ts, v, n))
   | LetRec (ts, v, exp) ->
-      let added, n = llift_expr (emptyctx ()) exp in
+      let added, n = llift_expr (emptyctx ()) false exp in
       (added, LetRec (ts, v, n))
 
 let rec lambda_lift_h tops =
@@ -100,3 +95,22 @@ let rec lambda_lift_h tops =
       (added @ (n :: [])) @ lambda_lift_h xs
 
 let lambda_lift kir = (fst kir, lambda_lift_h @@ snd kir)
+
+let%test "Basic Lambda Lifting" =
+  print_endline "TEST: Basic Lambda Lifting";
+  let before =
+    [
+      Let
+        ( TSBottom,
+          0,
+          Call (TSBottom, Lam (TSBottom, 1, Val (TSBottom, 1)), Int "10") );
+    ]
+  in
+  let after =
+    [
+      Let (TSBottom, 1, Val (TSBottom, 1));
+      Let (TSBottom, 0, Call (TSBottom, Val (TSBottom, 1), Int "10"));
+    ]
+  in
+  let (), before' = lambda_lift ((), before) in
+  before' = after

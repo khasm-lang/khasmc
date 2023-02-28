@@ -1,6 +1,5 @@
-let interesting : ∀a b, a -> b -> a =
-    tfun a =>
-    tfun b =>
-    fun x : a =>
-    fun y : b =>
-    x
+let hmm x : bool -> bool =
+    if x then
+       (fun y : bool => y) true
+    else
+       (fun y : bool => y) false
