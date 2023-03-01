@@ -1,5 +1,1 @@
-let hmm x : bool -> bool =
-    if x then
-       (fun y : bool => y) true
-    else
-       (fun y : bool => y) false
+let test : int -> int = 1 * 2 + 1

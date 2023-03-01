@@ -403,7 +403,11 @@ and infer ctx tm =
         (inf, TSForall (t, bodytyp))
     | TupAccess (inf, expr, i) -> (
         match infer ctx expr with
-        | TSTuple t -> (inf, List.nth t i)
+        | TSTuple t ->
+            print_int @@ List.length t;
+            if List.length t >= i then
+              raise @@ TypeErr "Tuple access of too-small tuple"
+            else (inf, List.nth t i)
         | _ ->
             raise
               (TypeErr ("can't tuple access non-tuple:\n" ^ show_kexpr expr)))
