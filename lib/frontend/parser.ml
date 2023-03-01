@@ -361,8 +361,9 @@ and parse_base state =
           | RPAREN -> e'
           | x -> error state x [ COMMA; RPAREN ]))
   | T_IDENT s -> (
-      match peek state 1 with
-      | DOT -> (
+      match (peek state 1, peek state 2) with
+      | DOT, T_INT _ -> Base (mkinfo (), Ident (mkinfo (), s))
+      | DOT, _ -> (
           let rec helper state =
             let id = get_ident_or_binop state in
             match peek state 1 with

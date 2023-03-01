@@ -70,4 +70,4 @@ let main_proc () =
     ^ string_of_int (Kir.get_random_num () - 1)
     ^ " stage 2 nodes.");
   if args.table then Hash.print_table () else ();
-  if args.debug then Debug.log_debug_stdout true else ()
+  if args.debug || succ <> "Success" then Debug.log_debug_stdout true else ()
