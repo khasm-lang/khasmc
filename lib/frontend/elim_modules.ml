@@ -156,9 +156,8 @@ let rec elim_toplevel ctx t =
       let proper = fix_name ctx id in
       (ctx', TopAssignRec ((proper, ts), (proper, args, trans)) :: [])
   | Extern (i, ts) ->
-      let ctx' = add_unqual_var ctx i in
-      let proper = fix_name ctx i in
-      (ctx', Extern (proper, ts) :: [])
+      let ctx' = add_local_var ctx i in
+      (ctx', Extern (i, ts) :: [])
   | IntExtern (i, a, ts) ->
       let ctx' = add_unqual_var ctx a in
       let proper = fix_name ctx a in

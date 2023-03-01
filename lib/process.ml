@@ -33,9 +33,6 @@ let compile names asts args =
 
   (*codegen stage*)
   let kir = asts' |> Translateftm.front_to_middle in
-
-  if args.dump_ast3 then print_endline (Kir.show_kirprog kir) else ();
-
   let kir' = kir |> Lamlift.lambda_lift in
 
   if args.dump_ast3 then print_endline (Kir.show_kirprog kir') else ();

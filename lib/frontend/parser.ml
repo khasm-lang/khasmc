@@ -517,7 +517,7 @@ and parse_bind state =
 
 and parse_extern state =
   let nm = get_ident state in
-  (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
+  (match pop state with COL_OP ":" -> () | x -> error state x [ COL_OP ":" ]);
   let ts = parse_type state in
   Extern (nm, ts)
 
