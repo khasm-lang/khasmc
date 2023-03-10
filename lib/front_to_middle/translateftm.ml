@@ -91,7 +91,7 @@ let rec ftm_toplevel table top =
   | Ast.IntExtern (id, id', ts) ->
       let id1, tbl' = Kir.add_to_tbl id table in
       let id2, tbl'' = Kir.add_to_tbl id' tbl' in
-      (Kir.Let (ts, id2, Kir.Val (ts, id1)), tbl'')
+      (Kir.Extern (ts, id2, id), tbl'')
   | Ast.SimplModule (_, _) -> raise @@ Impossible "Modules in ftm"
 
 let rec ftm table prog =

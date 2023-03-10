@@ -20,10 +20,10 @@ typedef struct khagm_obj {
     str,
   } type;
   union {
-    fptr * val;
+    fptr val;
     
     struct {
-      fptr * function;
+      fptr function;
       struct khagm_obj * args;
       i32 argnum;
     } packed thunk;

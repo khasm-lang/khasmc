@@ -12,9 +12,6 @@ let rec normalise files =
 
 let compile names asts args =
   print_endline "";
-  if args.dump_ast1 then
-    asts |> List.iter (fun x -> print_endline (Ast.show_program x))
-  else ();
   let asts' =
     asts
     |> List.map Complexity.init_program
@@ -22,7 +19,7 @@ let compile names asts args =
     |> List.rev |> Elim_modules.elim
   in
 
-  if args.dump_ast2 then
+  if args.dump_ast1 then
     asts' |> List.iter (fun x -> print_endline (Ast.show_program x))
   else ();
 
@@ -35,6 +32,9 @@ let compile names asts args =
   let kir = asts' |> Translateftm.front_to_middle in
   let kir' = kir |> Lamlift.lambda_lift in
 
-  if args.dump_ast3 then print_endline (Kir.show_kirprog kir') else ();
+  if args.dump_ast2 then print_endline (Kir.show_kirprog kir') else ();
+
+  let khagm = kir' |> Mtb.mtb in
+  if args.dump_ast3 then print_endline (Khagm.show_khagm khagm) else ();
 
   "done"

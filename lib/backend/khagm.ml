@@ -1,7 +1,13 @@
 open Exp
 
-type khagmid = int
-type unboxed = Int' of string | String' of string | Float' of string
+type khagmid = int [@@deriving show { with_path = false }]
+
+type unboxed =
+  | Int' of string
+  | String' of string
+  | Float' of string
+  | Bool' of bool
+[@@deriving show { with_path = false }]
 
 type khagmexpr =
   | Val of khagmid
@@ -11,7 +17,11 @@ type khagmexpr =
   | Seq of khagmexpr * khagmexpr
   | Let of khagmid * khagmexpr * khagmexpr
   | IfElse of khagmexpr * khagmexpr * khagmexpr
+[@@deriving show { with_path = false }]
 
 type khagmtop =
   | Let of khagmid * khagmid list * khagmexpr
   | Extern of khagmid * string
+[@@deriving show { with_path = false }]
+
+type khagm = khagmtop list [@@deriving show { with_path = false }]
