@@ -1,1 +1,5 @@
-let test : int -> int = 1 * 2 + 1
+let test x : int -> int = x
+
+let hmm x y : int -> int -> (int, int) = (x, y)
+
+let yes : int -> int -> (int, int) = hmm
