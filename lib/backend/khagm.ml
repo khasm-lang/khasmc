@@ -8,7 +8,9 @@ type khagmexpr =
   | Unboxed of unboxed
   | Tuple of khagmexpr list
   | Call of khagmexpr * khagmexpr
-  | Eval of khagmexpr
+  | Seq of khagmexpr * khagmexpr
+  | Let of khagmid * khagmexpr * khagmexpr
+  | IfElse of khagmexpr * khagmexpr * khagmexpr
 
 type khagmtop =
   | Let of khagmid * khagmid list * khagmexpr
