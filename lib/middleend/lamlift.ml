@@ -102,15 +102,18 @@ let%test "Basic Lambda Lifting" =
   let before =
     [
       Let
-        ( TSBottom,
+        ( Ast.tsBottom,
           0,
-          Call (TSBottom, Lam (TSBottom, 1, Val (TSBottom, 1)), Int "10") );
+          Call
+            ( Ast.tsBottom,
+              Lam (Ast.tsBottom, 1, Val (Ast.tsBottom, 1)),
+              Int "10" ) );
     ]
   in
   let after =
     [
-      Let (TSBottom, 1, Lam (TSBottom, 1, Val (TSBottom, 1)));
-      Let (TSBottom, 0, Call (TSBottom, Val (TSBottom, 1), Int "10"));
+      Let (Ast.tsBottom, 1, Lam (Ast.tsBottom, 1, Val (Ast.tsBottom, 1)));
+      Let (Ast.tsBottom, 0, Call (Ast.tsBottom, Val (Ast.tsBottom, 1), Int "10"));
     ]
   in
   let (), before' = lambda_lift ((), before) in

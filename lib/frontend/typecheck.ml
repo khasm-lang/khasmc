@@ -7,8 +7,7 @@ open Debug
 type ctx = { binds : (kident * typesig) list }
 [@@deriving show { with_path = false }]
 
-let empty_typ_ctx () =
-  { binds = [ (*hardcode in that () is bottom*) ("()", TSBottom) ] }
+let empty_typ_ctx () = { binds = [] }
 
 let assume_typ ctx id ts =
   { ctx with binds = (id, make_uniq_ts ts None) :: ctx.binds }
@@ -24,7 +23,6 @@ let rec occurs_ts s ts =
   (* checks whether a variable s is free in ts *)
   match ts with
   | TSBase x -> x = s
-  | TSBottom -> false
   | TSMeta _ -> false
   | TSApp (x, _) -> occurs_ts s x
   | TSMap (x, y) -> occurs_ts s x || occurs_ts s y
@@ -34,7 +32,6 @@ let rec occurs_ts s ts =
 let rec lift_ts_h t =
   match t with
   | TSBase _ -> (t, false)
-  | TSBottom -> (t, false)
   | TSMeta _ -> (t, false)
   | TSApp (x, y) ->
       let did = lift_ts_h x in
@@ -79,7 +76,6 @@ let rec lift_ts ts =
 (** Substitutes forall vars within a type *)
 let rec subs typ nm newt =
   match typ with
-  | TSBottom -> TSBottom
   | TSBase x -> if x == nm then newt else typ
   | TSMeta _ -> typ
   | TSApp (x, y) -> TSApp (subs x nm newt, y)
@@ -103,7 +99,6 @@ let lookup_meta ctx m =
 (** Instantiates foralls with metavars *)
 let rec inst_meta tp orig meta =
   match tp with
-  | TSBottom -> TSBottom
   | TSBase x -> if x = orig then meta else tp
   | TSMeta _ -> tp
   | TSApp (ts, p) -> TSApp (inst_meta ts orig meta, p)
@@ -121,7 +116,6 @@ let rec inst_all ts =
       inst_all new'
   | TSApp (x, y) -> TSApp (x, y)
   | TSMap (x, y) -> TSMap (x, y)
-  | TSBottom -> TSBottom
   | TSBase x -> TSBase x
   | TSMeta x -> TSMeta x
   | TSTuple t -> TSTuple (List.map inst_all t)
@@ -281,9 +275,6 @@ and unify ?loop ctx l r =
         debug "TUPLE";
         let tmp = unify_list ctx a x in
         (fst tmp, TSTuple (snd tmp))
-    | TSBottom, TSBottom ->
-        debug "BOT";
-        (ctx, TSBottom)
     | TSMeta m, _ -> (
         debug "META";
         match get_meta_opt ctx m with
@@ -310,7 +301,6 @@ and unify ?loop ctx l r =
 (** Applies a unify_ctx to a type *)
 let rec apply_unify ctx tp =
   match tp with
-  | TSBottom -> TSBottom
   | TSBase _ -> tp
   | TSMeta t -> ( match lookup_meta ctx t with Some x -> x | None -> tp)
   | TSApp (f, x) -> TSApp (apply_unify ctx f, x)
@@ -395,7 +385,7 @@ and infer ctx tm =
         let intyp = infer (assume_typ ctx id bodytyp) e2 in
         (inf, intyp)
     | Join (inf, a, b) ->
-        ignore (check ctx a TSBottom);
+        ignore (check ctx a tsBottom);
         (inf, infer ctx b)
     | Inst (_, _, _) -> raise (TypeErr "UNREACHABLE")
     | TypeLam (inf, t, b) ->

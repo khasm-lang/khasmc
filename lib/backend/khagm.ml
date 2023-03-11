@@ -24,4 +24,5 @@ type khagmtop =
   | Extern of khagmid * string
 [@@deriving show { with_path = false }]
 
-type khagm = khagmtop list [@@deriving show { with_path = false }]
+type khagm = khagmtop list * Kir.transtable
+[@@deriving show { with_path = false }]

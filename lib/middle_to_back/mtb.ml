@@ -38,6 +38,6 @@ let mtb_top code =
   | Bind (a, b) -> Khagm.Let (a, [], Khagm.Val b)
 
 let mtb kp =
-  let _typs, code = kp in
+  let typs, code = kp in
   let code' = List.map mtb_top code in
-  code'
+  (code', typs)

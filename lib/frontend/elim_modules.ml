@@ -49,7 +49,13 @@ type elim_ctx = {
 [@@deriving show { with_path = false }]
 
 let empty_elim_ctx () =
-  { mods = []; name = ""; prefix = []; vars = []; predefined = [] }
+  {
+    mods = [];
+    name = "";
+    prefix = [];
+    vars = [ ([ "()" ], [ "()" ]) ];
+    predefined = [];
+  }
 
 let ctx_with parent nm =
   {

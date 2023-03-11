@@ -1,0 +1,3 @@
+let test x : int -> int = (); x
+
+let main x : () -> () = ()

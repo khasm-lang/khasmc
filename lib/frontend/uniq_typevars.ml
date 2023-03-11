@@ -48,7 +48,6 @@ and get_binds newenv = List.nth newenv.binds 0 |> snd
 and make_uniq_ts ts env =
   let env = match env with None -> new_uniq_env () | Some x -> x in
   match ts with
-  | TSBottom -> TSBottom
   | TSBase t -> TSBase (get_uniq_in t env)
   | TSMap (t, k) -> TSMap (make_uniq_ts t (Some env), make_uniq_ts k (Some env))
   | TSForall (s, t) ->

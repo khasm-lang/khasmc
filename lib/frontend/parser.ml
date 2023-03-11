@@ -228,6 +228,7 @@ and get_binop_peek state =
   | AND_OP s
   | DOL_OP s ->
       Some s
+  | SEMICOLON -> Some ";"
   | _ -> None
 
 and get_ident_or_binop state =
@@ -268,14 +269,18 @@ and parse_type_tuple_2 state =
 
 and parse_type_helper state =
   let first =
-    match pop state with
-    | T_IDENT s -> if s = "()" then TSBottom else TSBase s
+    match peek state 1 with
+    | T_IDENT s ->
+        toss state;
+        TSBase s
     | LPAREN -> (
+        toss state;
         let lhs = parse_type state in
         match pop state with
         | RPAREN -> lhs
         | COMMA | MUL_OP "*" -> TSTuple (lhs :: parse_type_tuple_2 state)
         | x -> error state x [ RPAREN; COMMA; MUL_OP "*" ])
+    | RPAREN -> TSTuple []
     | x -> error state x [ T_IDENT "example1"; LPAREN ]
   in
   match peek state 1 with
@@ -318,19 +323,19 @@ and infix_bind_pow tok =
   if mab <> (0, 0) then mab
   else
     match first with
-    | ';' -> (0, 1)
-    | '$' -> (3, 2)
-    | '=' | '>' | '<' -> (5, 4)
-    | '|' | '&' -> (7, 6)
-    | '@' | '^' -> (8, 9)
-    | ':' -> (10, 11)
-    | '+' | '-' -> (13, 12)
-    | '*' | '/' | '%' -> (15, 14)
+    | ';' -> (1, 0)
+    | '$' -> (2, 3)
+    | '=' | '>' | '<' -> (4, 5)
+    | '|' | '&' -> (6, 7)
+    | '@' | '^' -> (9, 8)
+    | ':' -> (11, 10)
+    | '+' | '-' -> (12, 13)
+    | '*' | '/' | '%' -> (14, 15)
     (* | "**" -> (16, 17) *)
     | _ -> raise @@ Impossible "invalid char index bind pow"
 
 and parse_tuple state =
-  let b = parse_expr state in
+  let b = parse_expr state 0 in
   match pop state with
   | COMMA -> b :: parse_tuple state
   | RPAREN -> b :: []
@@ -353,9 +358,11 @@ and parse_base state =
       FCall (mkinfo (), Base (mkinfo (), Ident (mkinfo (), s)), parse_base state)
   | LPAREN -> (
       match peek state 1 with
-      | RPAREN -> Base (mkinfo (), Ident (mkinfo (), "()"))
+      | RPAREN ->
+          toss state;
+          Base (mkinfo (), Tuple [])
       | _ -> (
-          let e' = parse_expr state in
+          let e' = parse_expr state 0 in
           match pop state with
           | COMMA -> Base (mkinfo (), Tuple (e' :: parse_tuple state))
           | RPAREN -> e'
@@ -403,11 +410,11 @@ and parse_compound state =
   match peek state 1 with
   | IF ->
       toss state;
-      let cond = parse_expr state in
+      let cond = parse_expr state 0 in
       expect state THEN;
-      let e1 = parse_expr state in
+      let e1 = parse_expr state 0 in
       expect state ELSE;
-      let e2 = parse_expr state in
+      let e2 = parse_expr state 0 in
       IfElse (mkinfo (), cond, e1, e2)
   | LET ->
       toss state;
@@ -415,9 +422,9 @@ and parse_compound state =
       (match pop state with
       | EQ_OP "=" -> ()
       | x -> error state x [ EQ_OP "=" ]);
-      let first = parse_expr state in
+      let first = parse_expr state 0 in
       expect state IN;
-      let second = parse_expr state in
+      let second = parse_expr state 0 in
       LetIn (mkinfo (), var, first, second)
   | FUN ->
       toss state;
@@ -427,13 +434,13 @@ and parse_compound state =
       | x -> error state x [ COL_OP ":" ]);
       let typ = parse_type state in
       (match pop state with LAM_TO -> () | x -> error state x [ LAM_TO ]);
-      let expr = parse_expr state in
+      let expr = parse_expr state 0 in
       Ast.AnnotLam (mkinfo (), v, typ, expr)
   | TFUN ->
       toss state;
       let v = get_ident state in
       (match pop state with LAM_TO -> () | x -> error state x [ COL_OP ":" ]);
-      let expr = parse_expr state in
+      let expr = parse_expr state 0 in
       Ast.TypeLam (mkinfo (), v, expr)
   | _ -> (
       let b = parse_base state in
@@ -446,9 +453,21 @@ and parse_compound state =
       | _ -> parse_funccall_try b state)
 
 and parse_expr_h state res prec =
+  print_endline "\n\ndebug:";
+  print_endline (show_state !state);
+  print_endline (string_of_int prec);
+  print_endline (show_kexpr res);
+  print_endline "enddebug\n\n";
   let op = get_binop_peek state in
   match op with
   | None -> res
+  | Some ";" ->
+      let pl, pr = infix_bind_pow ";" in
+      if pl >= prec then (
+        toss state;
+        let next_prec = pr in
+        parse_expr_h state (Join (mkinfo (), res, parse_expr state next_prec)) 0)
+      else res
   | Some s ->
       let pl, pr = infix_bind_pow s in
       if pl >= prec then (
@@ -458,13 +477,17 @@ and parse_expr_h state res prec =
           (FCall
              ( mkinfo (),
                FCall (mkinfo (), Base (mkinfo (), Ident (mkinfo (), s)), res),
-               parse_expr state ))
-          next_prec)
+               parse_expr state next_prec ))
+          0)
       else res
 
-and parse_expr state =
+and parse_expr state prec =
+  print_endline "\n\ndebug2:";
+  print_endline (string_of_int prec);
+  print_endline (show_state !state);
+  print_endline "enddebug\n\n";
   let lhs = parse_compound state in
-  parse_expr_h state lhs 0
+  parse_expr_h state lhs prec
 
 and parse_let state =
   let names = id_list state in
@@ -480,7 +503,7 @@ and parse_let state =
   in
   let expr =
     match pop state with
-    | EQ_OP "=" -> parse_expr state
+    | EQ_OP "=" -> parse_expr state 0
     | x -> error state x [ EQ_OP "=" ]
   in
   ((id, ts), (id, args, expr))
@@ -560,6 +583,6 @@ and program token lexbuf file =
     print_endline (show_token t');
     t'
   in
-  let state = new_state token lexbuf file in
+  let state = new_state token' lexbuf file in
   let tmp = parse_toplevel_list state in
   if tmp = [] then raise ParseError else Program tmp
