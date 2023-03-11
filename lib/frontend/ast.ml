@@ -1,5 +1,4 @@
 type typesig =
-  | TSBottom
   | TSBase of string
   | TSMeta of string
   | TSApp of typesig * string
@@ -8,6 +7,7 @@ type typesig =
   | TSTuple of typesig list
 [@@deriving show { with_path = false }, eq]
 
+let tsBottom = TSTuple []
 let brac x = "(" ^ x ^ ")"
 
 let rec by_sep x y =
@@ -15,7 +15,6 @@ let rec by_sep x y =
 
 let rec pshow_typesig ts =
   match ts with
-  | TSBottom -> "()"
   | TSBase x -> x
   | TSMeta x -> x
   | TSApp (x, y) -> brac (pshow_typesig x) ^ " " ^ y

@@ -4,7 +4,7 @@ type kirtype = Ast.typesig [@@deriving show { with_path = false }]
 type kirval = int [@@deriving show { with_path = false }]
 type transtable = (int * string) list [@@deriving show { with_path = false }]
 
-let empty_transtable () = (-1, "") :: []
+let empty_transtable () = [ (-1, ""); (-2, "()") ]
 let rint = ref 1
 
 let get_random_num () =

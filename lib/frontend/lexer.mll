@@ -149,7 +149,6 @@ rule token = parse
      }
      | INTIDENT {incr_by lexbuf; INTIDENT (Lexing.lexeme lexbuf)}
      | IDENT {incr_by lexbuf; T_IDENT (Lexing.lexeme lexbuf)}
-     | "()" {incr_by lexbuf; T_IDENT "()"}
      | "." {incr_by lexbuf; DOT}
      | eof {EOF}
      | _ {raise (SyntaxError ("Lexer - Illegal Character: " ^ Lexing.lexeme lexbuf))}
