@@ -1,12 +1,39 @@
 open Exp
 open Format
 open Khagm
+open KhasmUTF
+
+let mangler id =
+  let asint = String.get_uint8 id 0 in
+  if asint > 65 && asint < 65 + 26 then id
+  else if asint > 97 && asint < 97 + 26 then id
+  else
+    ((*these chars have to be invalid in identifiers
+       - they serve as padding to make everything an i32*)
+     (match unicode_len id with
+     | 1 -> "???" ^ id
+     | 2 -> "??" ^ id
+     | 3 -> "?" ^ id
+     | 4 -> id
+     | _ -> raise @@ Impossible "unicode char len")
+    |> (fun x -> String.get_int32_le x 0)
+    |> Int32.to_string)
+    ^ "_"
+
+let mangle_top nms id =
+  let nm = List.assoc id nms in
+  match nm with "main" -> "main_____Khasm" | _ -> utf8_map mangler nm
 
 let mangle id =
   let id' = string_of_int id in
   "khasm_" ^ id'
 
 let gen i = String.concat "" @@ List.init i (fun _ -> " ")
+
+let gen_prelude args =
+  "\nif (khagm_get_argnum) return "
+  ^ (string_of_int @@ List.length args)
+  ^ ";\n"
 
 let rec compute_predecls exp =
   match exp with
@@ -30,8 +57,13 @@ let addr nms id =
   | Some _ -> "create_call(&" ^ mangle id ^ ", NULL, 0)"
   | None -> mangle id
 
-let gen_funcsig id args =
-  "khagm_obj * " ^ mangle id ^ "("
+let create_maybe_call id nms list =
+  match List.assoc_opt id nms with
+  | Some _ -> "create_call(&" ^ mangle_top nms id ^ ", " ^ list ^ ", 1)"
+  | None -> "create_thunk(" ^ mangle id ^ ", " ^ list ^ ", 1)"
+
+let gen_funcsig id nms args =
+  "khagm_obj * " ^ mangle_top nms id ^ "("
   ^ (List.map (( ^ ) "khagm_obj * ") (List.map mangle args)
     |> String.concat ", ")
   ^ ") {\n"
@@ -56,9 +88,8 @@ let rec emit_expr nms exp =
             "create_tuple(" ^ list ^ ", " ^ len ^ ")")
     | Call (Val id, e2) ->
         let e2' = emit_expr nms e2 in
-        let nm = addr nms id in
         let list = "create_list(1, " ^ e2' ^ ")" in
-        "create_call(" ^ nm ^ ", " ^ list ^ ", 1)"
+        create_maybe_call id nms list
     | Call (e1, e2) ->
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
@@ -88,10 +119,12 @@ let rec emit_top nms code =
   | Let (id, args, exp) ->
       let code = emit_expr nms exp in
       let pres = compute_predecls exp in
-      let sig' = gen_funcsig id args in
+      let sig' = gen_funcsig id nms args in
       let predecls = gen_predecls pres in
-      sig' ^ predecls ^ "return " ^ code ^ ";\n}\n"
-  | Extern (id, str) -> "\n/* TODO: externs */\n"
+      let prelude = gen_prelude args in
+      sig' ^ prelude ^ predecls ^ "return " ^ code ^ ";\n}\n"
+      |> ( ^ ) ("\n/* " ^ List.assoc id nms ^ " */\n")
+  | Extern (id, str) -> "#define " ^ mangle id ^ " " ^ str
 
 let emit (prog : khagm) =
   let code, nms = prog in

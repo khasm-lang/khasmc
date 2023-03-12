@@ -29,13 +29,26 @@
     }
 }
 
+let U1 = [ '\000' - '\127' ]
+let U2 = [ '\012' - '\013' ]
+let U3 = '\014'
+let U4 = '\015'
+let follow = [ '\008' - '\011' ][ '\000' - '\255' ]
+
+let unicode = (
+    U1
+    | U2 follow
+    | U3 follow follow
+    | U4 follow follow follow
+)
+
 let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
 let INT = (digit)+
 
 let start = ['a'-'z' 'A'-'Z' '_' '\'']
 
-let all = ['a'-'z' 'A'-'Z' '_' '\'' '0'-'9']
+let all = ['a'-'z' 'A'-'Z' '_' '\'' '0'-'9' ]
 
 let IDENT = start all*
 
