@@ -23,9 +23,6 @@ let split_unicode s =
         (get, rest)
     | _ -> raise Malformed_Unicode
   in
-  print_endline "hmm:";
-  print_endline get;
-  print_endline rest;
   (get, rest)
 
 let rec unicode_len s = fst @@ split_unicode s |> String.length

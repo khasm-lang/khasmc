@@ -1,3 +1,4 @@
+#pragma once
 #include "types.h"
 #define packed __attribute__ ((packed))
 
@@ -16,6 +17,7 @@ typedef struct khagm_obj {
     ub_float,
     str,
     ITE,
+    seq,
   } packed type;
   union {
     fptr val;
@@ -40,6 +42,11 @@ typedef struct khagm_obj {
     struct {
       struct khagm_obj ** ite;
     } ITE;
+
+    struct {
+      struct khagm_obj * a;
+      struct khagm_obj * b;
+    } seq;
     
     i64 unboxed_int;
     f64 unboxed_float;

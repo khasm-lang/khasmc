@@ -1,0 +1,11 @@
+internal_extern `print = print : ∀a, a -> ()
+
+let printer x : () -> () =
+    let x = 1 in
+    print x;
+    let y = "ten" in
+    print y;
+    let z = 1.2 in
+    print z
+
+let main x : () -> () = printer ()
