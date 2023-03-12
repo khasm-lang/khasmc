@@ -10,6 +10,10 @@
 extern long get_val_from_pointer(fptr p);
 
 void pprint_khagm_obj(khagm_obj * p) {
+  if (!p) {
+    printf("(NULL)\n");
+    return;
+  }
   switch (p->type) {
   case val: {
     long a = get_val_from_pointer(p->data.val);
@@ -32,13 +36,21 @@ void pprint_khagm_obj(khagm_obj * p) {
       pprint_khagm_obj(p->data.thunk.args[i]);
     }
     printf(")\n");
+    break;
+  }
+  case seq: {
+    printf("(Seq \n");
+    pprint_khagm_obj(p->data.seq.a);
+    pprint_khagm_obj(p->data.seq.b);
+    printf(")\n");
+    break;
   }
   case tuple: {
     printf("(Tuple\n");
     for (int i = 0; i < p->data.tuple.num; i++) {
       pprint_khagm_obj(p->data.tuple.tups[i]);
     }
-    printf(")");
+    printf(")\n");
     break;
   }
   case ub_int: {
@@ -51,10 +63,10 @@ void pprint_khagm_obj(khagm_obj * p) {
   }
   case str: {
     printf("(String ");
-    for (int i = 0; i < p->data.string->len; i++) {
-      printf("%d ", p->data.string->data[i]);
+    for (int i = 0; i < p->data.string.len; i++) {
+      printf("%d ", p->data.string.data[i]);
     }
-    printf(")");
+    printf(")\n");
     break;
   }
   case ITE: {
@@ -63,6 +75,7 @@ void pprint_khagm_obj(khagm_obj * p) {
     pprint_khagm_obj(p->data.ITE.ite[1]);
     pprint_khagm_obj(p->data.ITE.ite[2]);
     printf(")\n");
+    break;
   }
   }
 }

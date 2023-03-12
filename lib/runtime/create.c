@@ -71,6 +71,15 @@ khagm_obj *create_string(char * c) {
   return k;
 }
 
+khagm_obj *create_seq(khagm_obj *a, khagm_obj*b) {
+  new_kobj(k);
+  k->type = seq;
+  k->data.seq.a = a;
+  k->data.seq.b = b;
+  return k;
+}
+
+
 khagm_obj ** create_list(i32 num, ...) {
   va_list ap;
   va_start(ap, num);

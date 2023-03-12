@@ -5,8 +5,8 @@ open KhasmUTF
 
 let mangler id =
   let asint = String.get_uint8 id 0 in
-  if asint > 65 && asint < 65 + 26 then id
-  else if asint > 97 && asint < 97 + 26 then id
+  if asint >= 65 && asint < 65 + 26 then id
+  else if asint >= 97 && asint < 97 + 26 then id
   else
     ((*these chars have to be invalid in identifiers
        - they serve as padding to make everything an i32*)
@@ -22,18 +22,17 @@ let mangler id =
 
 let mangle_top nms id =
   let nm = List.assoc id nms in
-  match nm with "main" -> "main_____Khasm" | _ -> utf8_map mangler nm
+  match nm with
+  | "main" -> "main_____Khasm"
+  | _ -> "khasm_" ^ utf8_map mangler nm
+
+let mangle_top_str id = "extern_" ^ utf8_map mangler id
 
 let mangle id =
   let id' = string_of_int id in
   "khasm_" ^ id'
 
 let gen i = String.concat "" @@ List.init i (fun _ -> " ")
-
-let gen_prelude args =
-  "\nif (khagm_get_argnum) return "
-  ^ (string_of_int @@ List.length args)
-  ^ ";\n"
 
 let rec compute_predecls exp =
   match exp with
@@ -98,7 +97,7 @@ let rec emit_expr nms exp =
     | Seq (e1, e2) ->
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
-        "((" ^ e1' ^ "), (" ^ e2' ^ "))"
+        "create_seq(" ^ e1' ^ ", " ^ e2' ^ ")"
     | Let (v, e1, e2) ->
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
@@ -121,12 +120,39 @@ let rec emit_top nms code =
       let pres = compute_predecls exp in
       let sig' = gen_funcsig id nms args in
       let predecls = gen_predecls pres in
-      let prelude = gen_prelude args in
-      sig' ^ prelude ^ predecls ^ "return " ^ code ^ ";\n}\n"
-      |> ( ^ ) ("\n/* " ^ List.assoc id nms ^ " */\n")
-  | Extern (id, str) -> "#define " ^ mangle id ^ " " ^ str
+      let code =
+        sig' ^ predecls ^ "return " ^ code ^ ";\n}\n"
+        |> ( ^ ) ("\n/* " ^ List.assoc id nms ^ " */\n")
+      in
+      (code, Some (mangle_top nms id, List.length args))
+  | Extern (id, str) ->
+      ( "#define " ^ mangle_top nms id ^ " " ^ mangle_top_str str,
+        Some (mangle_top_str str, 1) )
+
+let top_prelude =
+  {|
+  /* Compiler generated khasm code,
+    running on the Khagm graph backend. */
+  #include "khagm_obj.h"
+  #include "create.h"  
+|}
+
+let rec arity_h nms list =
+  match list with
+  | [] -> ""
+  | Some x :: xs ->
+      "if (f == &" ^ fst x ^ ") return "
+      ^ string_of_int (snd x)
+      ^ ";\n" ^ arity_h nms xs
+  | None :: xs -> arity_h nms xs
+
+let gen_arity_table nms list =
+  "int arity_table(fptr f) {\n" ^ arity_h nms list ^ "return -1;\n}"
 
 let emit (prog : khagm) =
   let code, nms = prog in
   let res = List.map (emit_top nms) code in
-  String.concat "\n/* -------- */\n" res
+  let code = List.map fst res in
+  let aritytable = gen_arity_table nms (List.map snd res) in
+  let b = String.concat "\n/* -------- */\n" code |> ( ^ ) top_prelude in
+  b ^ aritytable
