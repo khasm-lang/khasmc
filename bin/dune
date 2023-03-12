@@ -16,9 +16,3 @@
   (:standard -warn-error -A -g -annot))
  (ocamlopt_flags
   (-g -annot)))
-
-(ocamllex lexer)
-
-(menhir
- (modules parser)
- (flags --exn-carries-state))

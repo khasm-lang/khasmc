@@ -453,11 +453,6 @@ and parse_compound state =
       | _ -> parse_funccall_try b state)
 
 and parse_expr_h state res prec =
-  print_endline "\n\ndebug:";
-  print_endline (show_state !state);
-  print_endline (string_of_int prec);
-  print_endline (show_kexpr res);
-  print_endline "enddebug\n\n";
   let op = get_binop_peek state in
   match op with
   | None -> res
@@ -482,10 +477,6 @@ and parse_expr_h state res prec =
       else res
 
 and parse_expr state prec =
-  print_endline "\n\ndebug2:";
-  print_endline (string_of_int prec);
-  print_endline (show_state !state);
-  print_endline "enddebug\n\n";
   let lhs = parse_compound state in
   parse_expr_h state lhs prec
 

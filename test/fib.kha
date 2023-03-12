@@ -7,3 +7,6 @@ let rec fib n : int -> int =
 
 let main x : () -> () =
    Stdlib.print fib
+
+
+let hmm1111 x123 : int -> int = x123
