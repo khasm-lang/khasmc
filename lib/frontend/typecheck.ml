@@ -21,13 +21,15 @@ let lookup ctx x =
 (** Checks whether a variable is free in a context *)
 let rec occurs_ts s ts =
   (* checks whether a variable s is free in ts *)
-  match ts with
+  let res = match ts with
   | TSBase x -> x = s
   | TSMeta _ -> false
   | TSApp (x, _) -> occurs_ts s x
   | TSMap (x, y) -> occurs_ts s x || occurs_ts s y
   | TSForall (x, y) -> if x = s then false else occurs_ts s y
   | TSTuple x -> List.map (fun x -> occurs_ts s x) x |> List.mem true
+  in
+  res
 
 let rec lift_ts_h t =
   match t with
@@ -120,6 +122,22 @@ let rec inst_all ts =
   | TSMeta x -> TSMeta x
   | TSTuple t -> TSTuple (List.map inst_all t)
 
+let rec elim_unused ts =
+  let af = match ts with
+  | TSBase(_) -> ts
+  | TSMeta(_) -> ts
+  | TSApp(a, b) -> TSApp(elim_unused a, b)
+  | TSMap(a, b) -> TSMap(elim_unused a, elim_unused b)
+  | TSForall(a, b) ->
+    if occurs_ts a b then
+      TSForall(a, elim_unused b)
+    else
+      elim_unused b
+  | TSTuple(t) -> TSTuple(List.map elim_unused t)
+  in
+  af
+
+                   
 (** Unique list tools *)
 let uniq_cons x xs = if List.mem x xs then xs else x :: xs
 
@@ -240,30 +258,24 @@ and unify ?loop ctx l r =
     logic for both sides lol)
 
    *)
-  debug "\n\n(\nUNIFY";
-  let l = lift_ts l in
-  let r = lift_ts r in
-  debug (pshow_typesig l);
-  debug (pshow_typesig r);
+
+  let l = elim_unused @@ lift_ts l in
+  let r = elim_unused @@ lift_ts r in
   let res =
     match (l, r) with
     | TSBase x, TSBase y ->
-        debug "BASE";
         if x = y then (ctx, TSBase x)
         else raise (UnifyErr ("can't unify " ^ x ^ " and " ^ y))
     | TSMap (a, b), TSMap (x, y) ->
-        debug "MAP";
         let lt = unify ctx a x in
         let rt = unify ctx b y in
         (combine (fst lt) (fst rt), TSMap (snd lt, snd rt))
     | TSApp (a, b), TSApp (x, y) ->
-        debug "APP";
         if b <> y then raise (UnifyErr ("can't unify" ^ b ^ " and " ^ y))
         else
           let t = unify ctx a x in
           (fst t, TSApp (snd t, b))
     | TSForall (a, b), TSForall (x, y) ->
-        debug "FORALL";
         (*
          TODO: show how this works
         *)
@@ -272,16 +284,17 @@ and unify ?loop ctx l r =
         let unf = unify ctx met sub in
         (fst unf, TSForall (a, snd unf))
     | TSTuple a, TSTuple x ->
-        debug "TUPLE";
         let tmp = unify_list ctx a x in
         (fst tmp, TSTuple (snd tmp))
     | TSMeta m, _ -> (
-        debug "META";
         match get_meta_opt ctx m with
         | Some x ->
             let typ = snd x in
             unify ctx typ r
         | None -> (combine { metas = [ (m, r) ] } ctx, r))
+    | TSForall (id, ts), _ -> (
+        unify ctx (inst_all (TSForall (id, ts))) r    
+      )     
     | _, _ -> (
         match loop with
         | None -> unify ~loop:true ctx r l
@@ -292,10 +305,6 @@ and unify ?loop ctx l r =
         )
   in
   let res = (fst res, lift_ts (snd res)) in
-  debug "\n\nUNIFY RESULT:";
-  debug (show_unify_ctx (fst res));
-  debug (pshow_typesig (snd res));
-  debug "\n)\n";
   res
 
 (** Applies a unify_ctx to a type *)
@@ -329,15 +338,10 @@ and infer ctx tm =
   (*
     infer the type of a term
    *)
-  debug "\n\n(\nINFER";
-  debug (show_kexpr tm);
   let res =
     match tm with
     | Base (inf, x) -> (inf, infer_base ctx x)
     | FCall (inf, f, x) -> (
-        debug "\n\nFCALL";
-        debug (show_kexpr f);
-        debug (show_kexpr x);
         (*
 
        alright, so this mess. Basically what this does is
@@ -356,8 +360,6 @@ and infer ctx tm =
         let inst_r = inst_all typ_r in
         let typ_l = infer ctx x in
         let inst_l = inst_all typ_l in
-        debug ("INST r. : " ^ pshow_typesig inst_r);
-        debug ("INST l. : " ^ pshow_typesig inst_l);
         match inst_r with
         | TSMap (a, b) ->
             let res = unify (empty_unify_ctx ()) a inst_l in
@@ -417,13 +419,8 @@ and infer ctx tm =
   in
   let inf = fst res in
   let res = snd res in
-  let res = lift_ts res in
+  let res = elim_unused @@ lift_ts res in
   Hash.add_typ inf.id res;
-  debug "\n\nINFER RES:";
-  debug (show_kexpr tm);
-  debug ":";
-  debug (pshow_typesig res);
-  debug "\n)\n";
   res
 
 (** Checks a type against a term *)
@@ -431,9 +428,7 @@ and check ctx tm tp =
   (*
     check a type against a term
    *)
-  debug "\n\n(\nCHECK";
-  debug (show_kexpr tm);
-  debug (pshow_typesig tp);
+  let tp = elim_unused tp in
   let inf =
     match (tm, tp) with
     | Lam (inf, id, bd), TSMap (a, b) ->
@@ -458,8 +453,7 @@ and check ctx tm tp =
   match inf with
   | Some s -> Hash.add_typ s.id tp
   | None ->
-      ();
-      debug "\n)\n CHECK END"
+      ()
 
 (** See conv_args_body_to_typelams *)
 let rec forall_to_typelam ts args body =
@@ -472,8 +466,8 @@ let rec forall_to_typelam ts args body =
 (** See conv_args_body_to_typelams *)
 let rec add_args ts args body =
   match (ts, args) with
-  | TSMap (a, b), x :: xs -> AnnotLam (mkinfo (), x, a, add_args b xs body)
-  | _, [ x ] -> AnnotLam (mkinfo (), x, ts, body)
+  | TSMap (a, b), x :: xs -> AnnotLam (mkinfo (), x, elim_unused a, add_args b xs body)
+  | _, [ x ] -> AnnotLam (mkinfo (), x, elim_unused ts, body)
   | _, [] -> body
   | _, _ ->
       raise
@@ -499,6 +493,7 @@ let rec add_args ts args body =
             
            *)
 let conv_ts_args_body_to_typelams ts args body =
+  let ts = elim_unused ts in  
   let fixed = forall_to_typelam ts args body in
   let args_fixed = add_args (fst fixed) args body in
   let fixed_2 = forall_to_typelam ts args args_fixed in
