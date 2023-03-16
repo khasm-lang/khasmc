@@ -113,6 +113,12 @@ let rec emit_expr nms exp =
   in
   first
 
+let gen_return code =
+  "static int done = 0;\n"
+  ^ "static khagm_obj * PERM = NULL;\n"  
+  ^ "if (!done) {PERM = " ^ code ^ "; done = 1;}\n"
+  ^ "return PERM;\n"
+    
 let rec emit_top nms code =
   match code with
   | Let (id, args, exp) ->
@@ -121,7 +127,7 @@ let rec emit_top nms code =
       let sig' = gen_funcsig id nms args in
       let predecls = gen_predecls pres in
       let code =
-        sig' ^ predecls ^ "return " ^ code ^ ";\n}\n"
+        sig' ^ predecls ^ gen_return code ^ ";\nreturn RETVAL;\n}\n"
         |> ( ^ ) ("\n/* " ^ List.assoc id nms ^ " */\n")
       in
       (code, Some (mangle_top nms id, List.length args))

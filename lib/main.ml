@@ -53,16 +53,13 @@ let main_proc () =
       print_endline res;
       "Success"
     with
-    (*
        | TypeErr x -> "Caught TypeErr:\n" ^ x
        | NotFound x -> "Caught NotFound:\n" ^ x
        | NotImpl x -> "NOTIMPL:\n" ^ x
        | UnifyErr x -> "Caught UnifyErr:\n" ^ x
        | SyntaxError x -> "LexerErr:\n" ^ x
        | Parser.ParseError -> "ParseError\n"
-           | Lexer.EOF x -> "EOF:\n" ^ x ( *)
-    | Impossible _ ->
-      "huh"
+           | Lexer.EOF x -> "EOF:\n" ^ x
   in
   Debug.debug ("\nStatus: " ^ succ);
   print_endline

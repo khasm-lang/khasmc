@@ -16,3 +16,8 @@
   (:standard -warn-error -A -g -annot))
  (ocamlopt_flags
   (-g -annot -afl-instrument)))
+
+(rule
+ (targets runtime_lib.ml)
+ (deps    (:gen ./runtime/generate.sh))
+ (action  (run %{gen})))
