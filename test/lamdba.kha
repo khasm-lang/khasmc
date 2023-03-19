@@ -1,5 +1,0 @@
-let test x : int -> int = x
-
-let hmm x y : int -> int -> (int, int) = (x, y)
-
-let yes : int -> int -> (int, int) = hmm

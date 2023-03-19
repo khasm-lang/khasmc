@@ -60,7 +60,6 @@ let main_proc () =
     | UnifyErr x -> "Caught UnifyErr:\n" ^ x
     | SyntaxError x -> "LexerErr:\n" ^ x
     | NotSupported x -> "Not Supported:\n" ^ x
-    | Parser.ParseError -> "ParseError\n"
     | Lexer.EOF x -> "EOF:\n" ^ x
   in
   Debug.debug ("\nStatus: " ^ succ);

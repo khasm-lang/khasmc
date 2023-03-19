@@ -13,10 +13,6 @@ let rec normalise files =
 let compile names asts args =
   print_endline "";
 
-  if args.dump_ast1 then
-    asts |> List.iter (fun x -> print_endline (Ast.show_program x))
-  else ();
-
   let asts' =
     asts
     |> List.map Complexity.init_program

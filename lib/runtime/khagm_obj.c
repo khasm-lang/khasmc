@@ -3,11 +3,12 @@
 #include <stdint.h>
 #include "types.h"
 #include "khagm_obj.h"
+#include "khagm_eval.h"
 
 #define packed __attribute__ ((packed))
 
 
-extern long get_val_from_pointer(fptr p);
+extern char * get_val_from_pointer(fptr p);
 
 void pprint_khagm_obj(khagm_obj * p) {
   if (!p) {
@@ -16,13 +17,13 @@ void pprint_khagm_obj(khagm_obj * p) {
   }
   switch (p->type) {
   case val: {
-    long a = get_val_from_pointer(p->data.val);
-    printf("(Val %ld)\n", a);
+    char * a = get_val_from_pointer(p->data.val);
+    printf("(Val %s)\n", a);
     break;
   }
   case call: {
-    long a = get_val_from_pointer(p->data.call.function);
-    printf("(Call %p\n", p->data.call.function);
+    char * a = get_val_from_pointer(p->data.call.function);
+    printf("(Call %s\n", a);
     for (int i = 0; i < p->data.call.argnum; i++) {
       pprint_khagm_obj(p->data.call.args[i]);
     }
@@ -72,7 +73,9 @@ void pprint_khagm_obj(khagm_obj * p) {
   case ITE: {
     printf("(ITE\n");
     pprint_khagm_obj(p->data.ITE.ite[0]);
+    printf("\nTHEN\n");
     pprint_khagm_obj(p->data.ITE.ite[1]);
+    printf("\nELSE\n");
     pprint_khagm_obj(p->data.ITE.ite[2]);
     printf(")\n");
     break;
@@ -81,4 +84,37 @@ void pprint_khagm_obj(khagm_obj * p) {
     printf("(UNKNOWN:\n");
     printf("\n)\n");
   }
+}
+
+
+int khagm_obj_eq(khagm_obj * a, khagm_obj * b) {
+  a = khagm_eval(a);
+  b = khagm_eval(b);
+  if (a->type != b->type) {
+    return 0;
+  }
+  if (a->type == ub_int) {
+    return (a->data.unboxed_int
+		      ==
+		      b->data.unboxed_int);
+  }
+  else if (a->type == ub_float) {
+    return (a->data.unboxed_float
+		      ==
+		      b->data.unboxed_float);
+  }
+  else if (a->type == tuple) {
+    if (a->data.tuple.num != b->data.tuple.num) {
+      return 0;
+    }
+    for (int i = 0; i < a->data.tuple.num; i++) {
+      if (!khagm_obj_eq(a->data.tuple.tups[i],
+			b->data.tuple.tups[i])) {
+	return 0;
+      }
+    }
+    return 1;
+  }
+  throw_err("Cannot compare types", FATAL);
+  return -1;
 }

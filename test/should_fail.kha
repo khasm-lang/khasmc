@@ -1,1 +1,0 @@
-let polyid x : forall b a, a -> (a, a) = (x, x)

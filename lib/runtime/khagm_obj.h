@@ -59,3 +59,4 @@ typedef struct khagm_obj {
 } khagm_obj;
 
 void pprint_khagm_obj(khagm_obj * a);
+int khagm_obj_eq(khagm_obj * a, khagm_obj * b);
