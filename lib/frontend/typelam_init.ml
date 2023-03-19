@@ -10,8 +10,8 @@ let rec init_toplevel t =
   | TopAssignRec ((_, ts), (id, args, expr)) ->
       TopAssignRec
         ((id, ts), (id, args, conv_ts_args_body_to_typelams ts args expr))
-  | Extern (_, _) -> t
-  | IntExtern (_, _, _) -> t
+  | Extern (_, _, _) -> t
+  | IntExtern (_, _, _, _) -> t
   | Bind (_, _, _) -> t
   | SimplModule (id, bd) -> SimplModule (id, List.map init_toplevel bd)
 

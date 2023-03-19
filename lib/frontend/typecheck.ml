@@ -21,13 +21,14 @@ let lookup ctx x =
 (** Checks whether a variable is free in a context *)
 let rec occurs_ts s ts =
   (* checks whether a variable s is free in ts *)
-  let res = match ts with
-  | TSBase x -> x = s
-  | TSMeta _ -> false
-  | TSApp (x, _) -> occurs_ts s x
-  | TSMap (x, y) -> occurs_ts s x || occurs_ts s y
-  | TSForall (x, y) -> if x = s then false else occurs_ts s y
-  | TSTuple x -> List.map (fun x -> occurs_ts s x) x |> List.mem true
+  let res =
+    match ts with
+    | TSBase x -> x = s
+    | TSMeta _ -> false
+    | TSApp (x, _) -> occurs_ts s x
+    | TSMap (x, y) -> occurs_ts s x || occurs_ts s y
+    | TSForall (x, y) -> if x = s then false else occurs_ts s y
+    | TSTuple x -> List.map (fun x -> occurs_ts s x) x |> List.mem true
   in
   res
 
@@ -123,21 +124,18 @@ let rec inst_all ts =
   | TSTuple t -> TSTuple (List.map inst_all t)
 
 let rec elim_unused ts =
-  let af = match ts with
-  | TSBase(_) -> ts
-  | TSMeta(_) -> ts
-  | TSApp(a, b) -> TSApp(elim_unused a, b)
-  | TSMap(a, b) -> TSMap(elim_unused a, elim_unused b)
-  | TSForall(a, b) ->
-    if occurs_ts a b then
-      TSForall(a, elim_unused b)
-    else
-      elim_unused b
-  | TSTuple(t) -> TSTuple(List.map elim_unused t)
+  let af =
+    match ts with
+    | TSBase _ -> ts
+    | TSMeta _ -> ts
+    | TSApp (a, b) -> TSApp (elim_unused a, b)
+    | TSMap (a, b) -> TSMap (elim_unused a, elim_unused b)
+    | TSForall (a, b) ->
+        if occurs_ts a b then TSForall (a, elim_unused b) else elim_unused b
+    | TSTuple t -> TSTuple (List.map elim_unused t)
   in
   af
 
-                   
 (** Unique list tools *)
 let uniq_cons x xs = if List.mem x xs then xs else x :: xs
 
@@ -258,7 +256,6 @@ and unify ?loop ctx l r =
     logic for both sides lol)
 
    *)
-
   let l = elim_unused @@ lift_ts l in
   let r = elim_unused @@ lift_ts r in
   let res =
@@ -292,9 +289,7 @@ and unify ?loop ctx l r =
             let typ = snd x in
             unify ctx typ r
         | None -> (combine { metas = [ (m, r) ] } ctx, r))
-    | TSForall (id, ts), _ -> (
-        unify ctx (inst_all (TSForall (id, ts))) r    
-      )     
+    | TSForall (id, ts), _ -> unify ctx (inst_all (TSForall (id, ts))) r
     | _, _ -> (
         match loop with
         | None -> unify ~loop:true ctx r l
@@ -450,10 +445,7 @@ and check ctx tm tp =
         ignore (unify (empty_unify_ctx ()) actual exp);
         None
   in
-  match inf with
-  | Some s -> Hash.add_typ s.id tp
-  | None ->
-      ()
+  match inf with Some s -> Hash.add_typ s.id tp | None -> ()
 
 (** See conv_args_body_to_typelams *)
 let rec forall_to_typelam ts args body =
@@ -466,7 +458,8 @@ let rec forall_to_typelam ts args body =
 (** See conv_args_body_to_typelams *)
 let rec add_args ts args body =
   match (ts, args) with
-  | TSMap (a, b), x :: xs -> AnnotLam (mkinfo (), x, elim_unused a, add_args b xs body)
+  | TSMap (a, b), x :: xs ->
+      AnnotLam (mkinfo (), x, elim_unused a, add_args b xs body)
   | _, [ x ] -> AnnotLam (mkinfo (), x, elim_unused ts, body)
   | _, [] -> body
   | _, _ ->
@@ -493,7 +486,7 @@ let rec add_args ts args body =
             
            *)
 let conv_ts_args_body_to_typelams ts args body =
-  let ts = elim_unused ts in  
+  let ts = elim_unused ts in
   let fixed = forall_to_typelam ts args body in
   let args_fixed = add_args (fst fixed) args body in
   let fixed_2 = forall_to_typelam ts args args_fixed in
@@ -522,8 +515,8 @@ let rec typecheck_toplevel_list ctx tl =
         (*
          assume the type is correct
         *)
-        | Extern (id, ts) -> assume_typ ctx id ts
-        | IntExtern (_, id, ts) -> assume_typ ctx id ts
+        | Extern (id, _arity, ts) -> assume_typ ctx id ts
+        | IntExtern (_nm, id, _arity, ts) -> assume_typ ctx id ts
         | SimplModule (_nm, _bd) ->
             raise @@ Impossible "Modules in typechecking"
         | Bind (id, _, ed) ->

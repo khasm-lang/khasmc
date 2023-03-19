@@ -81,17 +81,17 @@ let rec ftm_toplevel table top =
       let body = Typecheck.conv_ts_args_body_to_typelams ts args expr in
       let id', tbl' = Kir.add_to_tbl id table in
       (Kir.LetRec (ts, id', ftm_expr tbl' body), tbl')
-  | Ast.Extern (id, ts) ->
+  | Ast.Extern (id, arity, ts) ->
       let id', tbl' = Kir.add_to_tbl id table in
-      (Kir.Extern (ts, id', id), tbl')
+      (Kir.Extern (ts, arity, id', id), tbl')
   | Ast.Bind (id, _, nm) ->
       let id', tbl' = Kir.add_to_tbl id table in
       let v, _name = Kir.get_from_tbl nm tbl' in
       (Kir.Bind (id', v), tbl')
-  | Ast.IntExtern (id, id', ts) ->
+  | Ast.IntExtern (id, id', arity, ts) ->
       let id1, tbl' = Kir.add_to_tbl id table in
       let id2, tbl'' = Kir.add_to_tbl id' tbl' in
-      (Kir.Extern (ts, id2, id), tbl'')
+      (Kir.Extern (ts, arity, id2, id), tbl'')
   | Ast.SimplModule (_, _) -> raise @@ Impossible "Modules in ftm"
 
 let rec ftm table prog =

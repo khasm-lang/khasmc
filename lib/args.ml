@@ -4,7 +4,7 @@ let dast3 = ref false
 let debug = ref false
 let table = ref false
 let ins : string list ref = ref []
-let outs : string ref = ref ""
+let outs : string ref = ref "a.out"
 
 let usage =
   "khasmc [--dump-ast1] [--dump-ast2] [--dump-ast3] [--debug] [--table] \

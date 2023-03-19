@@ -161,13 +161,13 @@ let rec elim_toplevel ctx t =
       let trans = elim_expr ctx'' expr in
       let proper = fix_name ctx id in
       (ctx', TopAssignRec ((proper, ts), (proper, args, trans)) :: [])
-  | Extern (i, ts) ->
+  | Extern (i, arity, ts) ->
       let ctx' = add_local_var ctx i in
-      (ctx', Extern (i, ts) :: [])
-  | IntExtern (i, a, ts) ->
+      (ctx', Extern (i, arity, ts) :: [])
+  | IntExtern (i, a, arity, ts) ->
       let ctx' = add_unqual_var ctx a in
       let proper = fix_name ctx a in
-      (ctx', IntExtern (i, proper, ts) :: [])
+      (ctx', IntExtern (i, proper, arity, ts) :: [])
   | SimplModule (i, tl) ->
       let ctx' = ctx_with ctx i in
       let ctx'', tl' = elim_toplevel_list ctx' tl in

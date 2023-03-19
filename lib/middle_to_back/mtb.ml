@@ -34,7 +34,7 @@ let mtb_top code =
   | Kir.LetRec (_, id, exp) | Kir.Let (_, id, exp) ->
       let args, exp' = get_from_lams exp in
       Khagm.Let (kv_to_kg id, args, mtb_expr exp')
-  | Extern (_, v, s) -> Khagm.Extern (kv_to_kg v, s)
+  | Extern (_, arity, v, s) -> Khagm.Extern (kv_to_kg v, arity, s)
   | Bind (a, b) -> Khagm.Let (a, [], Khagm.Val b)
 
 let mtb kp =
