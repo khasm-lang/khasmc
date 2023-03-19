@@ -44,22 +44,25 @@ let rec compute_predecls exp =
   | Val _ | Unboxed _ -> []
 
 let rec emit_unboxed u =
-  match u with
-  | Float' s -> "create_float(" ^ s ^ ")"
-  | String' s -> "create_string(\"" ^ s ^ "\")"
-  | Int' s -> "create_int(" ^ s ^ ")"
-  | Bool' b -> (
-      match b with true -> "create_int(1)" | false -> "create_int(0)")
+  let f =
+    match u with
+    | Float' s -> "create_float(" ^ s ^ ")"
+    | String' s -> "create_string(\"" ^ String.escaped s ^ "\")"
+    | Int' s -> "create_int(" ^ s ^ ")"
+    | Bool' b -> (
+        match b with true -> "create_int(1)" | false -> "create_int(0)")
+  in
+  f ^ "\n"
 
 let addr nms id =
   match List.assoc_opt id nms with
-  | Some _ -> "create_call(&" ^ mangle id ^ ", NULL, 0)"
+  | Some _ -> "create_call(&" ^ mangle_top nms id ^ ", NULL, 0)"
   | None -> mangle id
 
 let create_maybe_call id nms list =
   match List.assoc_opt id nms with
-  | Some _ -> "create_call(&" ^ mangle_top nms id ^ ", " ^ list ^ ", 1)"
-  | None -> "create_thunk(" ^ mangle id ^ ", " ^ list ^ ", 1)"
+  | Some _ -> "create_call(&" ^ mangle_top nms id ^ "," ^ list ^ ", 1)"
+  | None -> "create_thunk(" ^ mangle id ^ ",\n " ^ list ^ ", 1)"
 
 let gen_funcsig id nms args =
   "khagm_obj * " ^ mangle_top nms id ^ "("
@@ -87,38 +90,36 @@ let rec emit_expr nms exp =
             "create_tuple(" ^ list ^ ", " ^ len ^ ")")
     | Call (Val id, e2) ->
         let e2' = emit_expr nms e2 in
-        let list = "create_list(1, " ^ e2' ^ ")" in
+        let list = "create_list(1,\n khagm_eval(" ^ e2' ^ "))" in
         create_maybe_call id nms list
     | Call (e1, e2) ->
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
-        let list = "create_list(1, " ^ e2' ^ ")" in
+        let list = "create_list(1,\n khagm_eval(" ^ e2' ^ "))" in
         "create_thunk(" ^ e1' ^ ", " ^ list ^ ", 1)"
     | Seq (e1, e2) ->
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
-        "create_seq(" ^ e1' ^ ", " ^ e2' ^ ")"
+        "create_seq(" ^ e1' ^ ",\n " ^ e2' ^ ")"
     | Let (v, e1, e2) ->
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
-        "((" ^ mangle v ^ " = " ^ e1' ^ "), (" ^ e2' ^ "))"
+        "((" ^ mangle v ^ " = " ^ e1' ^ "),\n (" ^ e2' ^ "))"
     | IfElse (c, e1, e2) ->
         let c' = emit_expr nms c in
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
         let list =
-          "create_list(3, " ^ String.concat ", " [ c'; e1'; e2' ] ^ ")"
+          "create_list(3,\n " ^ String.concat ",\n " [ c'; e1'; e2' ] ^ ")"
         in
         "create_ITE(" ^ list ^ ")"
   in
-  first
+  first ^ "\n"
 
 let gen_return code =
-  "static int done = 0;\n"
-  ^ "static khagm_obj * PERM = NULL;\n"  
-  ^ "if (!done) {PERM = " ^ code ^ "; done = 1;}\n"
-  ^ "return PERM;\n"
-    
+  "static int done = 0;\n" ^ "static khagm_obj * PERM = NULL;\n"
+  ^ "if (!done) {PERM = " ^ code ^ "; done = 1;}\n" ^ "return PERM;\n"
+
 let rec emit_top nms code =
   match code with
   | Let (id, args, exp) ->
@@ -127,20 +128,18 @@ let rec emit_top nms code =
       let sig' = gen_funcsig id nms args in
       let predecls = gen_predecls pres in
       let code =
-        sig' ^ predecls ^ gen_return code ^ ";\nreturn RETVAL;\n}\n"
+        sig' ^ predecls ^ gen_return code ^ ";\nreturn PERM;\n}\n"
         |> ( ^ ) ("\n/* " ^ List.assoc id nms ^ " */\n")
       in
       (code, Some (mangle_top nms id, List.length args))
-  | Extern (id, str) ->
+  | Extern (id, arity, str) ->
       ( "#define " ^ mangle_top nms id ^ " " ^ mangle_top_str str,
-        Some (mangle_top_str str, 1) )
+        Some (mangle_top_str str, arity) )
 
 let top_prelude =
   {|
   /* Compiler generated khasm code,
     running on the Khagm graph backend. */
-  #include "khagm_obj.h"
-  #include "create.h"  
 |}
 
 let rec arity_h nms list =
@@ -155,10 +154,13 @@ let rec arity_h nms list =
 let gen_arity_table nms list =
   "int arity_table(fptr f) {\n" ^ arity_h nms list ^ "return -1;\n}"
 
+let gen_get_val _nms = "long get_val_from_pointer(fptr f){\n return -1;\n}"
+
 let emit (prog : khagm) =
   let code, nms = prog in
   let res = List.map (emit_top nms) code in
   let code = List.map fst res in
   let aritytable = gen_arity_table nms (List.map snd res) in
+  let valtable = gen_get_val nms in
   let b = String.concat "\n/* -------- */\n" code |> ( ^ ) top_prelude in
-  b ^ aritytable
+  b ^ aritytable ^ valtable

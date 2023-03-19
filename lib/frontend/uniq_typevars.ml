@@ -59,7 +59,7 @@ and make_uniq_ts ts env =
 
 let rec make_uniq_toplevel t =
   match t with
-  | Extern (_, _) -> t
+  | Extern (_, _, _) -> t
   | TopAssign ((id, ts), ap) -> TopAssign ((id, make_uniq_ts ts None), ap)
 
 let rec make_uniq_typevars program =

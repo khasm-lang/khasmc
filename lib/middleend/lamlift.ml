@@ -79,7 +79,7 @@ and llift_expr ctx dolift expr =
 
 let rec llift_top top =
   match top with
-  | Extern (_, _, _) -> ([], top)
+  | Extern (_, _, _, _) -> ([], top)
   | Bind (_, _) -> ([], top)
   | Let (ts, v, exp) ->
       let added, n = llift_expr (emptyctx ()) false exp in

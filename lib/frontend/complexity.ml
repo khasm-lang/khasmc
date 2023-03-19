@@ -66,8 +66,8 @@ let rec init_expr expr =
 
 let rec init_toplevel t =
   match t with
-  | Extern (_, _) -> t
-  | IntExtern (_, _, _) -> t
+  | Extern (_, _, _) -> t
+  | IntExtern (_, _, _, _) -> t
   | Bind (_, _, _) -> t
   | TopAssignRec (a, (id, args, body)) ->
       let body' = init_expr body in

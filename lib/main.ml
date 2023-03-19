@@ -42,6 +42,7 @@ let parse_args () =
 
 let main_proc () =
   Printexc.record_backtrace true;
+  Random.self_init ();
   let args = parse_args () in
   let succ =
     try
@@ -53,13 +54,14 @@ let main_proc () =
       print_endline res;
       "Success"
     with
-       | TypeErr x -> "Caught TypeErr:\n" ^ x
-       | NotFound x -> "Caught NotFound:\n" ^ x
-       | NotImpl x -> "NOTIMPL:\n" ^ x
-       | UnifyErr x -> "Caught UnifyErr:\n" ^ x
-       | SyntaxError x -> "LexerErr:\n" ^ x
-       | Parser.ParseError -> "ParseError\n"
-           | Lexer.EOF x -> "EOF:\n" ^ x
+    | TypeErr x -> "Caught TypeErr:\n" ^ x
+    | NotFound x -> "Caught NotFound:\n" ^ x
+    | NotImpl x -> "NOTIMPL:\n" ^ x
+    | UnifyErr x -> "Caught UnifyErr:\n" ^ x
+    | SyntaxError x -> "LexerErr:\n" ^ x
+    | NotSupported x -> "Not Supported:\n" ^ x
+    | Parser.ParseError -> "ParseError\n"
+    | Lexer.EOF x -> "EOF:\n" ^ x
   in
   Debug.debug ("\nStatus: " ^ succ);
   print_endline

@@ -22,11 +22,11 @@ void pprint_khagm_obj(khagm_obj * p) {
   }
   case call: {
     long a = get_val_from_pointer(p->data.call.function);
-    printf("(Call %ld\n", a);
+    printf("(Call %p\n", p->data.call.function);
     for (int i = 0; i < p->data.call.argnum; i++) {
       pprint_khagm_obj(p->data.call.args[i]);
     }
-    printf(")\n");
+    printf(" %d)\n", p->data.call.argnum);
     break;
   }
   case thunk: {
@@ -35,7 +35,7 @@ void pprint_khagm_obj(khagm_obj * p) {
     for (int i = 0; i < p->data.thunk.argnum; i++) {
       pprint_khagm_obj(p->data.thunk.args[i]);
     }
-    printf(")\n");
+    printf(" %d)\n", p->data.thunk.argnum);
     break;
   }
   case seq: {
@@ -64,7 +64,7 @@ void pprint_khagm_obj(khagm_obj * p) {
   case str: {
     printf("(String ");
     for (int i = 0; i < p->data.string.len; i++) {
-      printf("%d ", p->data.string.data[i]);
+      printf("%c", p->data.string.data[i]);
     }
     printf(")\n");
     break;
@@ -77,5 +77,8 @@ void pprint_khagm_obj(khagm_obj * p) {
     printf(")\n");
     break;
   }
+  default:
+    printf("(UNKNOWN:\n");
+    printf("\n)\n");
   }
 }

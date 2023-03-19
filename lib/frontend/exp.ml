@@ -4,3 +4,5 @@ exception NotImpl of string
 exception Impossible of string
 exception UnifyErr of string
 exception Todo of string
+exception NotSupported of string
+exception CompileError of string

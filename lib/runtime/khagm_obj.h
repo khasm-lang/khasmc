@@ -51,6 +51,11 @@ typedef struct khagm_obj {
     i64 unboxed_int;
     f64 unboxed_float;
     kstring string;
+
+    i8 FULL[20];
+    
   } packed data;
   char GC_info;
 } khagm_obj;
+
+void pprint_khagm_obj(khagm_obj * a);

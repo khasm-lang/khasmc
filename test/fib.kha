@@ -6,6 +6,6 @@ let rec fib n : int -> int =
     Stdlib.(+) (fib (Stdlib.(-) n 1)) (fib (Stdlib.(-) n 2))
 
 let main x : () -> () =
-   Stdlib.print fib
+   Stdlib.print (fib 10)
 
 

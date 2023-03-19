@@ -44,7 +44,7 @@ type kirexpr =
 type kirtop =
   | Let of kirtype * kirval * kirexpr
   | LetRec of kirtype * kirval * kirexpr
-  | Extern of kirtype * kirval * string
+  | Extern of kirtype * int * kirval * string
   | Bind of kirval * kirval
 [@@deriving show { with_path = false }]
 

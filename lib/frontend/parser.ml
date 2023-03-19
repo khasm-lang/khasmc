@@ -530,12 +530,22 @@ and parse_bind state =
   Bind (op, [], name)
 
 and parse_extern state =
+  let arity =
+    match pop state with
+    | T_INT s -> int_of_string s
+    | x -> error state x [ T_INT "1" ]
+  in
   let nm = get_ident state in
   (match pop state with COL_OP ":" -> () | x -> error state x [ COL_OP ":" ]);
   let ts = parse_type state in
-  Extern (nm, ts)
+  Extern (nm, arity, ts)
 
 and parse_intextern state =
+  let arity =
+    match pop state with
+    | T_INT s -> int_of_string s
+    | x -> error state x [ T_INT "1" ]
+  in
   let nm =
     match pop state with INTIDENT s -> s | x -> error state x [ EQ_OP "=" ]
   in
@@ -543,7 +553,7 @@ and parse_intextern state =
   let id = get_ident state in
   (match pop state with COL_OP ":" -> () | x -> error state x [ COL_OP ":" ]);
   let ts = parse_type state in
-  IntExtern (nm, id, ts)
+  IntExtern (nm, id, arity, ts)
 
 and parse_toplevel_list state =
   let first =
