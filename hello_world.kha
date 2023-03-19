@@ -1,0 +1,1 @@
+let main x : () -> () = Stdlib.debug "Hello, world!"

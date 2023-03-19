@@ -1,6 +1,0 @@
-module A = struct
-  module B = struct
-    let ten : int = 10
-  end
-end
-let also_ten : int = A.B.ten

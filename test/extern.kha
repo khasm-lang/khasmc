@@ -1,5 +1,0 @@
-extern print : ∀a, a -> ()
-
-let test : () = print "hi"
-
-let main () : () -> () = print "hiiiii"

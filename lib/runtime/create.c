@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include "khagm_alloc.h"
 #include "khagm_obj.h"
 
@@ -42,6 +43,7 @@ khagm_obj *create_tuple(khagm_obj ** tups, i32 num) {
 
 khagm_obj *create_ITE(khagm_obj ** ite) {
   new_kobj(k);
+  k->type = ITE;
   k->data.ITE.ite = ite;
   return k;
 }

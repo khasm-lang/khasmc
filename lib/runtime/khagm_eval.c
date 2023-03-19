@@ -18,7 +18,6 @@ khagm_obj * reconcile(khagm_obj * ret, khagm_obj ** args,
 				  * ret->data.call.argnum);
     memcpy(ret->data.call.args + ret_argnum,
 	   args + arity, offset * sizeof(khagm_obj*));
-    k_free(args);
     return khagm_eval(ret);
   }
   case thunk: {
@@ -29,7 +28,6 @@ khagm_obj * reconcile(khagm_obj * ret, khagm_obj ** args,
 				  * ret->data.thunk.argnum);
     memcpy(ret->data.thunk.args + ret_argnum,
 	   args + arity, offset * sizeof(khagm_obj*));
-    k_free(args);
     return khagm_eval(ret);
   }
   case val: {
@@ -37,7 +35,6 @@ khagm_obj * reconcile(khagm_obj * ret, khagm_obj ** args,
     new->type = call;
     new->data.call.args = k_alloc(sizeof(khagm_obj*) * offset);
     memcpy(new->data.call.args, args + arity, offset * sizeof(khagm_obj*));
-    k_free(args);
     new->data.call.argnum = offset;
     return khagm_eval(new);
   }
@@ -80,18 +77,11 @@ khagm_obj * khagm_eval(khagm_obj * root) {
     khagm_obj * ret = dispatch(arity,
 			       root->data.call.function,
 			       root->data.call.args);
-    printf("got: %d %d %p\n",
-	   arity,
-	   root->data.call.argnum,
-	   root->data.call.function);
-    pprint_khagm_obj(root);
-    pprint_khagm_obj(ret);
     if (root->data.call.argnum > arity) {
       return reconcile(ret, root->data.call.args,
 		       arity, root->data.call.argnum);
     }
     else {
-      k_free(root);
       return khagm_eval(ret);
     }
   }

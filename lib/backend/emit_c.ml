@@ -90,12 +90,12 @@ let rec emit_expr nms exp =
             "create_tuple(" ^ list ^ ", " ^ len ^ ")")
     | Call (Val id, e2) ->
         let e2' = emit_expr nms e2 in
-        let list = "create_list(1,\n khagm_eval(" ^ e2' ^ "))" in
+        let list = "create_list(1,\n (" ^ e2' ^ "))" in
         create_maybe_call id nms list
     | Call (e1, e2) ->
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
-        let list = "create_list(1,\n khagm_eval(" ^ e2' ^ "))" in
+        let list = "create_list(1,\n (" ^ e2' ^ "))" in
         "create_thunk(" ^ e1' ^ ", " ^ list ^ ", 1)"
     | Seq (e1, e2) ->
         let e1' = emit_expr nms e1 in
@@ -116,9 +116,7 @@ let rec emit_expr nms exp =
   in
   first ^ "\n"
 
-let gen_return code =
-  "static int done = 0;\n" ^ "static khagm_obj * PERM = NULL;\n"
-  ^ "if (!done) {PERM = " ^ code ^ "; done = 1;}\n" ^ "return PERM;\n"
+let gen_return code = "\nreturn " ^ code ^ ";\n"
 
 let rec emit_top nms code =
   match code with
@@ -128,13 +126,13 @@ let rec emit_top nms code =
       let sig' = gen_funcsig id nms args in
       let predecls = gen_predecls pres in
       let code =
-        sig' ^ predecls ^ gen_return code ^ ";\nreturn PERM;\n}\n"
+        sig' ^ predecls ^ gen_return code ^ "}"
         |> ( ^ ) ("\n/* " ^ List.assoc id nms ^ " */\n")
       in
-      (code, Some (mangle_top nms id, List.length args))
+      (code, Some (mangle_top nms id, List.length args, mangle_top nms id))
   | Extern (id, arity, str) ->
       ( "#define " ^ mangle_top nms id ^ " " ^ mangle_top_str str,
-        Some (mangle_top_str str, arity) )
+        Some (mangle_top_str str, arity, str) )
 
 let top_prelude =
   {|
@@ -142,25 +140,39 @@ let top_prelude =
     running on the Khagm graph backend. */
 |}
 
-let rec arity_h nms list =
+let t_fst (a, _, _) = a
+let t_snd (_, b, _) = b
+let t_thrd (_, _, c) = c
+
+let rec arity_h list =
   match list with
   | [] -> ""
   | Some x :: xs ->
-      "if (f == &" ^ fst x ^ ") return "
-      ^ string_of_int (snd x)
-      ^ ";\n" ^ arity_h nms xs
-  | None :: xs -> arity_h nms xs
+      "if (f == &" ^ t_fst x ^ ") return "
+      ^ string_of_int (t_snd x)
+      ^ ";\n" ^ arity_h xs
+  | None :: xs -> arity_h xs
 
-let gen_arity_table nms list =
-  "int arity_table(fptr f) {\n" ^ arity_h nms list ^ "return -1;\n}"
+let gen_arity_table list =
+  "int arity_table(fptr f) {\n" ^ arity_h list ^ "return -1;\n}"
 
-let gen_get_val _nms = "long get_val_from_pointer(fptr f){\n return -1;\n}"
+let rec getval_h list =
+  match list with
+  | [] -> ""
+  | Some x :: xs ->
+      "if (f == &" ^ t_fst x ^ ") return " ^ "\"" ^ t_thrd x ^ "\"" ^ ";\n"
+      ^ getval_h xs
+  | None :: xs -> getval_h xs
+
+let gen_get_val list =
+  "char * get_val_from_pointer(fptr f){\n" ^ getval_h list
+  ^ "; return \"NO NAME\";\n}"
 
 let emit (prog : khagm) =
   let code, nms = prog in
   let res = List.map (emit_top nms) code in
   let code = List.map fst res in
-  let aritytable = gen_arity_table nms (List.map snd res) in
-  let valtable = gen_get_val nms in
+  let aritytable = gen_arity_table (List.map snd res) in
+  let valtable = gen_get_val (List.map snd res) in
   let b = String.concat "\n/* -------- */\n" code |> ( ^ ) top_prelude in
   b ^ aritytable ^ valtable

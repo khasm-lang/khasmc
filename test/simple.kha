@@ -1,3 +1,0 @@
-extern console.log : ∀a, a -> ()
-
-let main () : () -> () = console.log "Hello, world!"

@@ -1,3 +1,0 @@
-let tup x : forall a, a -> ((a, a), (a, a)) =
-    let b = (x, x) in
-    (b, b)

@@ -11,7 +11,7 @@ let gen_main () =
   {|
 int main(void) {
   khagm_obj * m = main_____Khasm(NULL);
-  khagm_eval(m);  
+  khagm_eval(m);
 }
 |}
 
@@ -39,7 +39,7 @@ let to_native code (args : Args.cliargs) =
       Printf.fprintf oc "%s\n" code;
       close_out oc;
       let code' =
-        Sys.command ("cc -O0 -g -w " ^ filename ^ " -o " ^ args.out)
+        Sys.command ("cc -O3 -g -w " ^ filename ^ " -o " ^ args.out)
       in
       FileUtil.cp [ filename ] ("./" ^ args.out ^ ".c");
       (match code' with 0 -> () | _ -> raise @@ CompileError "CC failed");
