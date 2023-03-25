@@ -66,6 +66,10 @@ khagm_obj * khagm_eval(khagm_obj * root) {
     break;
   }
   case call: {
+    for (int i = 0; i < root->data.call.argnum; i++) {
+      root->data.call.args[i] =
+	khagm_eval(root->data.call.args[i]);
+    }
     int arity = arity_table(root->data.call.function);
     if (arity == -1) {
       throw_err("Invalid function pointer\n", FATAL);
@@ -78,14 +82,21 @@ khagm_obj * khagm_eval(khagm_obj * root) {
 			       root->data.call.function,
 			       root->data.call.args);
     if (root->data.call.argnum > arity) {
-      return reconcile(ret, root->data.call.args,
+      khagm_obj * tmp = reconcile(ret, root->data.call.args,
 		       arity, root->data.call.argnum);
+      return tmp;
     }
     else {
+      k_free(root->data.call.args);
+      k_free(root);
       return khagm_eval(ret);
     }
   }
   case thunk: {
+    for (int i = 0; i < root->data.call.argnum; i++) {
+      root->data.call.args[i] =
+	khagm_eval(root->data.call.args[i]);
+    }
     khagm_obj * ret = khagm_eval(root->data.thunk.function);
     return reconcile(ret,
 		     root->data.thunk.args,
