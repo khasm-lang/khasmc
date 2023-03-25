@@ -1,5 +1,6 @@
 #pragma once
 #include "types.h"
+#include "khagm_alloc.h"
 #define packed __attribute__ ((packed))
 
 typedef struct kstring {
@@ -55,7 +56,7 @@ typedef struct khagm_obj {
     i8 FULL[20];
     
   } packed data;
-  char GC_info;
+  gc_info GC_info;
 } khagm_obj;
 
 void pprint_khagm_obj(khagm_obj * a);
