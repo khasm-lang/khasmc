@@ -13,7 +13,7 @@ khagm_obj * reconcile(khagm_obj * ret, khagm_obj ** args,
   case call: {
     i32 ret_argnum = ret->data.thunk.argnum;
     ret->data.call.argnum += offset;
-    ret->data.call.args = realloc(ret->data.call.args,
+    ret->data.call.args = k_realloc(ret->data.call.args,
 				  sizeof(khagm_obj*)
 				  * ret->data.call.argnum);
     memcpy(ret->data.call.args + ret_argnum,
@@ -23,7 +23,7 @@ khagm_obj * reconcile(khagm_obj * ret, khagm_obj ** args,
   case thunk: {
     i32 ret_argnum = ret->data.thunk.argnum;
     ret->data.thunk.argnum += offset;
-    ret->data.thunk.args = realloc(ret->data.thunk.args,
+    ret->data.thunk.args = k_realloc(ret->data.thunk.args,
 				  sizeof(khagm_obj*)
 				  * ret->data.thunk.argnum);
     memcpy(ret->data.thunk.args + ret_argnum,
@@ -66,10 +66,11 @@ khagm_obj * khagm_eval(khagm_obj * root) {
     break;
   }
   case call: {
+    /*
     for (int i = 0; i < root->data.call.argnum; i++) {
       root->data.call.args[i] =
 	khagm_eval(root->data.call.args[i]);
-    }
+	} */
     int arity = arity_table(root->data.call.function);
     if (arity == -1) {
       throw_err("Invalid function pointer\n", FATAL);
@@ -93,10 +94,11 @@ khagm_obj * khagm_eval(khagm_obj * root) {
     }
   }
   case thunk: {
+    /*
     for (int i = 0; i < root->data.call.argnum; i++) {
       root->data.call.args[i] =
 	khagm_eval(root->data.call.args[i]);
-    }
+	} */
     khagm_obj * ret = khagm_eval(root->data.thunk.function);
     return reconcile(ret,
 		     root->data.thunk.args,

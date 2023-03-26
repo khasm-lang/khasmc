@@ -10,6 +10,7 @@ let run cmd =
 let gen_main () =
   {|
 int main(void) {
+  GC_INIT();  
   khagm_obj * m = main_____Khasm(NULL);
   khagm_eval(m);
   printf("DIFF: %d\n", alloc_free_diff());
@@ -21,8 +22,12 @@ let prelude () =
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
-#include <stdlib.h>  
+#include <stdlib.h>
+#include "gc.h"  
 |}
+
+let flags =
+  {| -O3 -g -fsanitize=address -fno-omit-frame-pointer -w -L/usr/lib/ -lgc |}
 
 let to_native code (args : Args.cliargs) =
   let code = prelude () ^ Runtime_lib.runtime_c ^ code ^ gen_main () in
@@ -39,11 +44,7 @@ let to_native code (args : Args.cliargs) =
       let oc = open_out filename in
       Printf.fprintf oc "%s\n" code;
       close_out oc;
-      let code' =
-        Sys.command
-          ("cc -O3 -g -fsanitize=address -fno-omit-frame-pointer -w " ^ filename
-         ^ " -o " ^ args.out)
-      in
+      let code' = Sys.command ("cc " ^ flags ^ filename ^ " -o " ^ args.out) in
       FileUtil.cp [ filename ] ("./" ^ args.out ^ ".c");
       (match code' with 0 -> () | _ -> raise @@ CompileError "CC failed");
       ()
