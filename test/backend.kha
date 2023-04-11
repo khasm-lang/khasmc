@@ -1,0 +1,19 @@
+internal_extern `print = print : ∀a, a -> ()
+
+let printer x : () -> () =
+    let x = 1 in
+    print x;
+    let y = "ten" in
+    print y;
+    let z = 1.2 in
+    print z
+
+let main x : () -> () = printer ()
+
+(*
+(Int 1)
+
+(String 116 101 110 )
+
+(Float 1.2)
+*)
