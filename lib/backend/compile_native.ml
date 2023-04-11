@@ -27,7 +27,7 @@ let prelude () =
 |}
 
 let flags =
-  {| -O3 -g -fsanitize=address -fno-omit-frame-pointer -w -L/usr/lib/ -lgc |}
+  {| -O0 -g -fsanitize=address -fno-omit-frame-pointer -w -L/usr/lib/ -lgc |}
 
 let to_native code (args : Args.cliargs) =
   let code = prelude () ^ Runtime_lib.runtime_c ^ code ^ gen_main () in
