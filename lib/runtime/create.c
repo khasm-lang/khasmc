@@ -3,10 +3,12 @@
 #include <stdio.h>
 #include "khagm_alloc.h"
 #include "khagm_obj.h"
+#include "khagm_eval.h"
 
 #define new_kobj(nm) khagm_obj * nm = k_alloc(sizeof(khagm_obj)) 
 
 khagm_obj * create_val(fptr f) {
+  printf("making val %p\n", f);
   new_kobj(k);
   k->type = val;
   k->data.val = f;
@@ -42,10 +44,13 @@ khagm_obj *create_tuple(khagm_obj ** tups, i32 num) {
 }
 
 khagm_obj *create_ITE(khagm_obj ** ite) {
-  new_kobj(k);
-  k->type = ITE;
-  k->data.ITE.ite = ite;
-  return k;
+  khagm_obj * tmp = khagm_eval(ite[0]);
+  if (tmp->data.unboxed_int == 1) {
+    return ite[1];
+  }
+  else {
+    return ite[2];
+  }
 }
 
 khagm_obj *create_int(i64 i) {

@@ -1,5 +1,6 @@
 _build
 input
 output
-a.out
+a.out*
 perf
+

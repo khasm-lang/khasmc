@@ -46,12 +46,30 @@ khagm_obj * reconcile(khagm_obj * ret, khagm_obj ** args,
 }
 
 
-khagm_obj * khagm_eval(khagm_obj * root) {
+int whnf(khagm_obj * root) {
+  if (!root) {
+    throw_err("whnf null", MINOR);
+    return -1;
+  }
+  switch (root->type) {
+  case val:
+  case str:
+  case ub_float:
+  case ub_int:
+    return 1;
+  default:
+    return 0;
+  }
+  return -1;
+}
+
+khagm_obj * khagm_eval_h(khagm_obj * root) {
   if (!root) {
     return NULL;
   }
   switch (root->type) {
   case val:
+    printf("val??\n");
   case str:
   case ub_float:
   case ub_int:
@@ -125,8 +143,24 @@ khagm_obj * khagm_eval(khagm_obj * root) {
   default:
     printf("ERROR TYPE: %d\n", root->type);
     throw_err("UNREACHABLE: khagm_eval", MAJOR);
+    printf("OBJECT LOOKS LIKE:\n");
+    pprint_khagm_obj(root);
+    for (int i = 0; i < 20; i++) {
+      printf("%2X\n", (char)root->data.FULL[i]);
+    }
     return NULL;
   }
+}
+
+khagm_obj * khagm_eval(khagm_obj * root) {
+  int iter = 0;
+  if (!whnf(root)) {
+    iter++;
+    root = khagm_eval_h(root);
+  }
+  if (iter > 1)
+    printf("iters: %d\n", iter);
+  return root;
 }
 
 void pprint_khagm_obj(khagm_obj * p);

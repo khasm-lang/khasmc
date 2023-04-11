@@ -10,7 +10,7 @@ typedef struct kstring {
 
 typedef struct khagm_obj {
   enum {
-    val,
+    val = 1,
     call,
     thunk,
     tuple,
