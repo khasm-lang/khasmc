@@ -8,32 +8,18 @@ typedef struct kstring {
   i64 len;
 } packed kstring;
 
+/*
+ */
+
 typedef struct khagm_obj {
-  enum {
-    val = 1,
-    call,
-    thunk,
-    tuple,
-    ub_int,
-    ub_float,
-    str,
-    ITE,
-    seq,
-  } packed type;
+  fptr jump_point;
   union {
     fptr val;
     
     struct {
-      fptr function;
       struct khagm_obj ** args;
       i32 argnum;
-    } packed call;
-
-    struct {
-      struct khagm_obj * function;
-      struct khagm_obj ** args;
-      i32 argnum;
-    } packed thunk;
+    } packed callable;
     
     struct {
       struct khagm_obj ** tups;
@@ -41,22 +27,19 @@ typedef struct khagm_obj {
     } packed tuple;
 
     struct {
-      struct khagm_obj ** ite;
-    } ITE;
-
-    struct {
       struct khagm_obj * a;
       struct khagm_obj * b;
-    } seq;
+    } packed seq;
     
     i64 unboxed_int;
     f64 unboxed_float;
     kstring string;
 
-    i8 FULL[20];
+    // i8 FULL[20];
     
   } packed data;
   gc_info GC_info;
+  i32 used;
 } khagm_obj;
 
 void pprint_khagm_obj(khagm_obj * a);

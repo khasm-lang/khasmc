@@ -5,6 +5,5 @@
 #include "khagm_obj.h"
 #include "khagm_alloc.h"
 #include "dispatch.h"
-khagm_obj *reconcile
-(khagm_obj *ret, khagm_obj **args, int arity, int argnum);
-khagm_obj * khagm_eval(khagm_obj * root);
+khagm_obj *construct_thunk(khagm_obj *, khagm_obj **, i32);
+khagm_obj *handle_thunk(khagm_obj *);
