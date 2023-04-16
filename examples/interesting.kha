@@ -1,0 +1,9 @@
+let id x : ∀a, a -> a = x
+
+let hm n : int -> int -> int =
+    if Stdlib.(=) n 1 then
+       id
+    else
+	Stdlib.(+) 0
+
+let main x : () -> () = Stdlib.debug (hm 0)

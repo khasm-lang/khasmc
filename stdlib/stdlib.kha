@@ -10,8 +10,6 @@ internal_extern 2 `float_mul = fmul : ∀a, a -> a -> a
 
 internal_extern 1 `debug = debug : ∀a, a -> ()
 
-internal_extern 1 `force = force : forall a, a -> a
-
 internal_extern 2 `s_eq = s_eq : ∀a, a -> a -> bool
 
 bind (=) = s_eq
