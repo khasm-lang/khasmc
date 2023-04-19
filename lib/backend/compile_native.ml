@@ -11,8 +11,8 @@ let gen_main () =
   {|
 int main(void) {
   GC_INIT();  
-  khagm_obj * m = main_____Khasm(NULL);
-  khagm_eval(m);
+  khagm_obj * m = main_____Khasm(create_list(1, create_tuple(NULL, 0)), 1);
+  khagm_obj * end = khagm_whnf(m);
   printf("DIFF: %d\n", alloc_free_diff());
 }
 |}
@@ -30,7 +30,7 @@ let flags =
   {| -O0 -g -fsanitize=address -fno-omit-frame-pointer -w -L/usr/lib/ -lgc |}
 
 let to_native code (args : Args.cliargs) =
-  let code = prelude () ^ Runtime_lib.runtime_c ^ code ^ gen_main () in
+  let code = prelude () ^ Runtime_lib.runtime_c ^ code ^ gen_main3 () in
   match Sys.os_type with
   | "Win32" | "Cygwin" -> raise @@ NotSupported "Windows"
   | "Unix" ->
