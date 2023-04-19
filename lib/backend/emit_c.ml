@@ -68,8 +68,7 @@ let gen_funcsig id nms args =
   "khagm_obj * " ^ mangle_top nms id ^ "("
   ^ "khagm_obj ** khagm__args, i32 khagm__argnum) {\n" ^ "if (khagm__argnum < "
   ^ (string_of_int @@ List.length args)
-  ^ ") {return NULL;}\n" ^ "printf(\"trap: %s\\n\", \"" ^ mangle_top nms id
-  ^ "\");\n" ^ "khagm_obj "
+  ^ ") {return NULL;}\n" ^ "khagm_obj "
   ^ String.concat ", "
       (List.mapi
          (fun i a -> "*" ^ mangle a ^ " = khagm__args[" ^ string_of_int i ^ "]")
