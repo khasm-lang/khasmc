@@ -56,7 +56,7 @@ let rec emit_unboxed u =
 
 let addr nms id =
   match List.assoc_opt id nms with
-  | Some _ -> "create_call(&" ^ mangle_top nms id ^ ", NULL, 0)"
+  | Some _ -> "create_call(&" ^ mangle_top nms id ^ ", create_list(0, NULL), 0)"
   | None -> mangle id
 
 let create_maybe_call id nms list =
@@ -66,9 +66,15 @@ let create_maybe_call id nms list =
 
 let gen_funcsig id nms args =
   "khagm_obj * " ^ mangle_top nms id ^ "("
-  ^ (List.map (( ^ ) "khagm_obj * ") (List.map mangle args)
-    |> String.concat ", ")
-  ^ ") {\n"
+  ^ "khagm_obj ** khagm__args, i32 khagm__argnum) {\n" ^ "if (khagm__argnum < "
+  ^ (string_of_int @@ List.length args)
+  ^ ") {return NULL;}\n" ^ "printf(\"trap: %s\\n\", \"" ^ mangle_top nms id
+  ^ "\");\n" ^ "khagm_obj "
+  ^ String.concat ", "
+      (List.mapi
+         (fun i a -> "*" ^ mangle a ^ " = khagm__args[" ^ string_of_int i ^ "]")
+         args)
+  ^ ";\n"
 
 let gen_predecls predecls =
   List.map (( ^ ) "khagm_obj * ") predecls
@@ -109,14 +115,13 @@ let rec emit_expr nms exp =
         let c' = emit_expr nms c in
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
-        let list =
-          "create_list(3,\n " ^ String.concat ",\n " [ c'; e1'; e2' ] ^ ")"
-        in
-        "create_ITE(" ^ list ^ ")"
+        "(khagm_whnf(" ^ c' ^ "))->data.unboxed_int ? (" ^ e1' ^ ") : (" ^ e2'
+        ^ ")"
   in
   first ^ "\n"
 
-let gen_return code = "\nreturn " ^ code ^ ";\n"
+let gen_return code args =
+  "\nreturn set_used(" ^ code ^ ", " ^ string_of_int (List.length args) ^ ");\n"
 
 let rec emit_top nms code =
   match code with
@@ -126,7 +131,7 @@ let rec emit_top nms code =
       let sig' = gen_funcsig id nms args in
       let predecls = gen_predecls pres in
       let code =
-        sig' ^ predecls ^ gen_return code ^ "}"
+        sig' ^ predecls ^ gen_return code args ^ "}"
         |> ( ^ ) ("\n/* " ^ List.assoc id nms ^ " */\n")
       in
       (code, Some (mangle_top nms id, List.length args, mangle_top nms id))
@@ -153,8 +158,7 @@ let rec arity_h list =
       ^ ";\n" ^ arity_h xs
   | None :: xs -> arity_h xs
 
-let gen_arity_table list =
-  "int arity_table(fptr f) {\n" ^ arity_h list ^ "return -1;\n}"
+let gen_arity_table list = "/* ARITY TABLE REDUNDANT */"
 
 let rec getval_h list =
   match list with
@@ -164,9 +168,7 @@ let rec getval_h list =
       ^ getval_h xs
   | None :: xs -> getval_h xs
 
-let gen_get_val list =
-  "char * get_val_from_pointer(fptr f){\n" ^ getval_h list
-  ^ "; return \"NO NAME\";\n}"
+let gen_get_val list = "\n/* GETVAL REDUNDANT */"
 
 let emit (prog : khagm) =
   let code, nms = prog in

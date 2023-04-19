@@ -13,7 +13,7 @@ typedef struct kstring {
 
 typedef struct khagm_obj {
   fptr jump_point;
-  union {
+  union khagm_obj_union {
     fptr val;
     
     struct {
@@ -27,20 +27,24 @@ typedef struct khagm_obj {
     } packed tuple;
 
     struct {
-      struct khagm_obj * a;
-      struct khagm_obj * b;
+      struct khagm_obj ** a;
     } packed seq;
     
     i64 unboxed_int;
     f64 unboxed_float;
-    kstring string;
+    kstring * string;
 
-    // i8 FULL[20];
+    i8 FULL[12];
     
   } packed data;
-  gc_info GC_info;
   i32 used;
 } khagm_obj;
 
+#define khagm_eval(a) ((khagm_obj *(*)(khagm_obj*))(a)->jump_point)(a);
+
 void pprint_khagm_obj(khagm_obj * a);
-int khagm_obj_eq(khagm_obj * a, khagm_obj * b);
+i32 khagm_obj_eq(khagm_obj *a, khagm_obj *b);
+khagm_obj * set_used(khagm_obj *a, i32 b);
+khagm_obj * set_gc(khagm_obj *a, i8 b);
+i32 get_used(khagm_obj *a);
+i8 get_gc(khagm_obj *a);
