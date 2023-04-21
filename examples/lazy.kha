@@ -1,0 +1,5 @@
+let lazy l : int -> int =
+  let x = (Stdlib.print_int l; 10) in
+	Stdlib.(+) x x
+
+	let main x : () -> () = Stdlib.print_int (lazy 4)

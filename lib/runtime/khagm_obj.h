@@ -40,7 +40,7 @@ typedef struct khagm_obj {
   i32 used;
 } khagm_obj;
 
-#define khagm_eval(a) ((khagm_obj *(*)(khagm_obj*))(a)->jump_point)(a);
+#define khagm_eval(a) ((khagm_obj *(*)(khagm_obj*))(a)->jump_point)(a)
 
 void pprint_khagm_obj(khagm_obj * a);
 i32 khagm_obj_eq(khagm_obj *a, khagm_obj *b);

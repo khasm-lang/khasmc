@@ -50,7 +50,7 @@ khagm_obj * handle_thunk(khagm_obj * c) {
       new->data.callable.args[0] = ret;
       new->data.callable.argnum = diff;
       memmove(c, new, sizeof(khagm_obj));
-      return khagm_eval(c);
+      return set_used(khagm_eval(c), get_used(c) + 1);
     }
   }
   else if (get_used(first) == UNSAT){
@@ -68,12 +68,14 @@ khagm_obj * handle_thunk(khagm_obj * c) {
 	    sizeof(khagm_obj *) * c->data.callable.argnum);
     first->data.callable.argnum = sum;
     memmove(c, first, sizeof(khagm_obj));
-    return khagm_eval(c);
+    return set_used(khagm_eval(c), get_used(c) + 1);
   }
   else {
     // sat thunk
     c->data.callable.args[0] = first;
-    return khagm_eval(c);
+    i32 tmp = get_used(c);
+    khagm_obj * tmp2 = khagm_eval(c);
+    return set_used(tmp2, tmp+1);
   }
   UNREACHABLE;
 }

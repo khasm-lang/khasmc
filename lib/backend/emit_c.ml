@@ -1,12 +1,16 @@
 open Exp
 open Format
 open Khagm
+open Add_new
 open KhasmUTF
+
+(* TODO: add compiler generated names to nms dict *)
 
 let mangler id =
   let asint = String.get_uint8 id 0 in
   if asint >= 65 && asint < 65 + 26 then id
   else if asint >= 97 && asint < 97 + 26 then id
+  else if asint >= 48 && asint < 48 + 10 then id
   else
     ((*these chars have to be invalid in identifiers
        - they serve as padding to make everything an i32*)
@@ -144,36 +148,18 @@ let top_prelude =
     running on the Khagm graph backend. */
 |}
 
-let t_fst (a, _, _) = a
-let t_snd (_, b, _) = b
-let t_thrd (_, _, c) = c
-
-let rec arity_h list =
-  match list with
+let rec gen_toplevel_predecls nms =
+  match nms with
   | [] -> ""
-  | Some x :: xs ->
-      "if (f == &" ^ t_fst x ^ ") return "
-      ^ string_of_int (t_snd x)
-      ^ ";\n" ^ arity_h xs
-  | None :: xs -> arity_h xs
-
-let gen_arity_table list = "/* ARITY TABLE REDUNDANT */"
-
-let rec getval_h list =
-  match list with
-  | [] -> ""
-  | Some x :: xs ->
-      "if (f == &" ^ t_fst x ^ ") return " ^ "\"" ^ t_thrd x ^ "\"" ^ ";\n"
-      ^ getval_h xs
-  | None :: xs -> getval_h xs
-
-let gen_get_val list = "\n/* GETVAL REDUNDANT */"
+  | x :: xs ->
+      let x' = fst x in
+      "khagm_obj * " ^ mangle_top [ x ] x' ^ "(khagm_obj **, i32);"
+      ^ gen_toplevel_predecls xs
 
 let emit (prog : khagm) =
   let code, nms = prog in
+  let nms = add_new code nms in
   let res = List.map (emit_top nms) code in
   let code = List.map fst res in
-  let aritytable = gen_arity_table (List.map snd res) in
-  let valtable = gen_get_val (List.map snd res) in
   let b = String.concat "\n/* -------- */\n" code |> ( ^ ) top_prelude in
-  b ^ aritytable ^ valtable
+  gen_toplevel_predecls nms ^ b
