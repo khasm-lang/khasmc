@@ -69,7 +69,8 @@ and llift_expr ctx dolift expr =
         let call = gen_fcall ctx.frees asval in
         ((final :: added1) @ added2, call)
       else
-        let added, inner = llift_expr ctx dolift e in
+        let ctx' = add_bound ctx v ts in
+        let added, inner = llift_expr ctx' dolift e in
         (added, Lam (ts, v, inner))
   | IfElse (ts, e1, e2, e3) ->
       let a, b = llift_expr ctx true e1 in

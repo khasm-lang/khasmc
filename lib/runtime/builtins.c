@@ -5,7 +5,8 @@
 #include "create.h"
 
 #define new_kobj(nm) khagm_obj * nm = k_alloc(sizeof(khagm_obj))
-inline khagm_obj * extern_1614757695_int1597980479_add(khagm_obj**args, i32 c) {
+
+khagm_obj * extern_1614757695_int1597980479_add(khagm_obj**args, i32 c) {
   if (c < 2) {
     return NULL;
   }
@@ -78,7 +79,7 @@ khagm_obj * extern_1614757695_debug(khagm_obj ** a, i32 c) {
 }
 
 
-inline khagm_obj *extern_1614757695_s1597980479_eq
+khagm_obj *extern_1614757695_s1597980479_eq
 (khagm_obj **a, i32 c) {
   if (c < 2) {
     return NULL;

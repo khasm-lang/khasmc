@@ -1,0 +1,9 @@
+let example l : int -> int -> int =
+	if Stdlib.(=) l 0 then
+	(fun x : int => Stdlib.(+) 1 x)
+else
+	(fun x : int => Stdlib.(+) l x)
+
+let main x : () -> () = 
+    Stdlib.print_int ((example 5) 10);
+    Stdlib.print_int ((example 0) 3)
