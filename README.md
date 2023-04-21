@@ -44,16 +44,9 @@ Khasm, unlike OCaml, does not have toplevel execution, so the `main` function is
 - Uniqueness types, to correctly model IO and similar in the lazy context of khasm.
 - The full power of the ML module and System-F type systems
 
-## The TODO List:
+## TODOs
 
-- [ ] ADTs and pattern matching
-- [ ] Stdlib work
-- [X] Backend rewrite - In progress
-- [ ] Exceptions
-- [ ] Records
-- [ ] Typeclasses
-- [ ] Typeclass proving
-- [ ] Uniqueness typing
+For a comprehensive list, see TODO.md.
 
 # Notes:
 
