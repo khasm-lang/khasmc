@@ -381,6 +381,11 @@ and infer ctx tm =
         let bodytyp = infer ctx e1 in
         let intyp = infer (assume_typ ctx id bodytyp) e2 in
         (inf, intyp)
+    | LetRecIn (inf, ts, id, e1, e2) ->
+        let ctx' = assume_typ ctx id ts in
+        ignore (check ctx' e1 ts);
+        let intyp = infer (assume_typ ctx id ts) e2 in
+        (inf, intyp)
     | Join (inf, a, b) ->
         ignore (check ctx a tsBottom);
         (inf, infer ctx b)

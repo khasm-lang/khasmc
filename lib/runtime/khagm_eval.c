@@ -6,7 +6,9 @@
 #include <stdio.h>
 extern int khasm_get_argnum;
 extern int arity_table(fptr f);
-#define UNREACHABLE __builtin_unreachable(); throw_err("UNREACHABLE", FATAL); return NULL;
+#define UNREACHABLE __builtin_unreachable();\
+  throw_err("UNREACHABLE", FATAL);\
+  return NULL;
 
 /*
   BEWARE
@@ -55,7 +57,7 @@ khagm_obj * handle_thunk(khagm_obj * c) {
   }
   else if (get_used(first) == UNSAT){
     // unsat thunk
-    // add our args3
+    // add our args
     i32 sum = first->data.callable.argnum
       + c->data.callable.argnum;
     first->data.callable.args =
@@ -68,7 +70,7 @@ khagm_obj * handle_thunk(khagm_obj * c) {
 	    sizeof(khagm_obj *) * c->data.callable.argnum);
     first->data.callable.argnum = sum;
     memmove(c, first, sizeof(khagm_obj));
-    return set_used(khagm_eval(c), get_used(c) + 1);
+    return set_used(c, get_used(c) + 1);
   }
   else {
     // sat thunk
@@ -102,6 +104,9 @@ khagm_obj * khagm_whnf(khagm_obj * a) {
     olds = *(a->data.FULL + 8);
     oused = a->used;
     if (get_used(a) == SIMPL_VAL) {
+      break;
+    }
+    else if (get_used(a) == UNSAT) {
       break;
     }
     a = khagm_eval(a);

@@ -62,9 +62,9 @@ and llift_expr ctx dolift expr =
       if dolift then
         let ctx' = add_bound ctx v ts in
         let added1, e' = llift_expr ctx' true e in
-        let added2, get = gen_lams ctx.frees e' in
+        let added2, get = gen_lams ctx.frees (Lam (ts, v, e')) in
         let random = get_random_num () in
-        let final = Let (ts, random, Lam (ts, v, get)) in
+        let final = Let (ts, random, get) in
         let asval = Val (ts, random) in
         let call = gen_fcall ctx.frees asval in
         ((final :: added1) @ added2, call)

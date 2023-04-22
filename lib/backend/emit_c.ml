@@ -37,12 +37,13 @@ let mangle id =
   "khasm_" ^ id'
 
 let gen i = String.concat "" @@ List.init i (fun _ -> " ")
+let predecl s = mangle s ^ " = k_alloc(sizeof(khagm_obj));\n"
 
 let rec compute_predecls exp =
   match exp with
   | Tuple t -> List.map compute_predecls t |> List.flatten
   | Seq (e1, e2) | Call (e1, e2) -> compute_predecls e1 @ compute_predecls e2
-  | Let (v, e1, e2) -> (mangle v :: compute_predecls e1) @ compute_predecls e2
+  | Let (v, e1, e2) -> (predecl v :: compute_predecls e1) @ compute_predecls e2
   | IfElse (c, e1, e2) ->
       compute_predecls e1 @ compute_predecls e2 @ compute_predecls c
   | Val _ | Unboxed _ -> []
@@ -113,7 +114,8 @@ let rec emit_expr nms exp =
     | Let (v, e1, e2) ->
         let e1' = emit_expr nms e1 in
         let e2' = emit_expr nms e2 in
-        "((" ^ mangle v ^ " = " ^ e1' ^ "),\n (" ^ e2' ^ "))"
+        "((memmove(" ^ mangle v ^ ", " ^ e1' ^ ", sizeof(khagm_obj))),\n ("
+        ^ e2' ^ "))"
     | IfElse (c, e1, e2) ->
         let c' = emit_expr nms c in
         let e1' = emit_expr nms e1 in

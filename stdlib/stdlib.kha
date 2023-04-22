@@ -12,7 +12,6 @@ internal_extern 1 `print_int = print_int : int -> ()
 
 internal_extern 1 `debug = debug : ∀a, a -> ()
 
-
 internal_extern 2 `s_eq = s_eq : ∀a, a -> a -> bool
 
 bind (=) = s_eq
