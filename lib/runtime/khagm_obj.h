@@ -48,3 +48,4 @@ khagm_obj * set_used(khagm_obj *a, i32 b);
 khagm_obj * set_gc(khagm_obj *a, i8 b);
 i32 get_used(khagm_obj *a);
 i8 get_gc(khagm_obj *a);
+khagm_obj * khagm_obj_copy_thunk(khagm_obj *);

@@ -34,3 +34,15 @@ i32 get_used(khagm_obj *a) { return a->used; }
 
 i8 get_gc(khagm_obj *a) { return a->used & (1 << 8) - 1; }
 
+khagm_obj * khagm_obj_copy_thunk(khagm_obj * o) {
+  khagm_obj * new = k_alloc(sizeof(khagm_obj));
+  new->jump_point = o->jump_point;
+  new->data.callable.args =
+    k_alloc(sizeof(khagm_obj*) * (o->data.callable.argnum + 1));
+  memcpy(new->data.callable.args,
+	 o->data.callable.args,
+	 sizeof(khagm_obj*) * (o->data.callable.argnum + 1));
+  new->data.callable.argnum =
+    o->data.callable.argnum;
+  return set_used(new, get_used(o));
+}

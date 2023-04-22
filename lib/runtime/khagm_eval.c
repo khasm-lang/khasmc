@@ -37,7 +37,7 @@ khagm_obj * handle_thunk(khagm_obj * c) {
     else {
       if (ret->used == c->data.callable.argnum) {
 	memmove(c, ret, sizeof(khagm_obj));
-	return ret;
+	return c;
       }
       // enough args and we just got a new thing, so construct a
       i32 diff = c->data.callable.argnum - ret->used;
@@ -57,19 +57,21 @@ khagm_obj * handle_thunk(khagm_obj * c) {
   }
   else if (get_used(first) == UNSAT){
     // unsat thunk
+    // copy
+    khagm_obj * copy = khagm_obj_copy_thunk(first);
     // add our args
-    i32 sum = first->data.callable.argnum
+    i32 sum = copy->data.callable.argnum
       + c->data.callable.argnum;
-    first->data.callable.args =
-      k_realloc(first->data.callable.args,
+    copy->data.callable.args =
+      k_realloc(copy->data.callable.args,
 		/* account for 1 indexing */
 		sizeof(khagm_obj *) * (sum + 1));
     /* again account for 1 indexing */
-    memmove(first->data.callable.args + first->data.callable.argnum + 1,
+    memmove(copy->data.callable.args + copy->data.callable.argnum + 1,
 	   c->data.callable.args + 1,
 	    sizeof(khagm_obj *) * c->data.callable.argnum);
-    first->data.callable.argnum = sum;
-    memmove(c, first, sizeof(khagm_obj));
+    copy->data.callable.argnum = sum;
+    memmove(c, copy, sizeof(khagm_obj));
     return set_used(c, get_used(c) + 1);
   }
   else {
