@@ -7,11 +7,10 @@ let fac : int -> int =
     (
 	fun f : int -> int =>
 	fun x : int =>
-	Stdlib.print_int x;
 	if Stdlib.(=) x 0 then
 	   1
 	else
 	   Stdlib.( * ) x (f (Stdlib.(-) x 1))
     )
 
-let main x : () -> () = Stdlib.print_int (fac 3)
+let main x : () -> () = Stdlib.print_int (fac 10)
