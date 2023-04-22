@@ -8,6 +8,7 @@ let cmpget expr =
   | Base (inf, _)
   | FCall (inf, _, _)
   | LetIn (inf, _, _, _)
+  | LetRecIn (inf, _, _, _, _)
   | IfElse (inf, _, _, _)
   | Join (inf, _, _)
   | Inst (inf, _, _)
@@ -35,6 +36,10 @@ let rec init_expr expr =
       let b1 = init_expr e1 in
       let b2 = init_expr e2 in
       LetIn (cmpset inf (cmpget b1 + cmpget b2), id, b1, b2)
+  | LetRecIn (inf, ts, id, e1, e2) ->
+      let b1 = init_expr e1 in
+      let b2 = init_expr e2 in
+      LetRecIn (cmpset inf (cmpget b1 + cmpget b2), ts, id, b1, b2)
   | IfElse (inf, c, e1, e2) ->
       let b1 = init_expr c in
       let b2 = init_expr e1 in

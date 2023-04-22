@@ -53,6 +53,7 @@ and kexpr =
   | Base of info * kbase
   | FCall of info * kexpr * kexpr
   | LetIn of info * kident * kexpr * kexpr
+  | LetRecIn of info * typesig * kident * kexpr * kexpr
   | IfElse of info * kexpr * kexpr * kexpr
   | Join of info * kexpr * kexpr (* expr1; expr2; expr3, rightassoc*)
   | Inst of info * kexpr * typesig

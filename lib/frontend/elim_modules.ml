@@ -127,6 +127,9 @@ let rec elim_expr ctx expr =
   | LetIn (i, id, e1, e2) ->
       let ctx' = add_local_var ctx id in
       LetIn (i, id, elim_expr ctx e1, elim_expr ctx' e2)
+  | LetRecIn (i, ts, id, e1, e2) ->
+      let ctx' = add_local_var ctx id in
+      LetRecIn (i, ts, id, elim_expr ctx' e1, elim_expr ctx' e2)
   | IfElse (i, c, e1, e2) ->
       IfElse (i, elim_expr ctx c, elim_expr ctx e1, elim_expr ctx e2)
   | Join (i, e1, e2) -> Join (i, elim_expr ctx e1, elim_expr ctx e2)

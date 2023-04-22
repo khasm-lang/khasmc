@@ -47,6 +47,11 @@ and ftm_expr tbl expr =
       let b1 = ftm_expr tbl e1 in
       let b2 = ftm_expr tbl' e2 in
       Kir.Let (Hash.get_typ id.id, id', b1, b2)
+  | Ast.LetRecIn (info, _ts, id, e1, e2) ->
+      let id', tbl' = Kir.add_to_tbl id tbl in
+      let b1 = ftm_expr tbl' e1 in
+      let b2 = ftm_expr tbl' e2 in
+      Kir.Let (Hash.get_typ info.id, id', b1, b2)
   | Ast.AnnotLam (_, a, _, e) | Ast.Lam (_, a, e) ->
       let id', tbl' = Kir.add_to_tbl a tbl in
       let b = ftm_expr tbl' e in

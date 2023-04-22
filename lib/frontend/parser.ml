@@ -416,16 +416,31 @@ and parse_compound state =
       expect state ELSE;
       let e2 = parse_expr state 0 in
       IfElse (mkinfo (), cond, e1, e2)
-  | LET ->
+  | LET -> (
       toss state;
-      let var = get_ident state in
-      (match pop state with
-      | EQ_OP "=" -> ()
-      | x -> error state x [ EQ_OP "=" ]);
-      let first = parse_expr state 0 in
-      expect state IN;
-      let second = parse_expr state 0 in
-      LetIn (mkinfo (), var, first, second)
+      match pop state with
+      | T_IDENT var ->
+          (match pop state with
+          | EQ_OP "=" -> ()
+          | x -> error state x [ EQ_OP "=" ]);
+          let first = parse_expr state 0 in
+          expect state IN;
+          let second = parse_expr state 0 in
+          LetIn (mkinfo (), var, first, second)
+      | REC ->
+          let var = get_ident state in
+          (match pop state with
+          | COL_OP ":" -> ()
+          | x -> error state x [ COL_OP ":" ]);
+          let ts = parse_type state in
+          (match pop state with
+          | EQ_OP "=" -> ()
+          | x -> error state x [ EQ_OP "=" ]);
+          let first = parse_expr state 0 in
+          expect state IN;
+          let second = parse_expr state 0 in
+          LetRecIn (mkinfo (), ts, var, first, second)
+      | x -> error state x [ REC; EQ_OP "=" ])
   | FUN ->
       toss state;
       let v = get_ident state in
