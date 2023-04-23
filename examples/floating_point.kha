@@ -1,0 +1,10 @@
+open Stdlib
+let rec fp_fac n : float -> float =
+    if n = 0.0 then
+       1.0
+    else
+       n *. (fp_fac (n -. 1.0))
+
+let main x : () -> () =
+    print_float $ fp_fac 100.0
+

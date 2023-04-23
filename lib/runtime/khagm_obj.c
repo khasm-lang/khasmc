@@ -12,12 +12,11 @@ extern char * get_val_from_pointer(fptr p);
 
 i32 khagm_obj_eq(khagm_obj * a, khagm_obj * b) {
   // TODO: make this less stupid and dumb lmao
-  i64 x1 = (i64)(*a->data.FULL);
-  i64 y1 = (i64)(*b->data.FULL);
-  i32 x2 = (i32)(*(a->data.FULL + 8));
-  i32 y2 = (i32)(*(b->data.FULL + 8));
-  return (x1 == y1) && (x2 == y2);
-
+  for (int i = 0; i < 12; i++) {
+    if (a->data.FULL[i] != b->data.FULL[i])
+      return 0;
+  }
+  return 1;
 }
 khagm_obj * set_used(khagm_obj *a, i32 b) {
   a->used = b;
