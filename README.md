@@ -28,10 +28,9 @@ Here, the type of `apply_to_tuple` would be `∀a b, (∀c, c -> c) -> a -> b ->
 Here's a hello world program in khasm:
 
 ```ocaml
-(* Uses the stdlib. *)
-
+open Stdlib
 let main () : () -> () =
-    Stdlib.print "Hello, World!"
+    print_str "Hello, World!"
 
 ```
 Khasm, unlike OCaml, does not have toplevel execution, so the `main` function is the entry point. It must always have type `() -> ()`.
