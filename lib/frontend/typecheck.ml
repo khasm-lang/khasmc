@@ -4,15 +4,32 @@ open Uniq_typevars
 open Hash
 open Debug
 
-type ctx = { binds : (kident * typesig) list }
+(* Typechecks a program with a flat file structure - ie, no modules. *)
+
+(* See below for more details *)
+
+type ctx = { binds : (kident * typesig) list; types : typeprim list }
 [@@deriving show { with_path = false }]
 
 type 'a infer_result = One of 'a | Many of 'a list
 
-let empty_typ_ctx () = { binds = [] }
+let empty_typ_ctx () =
+  {
+    binds = [];
+    types =
+      [
+        (* base types in khasm *)
+        Bound "int";
+        Bound "float";
+        Bound "string";
+        Bound "bool";
+      ];
+  }
 
 let assume_typ ctx id ts =
   { ctx with binds = (id, make_uniq_ts ts None) :: ctx.binds }
+
+let add_bound_typ ctx ts = { ctx with types = Bound ts :: ctx.types }
 
 (** Looks up a value in a context *)
 let lookup ctx x =
@@ -33,6 +50,50 @@ let rec occurs_ts s ts =
     | TSTuple x -> List.map (fun x -> occurs_ts s x) x |> List.mem true
   in
   res
+
+(* some helpers around typeprims *)
+let rec typeprim_is_basic tys x =
+  match tys with
+  | [] -> false
+  | z :: zs -> (
+      match z with
+      | Basic y | Bound y -> if x = y then true else typeprim_is_basic zs x
+      | Param (_, _) -> typeprim_is_basic zs x)
+
+let rec typeprim_len tys x =
+  match tys with
+  | [] -> raise @@ TypeErr ("Type not found: " ^ x)
+  | z :: zs -> (
+      match z with
+      | Bound _ | Basic _ -> typeprim_len zs x
+      | Param (l, y) -> if y = x then l else typeprim_len zs x)
+
+let rec validate_typ types ty =
+  match ty with
+  | TSBase x -> (
+      match typeprim_is_basic types x with
+      | true -> ty
+      | false -> raise @@ TypeErr ("Cannot find type " ^ x))
+  | TSMeta _ -> ty
+  | TSApp (x, y) ->
+      (let n = typeprim_len types y in
+       match x with
+       | TSTuple l ->
+           if List.length l = n then ()
+           else
+             raise
+             @@ TypeErr ("Wrong amount of args to type-level function " ^ y)
+       | _ ->
+           if n = 1 then ()
+           else
+             raise
+             @@ TypeErr ("Wrong amount of args to type-level function " ^ y));
+      TSApp (validate_typ types x, y)
+  | TSMap (x, y) -> TSMap (validate_typ types x, validate_typ types y)
+  | TSForall (x, y) -> TSForall (x, validate_typ (Bound x :: types) y)
+  | TSTuple l -> TSTuple (List.map (validate_typ types) l)
+
+(* see below *)
 
 let rec lift_ts_h t =
   match t with
@@ -70,11 +131,6 @@ let rec lift_ts ts =
      ∀a, a -> (∀b, b)
      to
      ∀a b, a -> b
-
-     and simpls, like
-     ∀a b, a -> a
-     to
-     ∀a, a -> a
   *)
   match lift_ts_h ts with t, false -> t | t, true -> lift_ts t
 
@@ -394,7 +450,8 @@ and infer ctx tm =
         (inf, infer ctx b)
     | Inst (_, _, _) -> raise (TypeErr "UNREACHABLE")
     | TypeLam (inf, t, b) ->
-        let bodytyp = infer ctx b in
+        let ctx' = add_bound_typ ctx t in
+        let bodytyp = infer ctx' b in
         (inf, TSForall (t, bodytyp))
     | TupAccess (inf, expr, i) -> (
         match infer ctx expr with
@@ -421,10 +478,10 @@ and infer ctx tm =
              ("Cannot infer:\n" ^ show_kexpr tm ^ "\nMaybe add annotations?"))
   in
   let inf = fst res in
-  let res = snd res in
-  let res = elim_unused @@ lift_ts res in
-  Hash.add_typ inf.id res;
-  res
+  let ts = validate_typ ctx.types @@ snd res in
+  let res' = elim_unused @@ lift_ts ts in
+  Hash.add_typ inf.id res';
+  res'
 
 (** Checks a type against a term *)
 and check ctx tm tp =
@@ -439,7 +496,8 @@ and check ctx tm tp =
         Some inf
     | TypeLam (inf, a, b), TSForall (fv, bd) ->
         let typ' = subs bd fv (TSBase a) in
-        ignore (check ctx b typ');
+        let ctx' = add_bound_typ ctx a in
+        ignore (check ctx' b typ');
         Some inf
     | LetIn (inf, id, e1, e2), bd ->
         let bdtyp = infer ctx e1 in

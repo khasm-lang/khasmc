@@ -1,5 +1,7 @@
 open Khagm
 
+(* Gives the lambda lifted things names *)
+
 let rec add_new top (nms : Kir.transtable) =
   match top with
   | [] -> nms

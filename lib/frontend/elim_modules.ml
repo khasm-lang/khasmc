@@ -1,6 +1,9 @@
 open Ast
 open Exp
 
+(* Elimintates modules from a list of programs, reducing them to a
+   flat file structure with fully resolved names *)
+
 let rec list_without f l s =
   match l with
   | [] -> []

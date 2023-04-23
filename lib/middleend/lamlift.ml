@@ -1,6 +1,8 @@
 open Exp
 open Kir
 
+(* Performs lambda lifting, putting all lambdas on the toplevel *)
+
 type lamctx = { frees : (kirval * kirtype) list }
 [@@deriving show { with_path = false }]
 

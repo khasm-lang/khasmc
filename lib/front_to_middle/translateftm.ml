@@ -1,5 +1,7 @@
 open Exp
 
+(* Converts between the frontend IR and the middleend IR. *)
+
 let rec fold_tup_flat f s l =
   match l with
   | [] -> raise @@ Impossible "empty fold_tup"
@@ -94,7 +96,7 @@ let rec ftm_toplevel table top =
       let v, _name = Kir.get_from_tbl nm tbl' in
       (Kir.Bind (id', v), tbl')
   | Ast.IntExtern (id, id', arity, ts) ->
-      let id1, tbl' = Kir.add_to_tbl id table in
+      let _id1, tbl' = Kir.add_to_tbl id table in
       let id2, tbl'' = Kir.add_to_tbl id' tbl' in
       (Kir.Extern (ts, arity, id2, id), tbl'')
   | Ast.Open _ | Ast.SimplModule (_, _) -> raise @@ Impossible "Modules in ftm"

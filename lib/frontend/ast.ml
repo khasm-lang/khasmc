@@ -1,3 +1,6 @@
+type typeprim = Basic of string | Bound of string | Param of int * string
+[@@deriving show { with_path = false }]
+
 type typesig =
   | TSBase of string
   | TSMeta of string

@@ -1,6 +1,8 @@
 open Emit_c
 open Exp
 
+(* Compiles the code to an executable *)
+
 let run cmd =
   let inp = Unix.open_process_in cmd in
   let r = In_channel.input_all inp in
@@ -13,7 +15,6 @@ int main(void) {
   GC_INIT();  
   khagm_obj * m = main_____Khasm(create_list(1, create_tuple(NULL, 0)), 1);
   khagm_obj * end = khagm_whnf_viz(m);
-  printf("DIFF: %d\n", alloc_free_diff());
 }
 |}
 
@@ -27,7 +28,7 @@ let prelude () =
 |}
 
 let flags =
-  {| -O0 -g -fsanitize=address -fno-omit-frame-pointer -w -L/usr/lib/ -lgc |}
+  {| -O3 -g -fsanitize=address -fno-omit-frame-pointer -w -L/usr/lib/ -lgc |}
 
 let to_native code (args : Args.cliargs) =
   let code = prelude () ^ Runtime_lib.runtime_c ^ code ^ gen_main () in
@@ -47,5 +48,7 @@ let to_native code (args : Args.cliargs) =
       let code' = Sys.command ("cc " ^ flags ^ filename ^ " -o " ^ args.out) in
       FileUtil.cp [ filename ] ("./" ^ args.out ^ ".c");
       (match code' with 0 -> () | _ -> raise @@ CompileError "CC failed");
+      FileUtil.rm [ filename ];
+      Sys.rmdir tmpdir;
       ()
   | _ -> raise @@ Impossible "non-standard os"

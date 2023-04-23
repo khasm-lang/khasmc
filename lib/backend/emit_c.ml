@@ -4,7 +4,7 @@ open Khagm
 open Add_new
 open KhasmUTF
 
-(* TODO: add compiler generated names to nms dict *)
+(* Emits the backend C *)
 
 let mangler id =
   let asint = String.get_uint8 id 0 in
