@@ -1,6 +1,8 @@
 open Ast
 open Exp
 
+(* Computes a complexity for each node. Not currently used. *)
+
 let cmpset inf complex = { inf with complex = complex + 1 }
 
 let cmpget expr =

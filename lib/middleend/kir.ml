@@ -1,5 +1,7 @@
 open Exp
 
+(* The middleend IR *)
+
 type kirtype = Ast.typesig [@@deriving show { with_path = false }]
 type kirval = int [@@deriving show { with_path = false }]
 type transtable = (int * string) list [@@deriving show { with_path = false }]

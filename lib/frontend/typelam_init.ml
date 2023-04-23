@@ -2,6 +2,8 @@ open Ast
 open Exp
 open Typecheck
 
+(* Converts assignments into lambdas, allowing for typechecking *)
+
 let rec init_toplevel t =
   match t with
   | TopAssign ((_, ts), (id, args, expr)) ->
@@ -13,6 +15,7 @@ let rec init_toplevel t =
   | Extern (_, _, _) -> t
   | IntExtern (_, _, _, _) -> t
   | Bind (_, _, _) -> t
+  | Open _ -> t
   | SimplModule (id, bd) -> SimplModule (id, List.map init_toplevel bd)
 
 let init_program p =
