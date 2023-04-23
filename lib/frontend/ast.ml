@@ -74,6 +74,7 @@ and toplevel =
   | IntExtern of kident * kident * int * typesig
   | SimplModule of kident * toplevel list
   | Bind of kident * kident list * kident
+  | Open of kident
 [@@deriving show { with_path = false }]
 
 and program = Program of toplevel list [@@deriving show { with_path = false }]
@@ -91,6 +92,8 @@ let rec esubs expr x y =
       if id <> x then LetIn (i, id, esubs e1 x y, esubs e2 x y) else expr
   | AnnotLet (i, id, ts, e1, e2) ->
       if id <> x then AnnotLet (i, id, ts, esubs e1 x y, esubs e2 x y) else expr
+  | LetRecIn (i, ts, id, e1, e2) ->
+      if id <> x then LetRecIn (i, ts, id, esubs e1 x y, esubs e2 x y) else expr
   | IfElse (i, c, e1, e2) -> IfElse (i, esubs c x y, esubs e1 x y, esubs e2 x y)
   | Join (info, e1, e2) -> Join (info, esubs e1 x y, esubs e2 x y)
   | Lam (i, x', e) -> if x' <> x then Lam (i, x', esubs e x y) else expr
@@ -114,5 +117,6 @@ let getinfo expr =
   | TupAccess (inf, _, _)
   | AnnotLet (inf, _, _, _, _)
   | AnnotLam (inf, _, _, _)
-  | ModAccess (inf, _, _) ->
+  | ModAccess (inf, _, _)
+  | LetRecIn (inf, _, _, _, _) ->
       inf

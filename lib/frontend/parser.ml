@@ -69,6 +69,7 @@ type token =
   | MODULE
   | STRUCT
   | FUNCTOR
+  | OPEN
   | BIND
   | LAND
   | LOR
@@ -570,6 +571,10 @@ and parse_intextern state =
   let ts = parse_type state in
   IntExtern (nm, id, arity, ts)
 
+and parse_open state =
+  let s = get_ident state in
+  Open s
+
 and parse_toplevel_list state =
   let first =
     match peek state 1 with
@@ -588,6 +593,9 @@ and parse_toplevel_list state =
     | INTEXTERN ->
         toss state;
         Some (parse_intextern state)
+    | OPEN ->
+        toss state;
+        Some (parse_open state)
     | EOF -> None
     | _ -> None
   in

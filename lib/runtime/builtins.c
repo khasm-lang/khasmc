@@ -65,7 +65,7 @@ khagm_obj * extern_1614757695_print1597980479_int(khagm_obj ** a, i32 c) {
     return NULL;
   }
   khagm_obj * b = khagm_whnf(a[0]);
-  printf("awoga %ld\n", b->data.unboxed_int);
+  printf("%ld\n", b->data.unboxed_int);
   khagm_obj * tmp = create_tuple(create_list(0, NULL),0);
   set_used(tmp, 1);
   return tmp;

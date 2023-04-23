@@ -121,3 +121,32 @@ khagm_obj * khagm_whnf(khagm_obj * a) {
   }
   return a;
 }
+
+khagm_obj * khagm_whnf_viz(khagm_obj * a) {
+  // TODO : this is not true weak head normal form, because reasons
+  u64 oldb, newb;
+  u32 olds, news;
+  i32 oused, nused;
+  int i = 0;
+  while (1) {
+    i++;
+    as_graphviz(a, i);
+    oldb = *a->data.FULL;
+    olds = *(a->data.FULL + 8);
+    oused = a->used;
+    if (get_used(a) == SIMPL_VAL) {
+      break;
+    }
+    else if (get_used(a) == UNSAT) {
+      break;
+    }
+    a = khagm_eval(a);
+    newb = *a->data.FULL;
+    news = *(a->data.FULL + 8);
+    nused = a->used;
+    if (oldb == newb && olds == news && oused == nused) {
+      break;
+    }
+  }
+  return a;
+}

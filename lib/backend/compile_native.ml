@@ -12,7 +12,7 @@ let gen_main () =
 int main(void) {
   GC_INIT();  
   khagm_obj * m = main_____Khasm(create_list(1, create_tuple(NULL, 0)), 1);
-  khagm_obj * end = khagm_whnf(m);
+  khagm_obj * end = khagm_whnf_viz(m);
   printf("DIFF: %d\n", alloc_free_diff());
 }
 |}

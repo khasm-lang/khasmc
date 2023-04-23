@@ -97,10 +97,11 @@ let rec ftm_toplevel table top =
       let id1, tbl' = Kir.add_to_tbl id table in
       let id2, tbl'' = Kir.add_to_tbl id' tbl' in
       (Kir.Extern (ts, arity, id2, id), tbl'')
-  | Ast.SimplModule (_, _) -> raise @@ Impossible "Modules in ftm"
+  | Ast.Open _ | Ast.SimplModule (_, _) -> raise @@ Impossible "Modules in ftm"
 
 let rec ftm table prog =
   match prog with
+  | Ast.Program [] -> ([], table)
   | Ast.Program tl ->
       let a, b = fold_tup (fun x y -> ftm_toplevel x y) table (List.rev tl) in
       (a, b)

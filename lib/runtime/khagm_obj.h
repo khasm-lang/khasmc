@@ -42,6 +42,12 @@ typedef struct khagm_obj {
 
 #define khagm_eval(a) ((khagm_obj *(*)(khagm_obj*))(a)->jump_point)(a)
 
+typedef struct ptr_ll {
+  void * p;
+  struct ptr_ll * next;
+} ptr_ll;
+
+
 void pprint_khagm_obj(khagm_obj * a);
 i32 khagm_obj_eq(khagm_obj *a, khagm_obj *b);
 khagm_obj * set_used(khagm_obj *a, i32 b);
@@ -49,3 +55,8 @@ khagm_obj * set_gc(khagm_obj *a, i8 b);
 i32 get_used(khagm_obj *a);
 i8 get_gc(khagm_obj *a);
 khagm_obj * khagm_obj_copy_thunk(khagm_obj *);
+void as_graphviz(khagm_obj *, int);
+void graphviz(khagm_obj *, ptr_ll*p);
+void graph_thunk(khagm_obj *, ptr_ll*p);
+void graph_seq(khagm_obj *, ptr_ll*p);
+void graph_simpl(khagm_obj*, ptr_ll*p);
