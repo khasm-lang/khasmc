@@ -55,10 +55,58 @@ khagm_obj *extern_1614757695_int1597980479_div(khagm_obj **args, i32 c)  {
     khagm_whnf(args[1])->data.unboxed_int;
   return set_used(k, 2);
 }
-khagm_obj *extern_1614757695_float1597980479_add(khagm_obj **args, i32 c);
-khagm_obj *extern_1614757695_float1597980479_sub(khagm_obj **args, i32 c);
-khagm_obj *extern_1614757695_float1597980479_mul(khagm_obj **args, i32 c);
-khagm_obj *extern_1614757695_float1597980479_div(khagm_obj **args, i32 c);
+khagm_obj *extern_1614757695_float1597980479_add(khagm_obj **args, i32 c) {
+  if (c < 2) {
+    return NULL;
+  }
+  new_kobj(k);
+  k->jump_point = &handle_simpl;
+  k->data.unboxed_float =
+    (f64)
+    khagm_whnf(args[0])->data.unboxed_float
+    +
+    khagm_whnf(args[1])->data.unboxed_float;
+  return set_used(k, 2);
+}
+khagm_obj *extern_1614757695_float1597980479_sub(khagm_obj **args, i32 c)  {
+  if (c < 2) {
+    return NULL;
+  }
+  new_kobj(k);
+  k->jump_point = &handle_simpl;
+  k->data.unboxed_float =
+    (f64)
+    khagm_whnf(args[0])->data.unboxed_float
+    -
+    khagm_whnf(args[1])->data.unboxed_float;
+  return set_used(k, 2);
+}
+khagm_obj *extern_1614757695_float1597980479_mul(khagm_obj **args, i32 c)  {
+  if (c < 2) {
+    return NULL;
+  }
+  new_kobj(k);
+  k->jump_point = &handle_simpl;
+  k->data.unboxed_float =
+    (f64)
+    khagm_whnf(args[0])->data.unboxed_float
+    *
+    khagm_whnf(args[1])->data.unboxed_float;
+  return set_used(k, 2);
+}
+khagm_obj *extern_1614757695_float1597980479_div(khagm_obj **args, i32 c)  {
+  if (c < 2) {
+    return NULL;
+  }
+  new_kobj(k);
+  k->jump_point = &handle_simpl;
+  k->data.unboxed_float =
+    (f64)
+    khagm_whnf(args[0])->data.unboxed_float
+    /
+    khagm_whnf(args[1])->data.unboxed_float;
+  return set_used(k, 2);
+}
 
 khagm_obj * extern_1614757695_print1597980479_int(khagm_obj ** a, i32 c) {
   if (c < 1) {
@@ -70,6 +118,33 @@ khagm_obj * extern_1614757695_print1597980479_int(khagm_obj ** a, i32 c) {
   set_used(tmp, 1);
   return tmp;
 }
+
+khagm_obj * extern_1614757695_print1597980479_float(khagm_obj ** a, i32 c) {
+  if (c < 1) {
+    return NULL;
+  }
+  khagm_obj * b = khagm_whnf(a[0]);
+  printf("%f\n", b->data.unboxed_float);
+  khagm_obj * tmp = create_tuple(create_list(0, NULL),0);
+  set_used(tmp, 1);
+  return tmp;
+}
+
+
+khagm_obj * extern_1614757695_print1597980479_str(khagm_obj ** a, i32 c) {
+  if (c < 1) {
+    return NULL;
+  }
+  char * tmp = calloc(sizeof(char) * a[0]->data.string->len + 1, 1);
+  memcpy(tmp, a[0]->data.string->data, a[0]->data.string->len);
+  printf("%s", tmp);
+  free(tmp);
+  khagm_obj * tmp2 = create_tuple(create_list(0, NULL),0);
+  set_used(tmp2, 1);
+  return tmp2;
+}
+
+
 khagm_obj * extern_1614757695_debug(khagm_obj ** a, i32 c) {
   if (c < 1) {
     return NULL;

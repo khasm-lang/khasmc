@@ -130,7 +130,7 @@ khagm_obj * khagm_whnf_viz(khagm_obj * a) {
   int i = 0;
   while (1) {
     i++;
-    as_graphviz(a, i);
+    //as_graphviz(a, i);
     oldb = *a->data.FULL;
     olds = *(a->data.FULL + 8);
     oused = a->used;

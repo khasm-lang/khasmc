@@ -9,6 +9,9 @@ internal_extern 2 `float_div = fdiv : ∀a, a -> a -> a
 internal_extern 2 `float_mul = fmul : ∀a, a -> a -> a
 
 internal_extern 1 `print_int = print_int : int -> ()
+internal_extern 1 `print_str = print_str : str -> ()
+internal_extern 1 `print_float = print_float : float -> ()
+
 
 internal_extern 1 `debug = debug : ∀a, a -> ()
 
@@ -20,6 +23,11 @@ bind (+) = iadd
 bind (-) = isub
 bind (/) = idiv
 bind ( * ) = imul
+
+bind (+.) = fadd
+bind (-.) = fsub
+bind ( *. ) = fmul
+bind (/.) = fdiv
 
 let pipe x0 f1
     : ∀a b, a -> (a -> b) -> b

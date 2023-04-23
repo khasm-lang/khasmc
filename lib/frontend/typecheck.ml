@@ -7,6 +7,8 @@ open Debug
 type ctx = { binds : (kident * typesig) list }
 [@@deriving show { with_path = false }]
 
+type 'a infer_result = One of 'a | Many of 'a list
+
 let empty_typ_ctx () = { binds = [] }
 
 let assume_typ ctx id ts =
@@ -123,6 +125,7 @@ let rec inst_all ts =
   | TSMeta x -> TSMeta x
   | TSTuple t -> TSTuple (List.map inst_all t)
 
+(* eliminates unused forall variables *)
 let rec elim_unused ts =
   let af =
     match ts with
