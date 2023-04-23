@@ -182,6 +182,9 @@ let rec elim_toplevel ctx t =
       let ctx' = add_unqual_var ctx op in
       let name = fix_name ctx op in
       (ctx', Bind (name, [], get) :: [])
+  | Open id ->
+      let ctx' = open_module ctx id in
+      (ctx', [])
 
 and elim_toplevel_list ctx tl =
   match tl with

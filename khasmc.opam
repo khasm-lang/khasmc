@@ -14,7 +14,7 @@ depends: [
   "menhir"
   "ppx_deriving.show"
   "ppx_deriving_yojson"
-  "kavern"
+  "fileutils"
   "odoc" {with-doc}
 ]
 build: [

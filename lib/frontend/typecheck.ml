@@ -522,7 +522,7 @@ let rec typecheck_toplevel_list ctx tl =
         *)
         | Extern (id, _arity, ts) -> assume_typ ctx id ts
         | IntExtern (_nm, id, _arity, ts) -> assume_typ ctx id ts
-        | SimplModule (_nm, _bd) ->
+        | Open _ | SimplModule (_, _) ->
             raise @@ Impossible "Modules in typechecking"
         | Bind (id, _, ed) ->
             let typ = lookup ctx ed in
