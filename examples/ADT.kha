@@ -1,0 +1,5 @@
+open Stdlib
+let add x y : ∀a, a -> a -> a = x + y
+bind (::) = add
+
+
