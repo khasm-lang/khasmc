@@ -94,6 +94,7 @@ module Lexing = struct
   include Lexing
 
   let pp_lexbuf _l _r = ()
+  let pp_position _l _r = ()
 end
 
 let rec repl s i = match i with 0 -> "" | x -> s ^ repl s (x - 1)
@@ -102,25 +103,33 @@ let rec delim s sl =
   match sl with [] -> "" | [ x ] -> x | x :: xs -> x ^ s ^ delim s xs
 
 let parse_error lines (offsets : Lexing.position) actual follow_set =
-  let line = List.nth lines (offsets.pos_lnum - 1) in
-  let line' =
-    match line.[String.length line - 1] with '\n' -> line | _ -> line ^ "\n"
-  in
-  let coff = repl " " (offsets.pos_bol - 1) ^ "^\n" in
-  print_endline @@ "Error in file " ^ offsets.pos_fname ^ " line "
-  ^ string_of_int offsets.pos_lnum;
-  print_string line';
-  print_string coff;
-  print_endline @@ "Got " ^ show_token actual;
-  print_endline @@ "Expected ["
-  ^ delim ", " (List.map show_token follow_set)
-  ^ "]"
+  try
+    let line = List.nth lines (offsets.pos_lnum - 1) in
+    let line' =
+      match line.[String.length line - 1] with '\n' -> line | _ -> line ^ "\n"
+    in
+    let coff = repl " " (offsets.pos_bol - 1) ^ "^\n" in
+    print_endline @@ "Error in file " ^ offsets.pos_fname ^ " line "
+    ^ string_of_int offsets.pos_lnum;
+    print_string line';
+    print_string coff;
+    print_endline @@ "Got " ^ show_token actual;
+    print_endline @@ "Expected ["
+    ^ delim ", " (List.map show_token follow_set)
+    ^ "]"
+  with Invalid_argument _ ->
+    print_endline @@ "Error in file " ^ offsets.pos_fname ^ " line "
+    ^ string_of_int offsets.pos_lnum;
+    print_endline @@ "Got " ^ show_token actual;
+    print_endline @@ "Expected ["
+    ^ delim ", " (List.map show_token follow_set)
+    ^ "]"
 
 module ParserState = struct
   type state = {
     lex_func : Lexing.lexbuf -> token;
     lex_buf : Lexing.lexbuf ref;
-    buffer : token list ref;
+    buffer : (token * Lexing.position) list ref;
     file : string;
   }
   [@@deriving show { with_path = false }]
@@ -131,7 +140,11 @@ module ParserState = struct
     ref { lex_func; lex_buf = ref lex_buf; buffer = ref []; file }
 
   let error state actual follow_set =
-    let offset = !(!state.lex_buf).lex_curr_p in
+    let offset =
+      match !(!state.buffer) with
+      | [] -> !(!state.lex_buf).lex_curr_p
+      | x :: _ -> snd x
+    in
     let split = String.split_on_char '\n' !state.file in
     parse_error split offset actual follow_set;
     raise @@ ParseError
@@ -141,7 +154,7 @@ module ParserState = struct
     | [] -> !state.lex_func !(!state.lex_buf)
     | x :: xs ->
         !state.buffer := xs;
-        x
+        fst x
 
   let toss state =
     match !(!state.buffer) with
@@ -154,9 +167,9 @@ module ParserState = struct
     let int = int - 1 in
     for i = 0 to int do
       let t = !state.lex_func !(!state.lex_buf) in
-      !state.buffer := !(!state.buffer) @ [ t ]
+      !state.buffer := !(!state.buffer) @ [ (t, !(!state.lex_buf).lex_curr_p) ]
     done;
-    try List.nth !(!state.buffer) int
+    try fst (List.nth !(!state.buffer) int)
     with Failure _ -> error state EOF [ ANY ]
 
   let expect state tok =
@@ -199,7 +212,7 @@ and get_binop state =
   | MOD_OP s
   | ADD_OP s
   | SUB_OP s
-  | COL_OP s
+  (* | COL_OP s *)
   | CAR_OP s
   | AT_OP s
   | EQ_OP s
@@ -219,7 +232,7 @@ and get_binop_peek state =
   | MOD_OP s
   | ADD_OP s
   | SUB_OP s
-  | COL_OP s
+  (* | COL_OP s *)
   | CAR_OP s
   | AT_OP s
   | EQ_OP s
