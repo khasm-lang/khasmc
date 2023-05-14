@@ -1,11 +1,10 @@
 #ifndef KHASM_GC
 #define KHASM_GC
 #include "type.h"
+#include "obj.h"
 
-typedef struct kha_heap {
-  i64 left;
-  void *data;
-  struct heap *next;
-} kha_heap;
+kha_obj *new_kha_obj(kha_obj_typ t);
 
+kha_obj *ref(kha_obj *);
+void unref(kha_obj*);
 #endif

@@ -101,6 +101,7 @@ rule token = parse
      | "," {incr_by lexbuf; COMMA}
      | ";" {incr_by lexbuf; SEMICOLON}
      | "->" {incr_by lexbuf; TS_TO}
+     | "→" {incr_by lexbuf; TS_TO}
      | "=>" {incr_by lexbuf; LAM_TO}
 	| bang_op {incr_by lexbuf; BANG_OP (Lexing.lexeme lexbuf)}
 	| tilde_op {incr_by lexbuf; TILDE_OP (Lexing.lexeme lexbuf)}
