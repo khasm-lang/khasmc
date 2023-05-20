@@ -14,12 +14,18 @@ kha_obj * new_kha_obj(kha_obj_typ t) {
 
 kha_obj * ref(kha_obj * a) {
   a->gc += 1;
+  //printf("ref  %d : %ld | %p\n",
+  //	 a->tag, a->gc, a);
   return a;
 }
 
 void unref(kha_obj * a) {
   a->gc -= 1;
+  //fprintf(stderr, "uref %d : %ld | %p\n",
+  //  a->tag, a->gc, a);
   if (a->gc <= 0) {
+    //fprintf(stderr, "free %d : %ld | %p\n",
+    //	    a->tag, a->gc, a);
     int i;
     switch (a->tag) {
     case INT:
@@ -27,24 +33,43 @@ void unref(kha_obj * a) {
     case ENUM:
     case PTR:
       free(a);
+      break;
     case PAP: {
       for (int i = 0; i < a->data.pap->argnum; i++) {
 	unref(a->data.pap->args[i]);
       }
       free(a->data.pap);
       free(a);
+      break;
     }
     case ADT: {
       for (int i = 0; i < a->data.pap->argnum; i++) {
 	unref(a->data.adt->data[i]);
       }
+      free(a->data.adt->data);
       free(a->data.adt);
       free(a);
+      break;
     }
-    case STR:
+    case TUPLE: {
+      for (int i = 0; i < a->data.tuple->len; i++) {
+	unref(a->data.tuple->tups[i]);
+      }
+      free(a->data.tuple->tups);
+      free(a->data.tuple);
+      free(a);
+      break;
+    }
+    case STR: {
       free(a->data.str->data);
       free(a->data.str);
       free(a);
+      break;
+    }
+    case END: {
+    fprintf(stderr, "UNREACHABLE\n");
+    exit(1);
+    }
     }
   }
 }

@@ -10,12 +10,19 @@ typedef enum kha_obj_typ {
   PTR,
   INT,
   FLOAT,
-  STR
+  STR,
+  TUPLE,
+  END
 } packed kha_obj_typ;
 
 typedef struct kha_obj {
-  kha_obj_typ tag;
-  u64 gc: 56;
+  union {
+    struct {
+      kha_obj_typ tag;
+      u64 gc: 56;
+    };
+    void *fatptr;
+  };
   union {
     u64 kha_enum;
 
@@ -28,7 +35,7 @@ typedef struct kha_obj {
     struct kha_obj_pap {
       void *(*func)(void*);
       struct kha_obj **args;
-      i64 argnum;
+      u64 argnum;
     } *pap;
 
     void *(*ptr)(void);
@@ -37,13 +44,25 @@ typedef struct kha_obj {
 
     f64 f;
 
+    struct kha_obj_tuple {
+      u64 len;
+      struct kha_obj ** tups;
+    } *tuple;
+    
     struct kha_obj_str {
       char * data;
       i64 len;
     } *str;
     
   }data;
-} packed kha_obj;
+} kha_obj;
 
+kha_obj * make_ptr(kha_obj * p);
+kha_obj * make_int(i64 i);
 
+kha_obj * make_float(f64 f);
+
+kha_obj *make_pap(u64 argnum, void *p, kha_obj **args);
+
+kha_obj *make_tuple(u64 num, ...);
 #endif

@@ -9,4 +9,4 @@ let rec ack m n : int -> int -> int =
     	(ack m (Stdlib.(-) n 1))
 
 let main x : () -> () =
-    Stdlib.print_int (ack 3 5)
+    Stdlib.print_int (ack 3 2)
