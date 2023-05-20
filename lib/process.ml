@@ -38,6 +38,6 @@ let compile names asts args =
   let khagm = kir' |> Mtb.mtb in
   if args.dump_ast3 then print_endline (Khagm.show_khagm khagm) else ();
   let out = khagm |> Emit_c.emit_c in
-  print_endline out;
+  let () = Native.compile out args in
 
   "Outputted as " ^ args.out

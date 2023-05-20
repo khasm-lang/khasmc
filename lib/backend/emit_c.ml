@@ -28,10 +28,14 @@ let mangle_top nms id =
   | _ -> "khasm_" ^ utf8_map mangler nm
 
 let mangle id =
-  let id' = string_of_int id in
-  "khasm_" ^ id'
+  if id >= 0 then
+    let id' = string_of_int id in
+    "khasm_" ^ id'
+  else
+    let id' = string_of_int (-id) in
+    "khasm_neg_" ^ id'
 
-let function_name name = "\nkha_obj * " ^ name ^ "(int i, kha_obj **a)"
+let function_name name = "\nkha_obj * " ^ name ^ "(u64 i, kha_obj **a) {"
 
 let is_toplevel id tbl =
   match List.assoc_opt id tbl with Some _ -> true | None -> false
@@ -41,7 +45,7 @@ let lookup x (tbl : (khagmid * string) list) =
   | Some x -> x
   | None -> raise (Impossible "not_found")
 
-let emit_ptr tbl name = "make_ptr(&" ^ mangle_top tbl name ^ ")"
+let emit_ptr tbl name = "make_raw_ptr(&" ^ mangle_top tbl name ^ ")"
 let emit_ref name = "ref(" ^ name ^ ")"
 
 let rec emit_tuple x tbl =
@@ -86,7 +90,9 @@ and codegen_func code tbl =
       let c', add1 = codegen_func c tbl in
       let b1, add2 = codegen_func e1 tbl in
       let b2, add3 = codegen_func e2 tbl in
-      ("(" ^ c' ^ " ? " ^ b1 ^ " : " ^ b2 ^ ")", add1 @ add2 @ add3)
+      ("((" ^ c' ^ ")->data.i ? " ^ b1 ^ " : " ^ b2 ^ ")", add1 @ add2 @ add3)
+
+let ensure_notempty args str = match args with [] -> "/*EMPTY*/" | _ -> str
 
 let rec codegen code tbl =
   match code with
@@ -95,30 +101,49 @@ let rec codegen code tbl =
       let part =
         match x with
         | Let (id, args, expr) ->
-            let scaf = function_name (mangle id) in
+            let scaf = function_name (mangle_top tbl id) in
+            let ensure_enough_args =
+              "if (i < "
+              ^ (string_of_int @@ List.length args)
+              ^ ") {return NULL;}"
+            in
+            let set_used =
+              "used = " ^ (string_of_int @@ List.length args) ^ ";\n"
+            in
             let args_gen =
-              "kha_obj "
+              ensure_notempty args @@ "kha_obj "
               ^ (String.concat ", "
                 @@ List.mapi
                      (fun i x ->
-                       "*" ^ mangle x ^ " = a[" ^ string_of_int i ^ "]")
+                       "*" ^ mangle x ^ " = ref(a[" ^ string_of_int i ^ "])")
                      args)
               ^ ";"
             in
+            let unrefs =
+              ensure_notempty args @@ String.concat " "
+              @@ List.map (fun x -> "; unref(" ^ mangle x ^ ");") args
+            in
             let body, adds = codegen_func expr tbl in
             let adds =
-              "kha_obj "
+              ensure_notempty adds @@ "kha_obj "
               ^ (String.concat ", " @@ List.map (fun x -> "*" ^ x) adds)
               ^ ";"
             in
-            scaf ^ args_gen ^ adds ^ "return " ^ body ^ ";}\n"
+            scaf ^ ensure_enough_args ^ set_used ^ args_gen ^ adds
+            ^ "kha_obj * kha_return = " ^ body ^ ";\n" ^ unrefs
+            ^ "; return kha_return;}\n"
         | Extern (id, index, name) ->
             "/* EXTERN " ^ string_of_int id ^ " " ^ mangle index ^ " " ^ name
-            ^ " */\n"
+            ^ " */\n" ^ "extern kha_obj *" ^ mangle_top tbl id
+            ^ "(u64, kha_obj **);"
       in
       part ^ codegen xs tbl
+
+let prelude = {|
+u64 used;
+|}
 
 let emit_c khagm =
   let code, tbl = khagm in
   let tbl = add_new code tbl in
-  codegen code tbl
+  prelude ^ codegen code tbl
