@@ -1,6 +1,9 @@
 #ifndef KHASM_OBJ
 #define KHASM_OBJ
 #include "type.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #define packed __attribute__((packed))
 
 typedef enum kha_obj_typ {
@@ -65,4 +68,5 @@ kha_obj * make_float(f64 f);
 kha_obj *make_pap(u64 argnum, void *p, kha_obj **args);
 
 kha_obj *make_tuple(u64 num, ...);
+kha_obj *copy(kha_obj * a);
 #endif

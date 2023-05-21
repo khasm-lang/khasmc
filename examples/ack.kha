@@ -1,12 +1,13 @@
+open Stdlib
 let rec ack m n : int -> int -> int =
-    if (Stdlib.(=) m 0) then
-       Stdlib.(+) n 1
+    if (m = 0) then
+       n + 1
     else
-    if (Stdlib.(=) n 0) then
-       ack (Stdlib.(-) m 1) 1
+    if (n = 0) then
+       ack (m - 1) 1
     else
-    ack (Stdlib.(-) m 1)
-    	(ack m (Stdlib.(-) n 1))
+    ack (m - 1)
+    	(ack m (n - 1))
 
 let main x : () -> () =
-    Stdlib.print_int (ack 3 2)
+    print_int $ ack 3 5

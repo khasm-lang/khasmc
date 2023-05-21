@@ -24,6 +24,8 @@ kha_obj *pap_call(kha_obj *f) {
     return f;
   }
   else {
+    // printf("called func %p\n", f->data.pap->func);
+    
     if (ret->tag == PAP) {
       // add our args and recurse
       if (used >= argnum) {
@@ -49,7 +51,6 @@ ceed number of args %ld\n", used, argnum);
       }
       
       ret->data.pap->argnum += new_argnum;
-      unref(f);
       return pap_call(ret);
     }
     else if (ret->tag == PTR) {
@@ -68,8 +69,12 @@ ceed number of args %ld\n", used, argnum);
       kha_obj *new = make_pap(new_argnum,
 			      ret->data.ptr,
 			      unused);
-      unref(ret);
-      unref(f);
+      for(int i = 0; i < new_argnum; i++) {
+	ref(new->data.pap->args[i]);
+      }
+      
+       unref(ret);
+       unref(f);
       return new;
     }
     else {
@@ -82,19 +87,19 @@ ceed number of args %ld\n", used, argnum);
 
 kha_obj *call(kha_obj *f, kha_obj *x) {
   if (f->tag == PAP) {
-    u64 argnum = f->data.pap->argnum;
-    f->data.pap->args =
-      realloc(f->data.pap->args,
+    kha_obj * new = copy(f);
+    u64 argnum = new->data.pap->argnum;
+    new->data.pap->args =
+      realloc(new->data.pap->args,
 	      (argnum + 1) * sizeof(kha_obj *));
-    f->data.pap->args[argnum] = ref(x);
-    f->data.pap->argnum++;
-    return pap_call(f);
+    new->data.pap->args[argnum] = ref(x);
+    new->data.pap->argnum++;
+    return pap_call(new);
   }
   else if (f->tag == PTR) {
     kha_obj ** args = malloc(sizeof(kha_obj *));
     args[0] = ref(x);
     kha_obj * pap = make_pap(1, f->data.ptr, args);
-    unref(f);
     return pap_call(pap);
   }
   else {

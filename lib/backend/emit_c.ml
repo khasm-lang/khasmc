@@ -45,52 +45,75 @@ let lookup x (tbl : (khagmid * string) list) =
   | Some x -> x
   | None -> raise (Impossible "not_found")
 
+let counter = ref 0
+
+let gen_uniq_name () =
+  let tmp = !counter in
+  counter := !counter + 1;
+  "tmp_var_" ^ string_of_int tmp
+
+let emission = ref []
+let adds_default () = [ "IFELSETEMP" ]
+let adds = ref [ "IFELSETEMP" ]
 let emit_ptr tbl name = "make_raw_ptr(&" ^ mangle_top tbl name ^ ")"
+
 let emit_ref name = "ref(" ^ name ^ ")"
 
-let rec emit_tuple x tbl =
-  let tmp = List.map (fun x -> codegen_func x tbl) x in
-  let codes = List.map fst tmp in
-  let adds = List.flatten @@ List.map snd tmp in
-  ( "make_tuple("
-    ^ (string_of_int @@ List.length x)
-    ^ ", " ^ String.concat ", " codes ^ ")",
-    adds )
+and gen_new s =
+  let n' = gen_uniq_name () in
+  emission := (n' ^ " = " ^ s ^ ";\n") :: !emission;
+  adds := n' :: !adds;
+  n'
 
-and emit_call e1 e2 tbl =
-  let b1, add1 = codegen_func e1 tbl in
-  let b2, add2 = codegen_func e2 tbl in
-  ("call(" ^ b1 ^ ", " ^ b2 ^ ")", add1 @ add2)
+let rec emit_tuple tbl x =
+  let codes = List.map (fun x -> codegen_func x tbl) x in
+  gen_new
+    ("make_tuple("
+    ^ (string_of_int @@ List.length x)
+    ^ ", " ^ String.concat ", " codes ^ ")")
+
+and emit_call tbl e1 e2 =
+  let b1 = codegen_func e1 tbl in
+  let b2 = codegen_func e2 tbl in
+  gen_new ("call(" ^ b1 ^ ", " ^ b2 ^ ")")
 
 and emit_unboxed b =
   match b with
-  | Int' x -> "make_int(" ^ x ^ ")"
-  | Float' x -> "make_float(" ^ x ^ ")"
-  | Bool' x -> if x then "1" else "0"
-  | String' x -> "make_string(\"" ^ Str.quote x ^ "\")"
+  | Float' s -> "make_float(" ^ s ^ ")"
+  | String' s -> "make_string(\"" ^ String.escaped s ^ "\")"
+  | Int' s -> "make_int(" ^ s ^ ")"
+  | Bool' b -> ( match b with true -> "make_int(1)" | false -> "make_int(0)")
+
+and add_to_emi s = emission := s :: !emission
 
 and codegen_func code tbl =
   match code with
-  | Val x ->
-      if is_toplevel x tbl then (emit_ptr tbl x, [])
-      else (emit_ref (mangle x), [])
-  | Unboxed b -> (emit_unboxed b, [])
-  | Tuple t -> emit_tuple t tbl
-  | Call (e1, e2) -> emit_call e1 e2 tbl
+  | Val v ->
+      if is_toplevel v tbl then gen_new (emit_ptr tbl v)
+      else gen_new (emit_ref (mangle v))
+  | Unboxed v -> gen_new (emit_unboxed v)
+  | Tuple t -> emit_tuple tbl t
+  | Call (e1, e2) -> emit_call tbl e1 e2
   | Seq (e1, e2) ->
-      let b1, add = codegen_func e1 tbl in
-      let b2, add2 = codegen_func e2 tbl in
-      ("(" ^ b1 ^ ", " ^ b2 ^ ")", add @ add2)
+      ignore @@ codegen_func e1 tbl;
+      codegen_func e2 tbl
   | Let (id, e1, e2) ->
-      let b1, add1 = codegen_func e1 tbl in
-      let b2, add2 = codegen_func e2 tbl in
-      ( "(" ^ mangle id ^ " = " ^ b1 ^ ", " ^ b2 ^ ")",
-        mangle id :: (add1 @ add2) )
+      let n' = codegen_func e1 tbl in
+      emission :=
+        ("kha_obj * " ^ mangle id ^ " = ref(" ^ n' ^ ");\n") :: !emission;
+      codegen_func e2 tbl
   | IfElse (c, e1, e2) ->
-      let c', add1 = codegen_func c tbl in
-      let b1, add2 = codegen_func e1 tbl in
-      let b2, add3 = codegen_func e2 tbl in
-      ("((" ^ c' ^ ")->data.i ? " ^ b1 ^ " : " ^ b2 ^ ")", add1 @ add2 @ add3)
+      let n1 = codegen_func c tbl in
+      add_to_emi ("if (" ^ n1 ^ "->data.i) {\n");
+      let t1 = codegen_func e1 tbl in
+      if t1 = "IFELSETEMP" then ()
+      else add_to_emi (";\n IFELSETEMP = ref(" ^ t1 ^ ");");
+      add_to_emi "} else {";
+      let t2 = codegen_func e2 tbl in
+      if t2 = "IFELSETEMP" then ()
+      else add_to_emi (";\n IFELSETEMP = ref(" ^ t2 ^ ");");
+      add_to_emi "}\n";
+      "IFELSETEMP"
 
 let ensure_notempty args str = match args with [] -> "/*EMPTY*/" | _ -> str
 
@@ -98,6 +121,8 @@ let rec codegen code tbl =
   match code with
   | [] -> ""
   | x :: xs ->
+      adds := adds_default ();
+      emission := [];
       let part =
         match x with
         | Let (id, args, expr) ->
@@ -115,22 +140,27 @@ let rec codegen code tbl =
               ^ (String.concat ", "
                 @@ List.mapi
                      (fun i x ->
-                       "*" ^ mangle x ^ " = ref(a[" ^ string_of_int i ^ "])")
+                       "*" ^ mangle x ^ " = ref(a[" ^ string_of_int i ^ "])\n")
                      args)
-              ^ ";"
+              ^ ";\n"
             in
+            (* STATEFUL *)
+            let body = codegen_func expr tbl in
             let unrefs =
-              ensure_notempty args @@ String.concat " "
-              @@ List.map (fun x -> "; unref(" ^ mangle x ^ ");") args
+              (ensure_notempty args @@ String.concat " "
+              @@ List.map (fun x -> "unref(" ^ mangle x ^ ");\n") args)
+              ^ String.concat ""
+                  (List.map (fun x -> "unref(" ^ x ^ ");\n") (List.rev !adds))
             in
-            let body, adds = codegen_func expr tbl in
-            let adds =
-              ensure_notempty adds @@ "kha_obj "
-              ^ (String.concat ", " @@ List.map (fun x -> "*" ^ x) adds)
-              ^ ";"
+            let adds' =
+              ensure_notempty !adds @@ "kha_obj "
+              ^ (String.concat ", "
+                @@ List.map (fun x -> "*" ^ x ^ "= NULL") !adds)
+              ^ ";\n"
             in
-            scaf ^ ensure_enough_args ^ set_used ^ args_gen ^ adds
-            ^ "kha_obj * kha_return = " ^ body ^ ";\n" ^ unrefs
+            scaf ^ ensure_enough_args ^ args_gen ^ adds'
+            ^ String.concat "" (List.rev !emission)
+            ^ "kha_obj * kha_return = ref(" ^ body ^ ");\n" ^ unrefs ^ set_used
             ^ "; return kha_return;}\n"
         | Extern (id, index, name) ->
             "/* EXTERN " ^ string_of_int id ^ " " ^ mangle index ^ " " ^ name

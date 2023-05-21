@@ -16,13 +16,17 @@ KHAFUNC(khasm_Stdlib775896895_s1597980479_eq) {
   used = 2;
   kha_obj * b = a[0];
   kha_obj * c = a[1];
+  kha_obj * ret;
   if (b->tag != c->tag) {
-    return make_int(0);
+    ret =  make_int(0);
   }
   else if (b->data.i != c->data.i) {
-    return make_int(0);
+    ret =  make_int(0);
   }
-  return make_int(1);
+  else {
+    ret = make_int(1);
+  }
+  return ret;
 }
 
 KHAFUNC(khasm_Stdlib775896895_iadd) {
@@ -152,6 +156,8 @@ KHAFUNC(khasm_Stdlib775896895_print1597980479_int) {
   if (i < 1) {
     return NULL;
   }
+  used = 1;
+  
   kha_obj *b = a[0];
   if (b->tag != INT) {
     fprintf(stderr, "INVALID PRINT INT\n");
