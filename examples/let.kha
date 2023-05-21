@@ -1,0 +1,6 @@
+open Stdlib
+let main x : () -> () =
+	let five = 5 in 
+	print_int 4;
+	print_int five;
+	print_int 6

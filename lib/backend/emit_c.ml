@@ -99,8 +99,7 @@ and codegen_func code tbl =
       codegen_func e2 tbl
   | Let (id, e1, e2) ->
       let n' = codegen_func e1 tbl in
-      emission :=
-        ("kha_obj * " ^ mangle id ^ " = ref(" ^ n' ^ ");\n") :: !emission;
+      emission := ("kha_obj * " ^ mangle id ^ " = (" ^ n' ^ ");\n") :: !emission;
       codegen_func e2 tbl
   | IfElse (c, e1, e2) ->
       let n1 = codegen_func c tbl in
