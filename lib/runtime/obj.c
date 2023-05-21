@@ -59,3 +59,30 @@ kha_obj * make_tuple(u64 num, ...) {
   k->gc = 1;
   return k;
 }
+
+kha_obj *copy(kha_obj * a) {
+  if (a->tag == PAP) {
+    kha_obj * new = new_kha_obj(PAP);
+    new->data.pap = malloc(sizeof(struct kha_obj_pap));
+    new->data.pap->argnum
+      = a->data.pap->argnum;
+    new->data.pap->func
+      = a->data.pap->func;
+    new->data.pap->args
+      = malloc(sizeof(kha_obj *)
+	       * a->data.pap->argnum);
+    memcpy(new->data.pap->args,
+	   a->data.pap->args,
+	   sizeof(kha_obj*)
+	   * a->data.pap->argnum);
+    for (int i = 0; i < a->data.pap->argnum; i++) {
+      ref(new->data.pap->args[i]);
+    }
+    new->gc = 1;
+    return new;
+  }
+  else {
+    fprintf(stderr, "TODO: copy other stuff");
+    exit(1);
+  }
+}

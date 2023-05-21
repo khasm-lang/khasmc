@@ -4,8 +4,13 @@ open Args
 let gen_main () =
   {|
 int main(void) {
-kha_obj * empty = make_tuple(0);
+  kha_obj * empty = make_tuple(0);
   kha_obj * ret = main_____Khasm(1, &empty);
+  if (ret->tag != TUPLE) {
+  fprintf(stderr, "RETURN VALUE NOT TUPLE - TYPE SYSTEM INVALID\n");
+  }  
+  unref(empty);
+  unref(ret);  
   return 0;  
 }
 |}
