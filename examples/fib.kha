@@ -7,4 +7,4 @@ let rec fib n : int -> int =
   else
     fib (n - 1) + fib (n - 2)
 
-let main x : () -> () = print_int $ fib 30
+let main x : () -> () = print_int 30
