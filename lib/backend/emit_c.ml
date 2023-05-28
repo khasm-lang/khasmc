@@ -35,7 +35,17 @@ let mangle id =
     let id' = string_of_int (-id) in
     "khasm_neg_" ^ id'
 
-let function_name name = "\nkha_obj * " ^ name ^ "(u64 i, kha_obj **a) {"
+let rec n_of_i n i = match n with 0 -> [] | _ -> i :: n_of_i (n - 1) i
+
+let function_name name argnum =
+  let args =
+    String.concat ", "
+      (List.mapi (fun i x -> x ^ "_" ^ string_of_int i)
+      @@ n_of_i argnum "kha_obj * a")
+  in
+  let args = if args = "" then "void" else args in
+  "extern kha_obj * " ^ name ^ "(" ^ args ^ ");\n" ^ "KHASM_ENTRY(" ^ name
+  ^ ", " ^ string_of_int argnum ^ ", " ^ args ^ ") {\n"
 
 let is_toplevel id tbl =
   match List.assoc_opt id tbl with Some _ -> true | None -> false
@@ -75,7 +85,7 @@ let rec emit_tuple tbl x =
 and emit_call tbl e1 e2 =
   let b1 = codegen_func e1 tbl in
   let b2 = codegen_func e2 tbl in
-  gen_new ("call(" ^ b1 ^ ", " ^ b2 ^ ")")
+  gen_new ("add_arg(" ^ b1 ^ ", " ^ b2 ^ ")")
 
 and emit_unboxed b =
   match b with
@@ -125,21 +135,13 @@ let rec codegen code tbl =
       let part =
         match x with
         | Let (id, args, expr) ->
-            let scaf = function_name (mangle_top tbl id) in
-            let ensure_enough_args =
-              "if (i < "
-              ^ (string_of_int @@ List.length args)
-              ^ ") {return NULL;}"
-            in
-            let set_used =
-              "used = " ^ (string_of_int @@ List.length args) ^ ";\n"
-            in
+            let scaf = function_name (mangle_top tbl id) (List.length args) in
             let args_gen =
               ensure_notempty args @@ "kha_obj "
               ^ (String.concat ", "
                 @@ List.mapi
                      (fun i x ->
-                       "*" ^ mangle x ^ " = ref(a[" ^ string_of_int i ^ "])\n")
+                       "*" ^ mangle x ^ " = ref(a_" ^ string_of_int i ^ ")\n")
                      args)
               ^ ";\n"
             in
@@ -157,9 +159,9 @@ let rec codegen code tbl =
                 @@ List.map (fun x -> "*" ^ x ^ "= NULL") !adds)
               ^ ";\n"
             in
-            scaf ^ ensure_enough_args ^ args_gen ^ adds'
+            scaf ^ args_gen ^ adds'
             ^ String.concat "" (List.rev !emission)
-            ^ "kha_obj * kha_return = ref(" ^ body ^ ");\n" ^ unrefs ^ set_used
+            ^ "kha_obj * kha_return = ref(" ^ body ^ ");\n" ^ unrefs
             ^ "; return kha_return;}\n"
         | Extern (id, index, name) ->
             "/* EXTERN " ^ string_of_int id ^ " " ^ mangle index ^ " " ^ name

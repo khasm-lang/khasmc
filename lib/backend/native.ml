@@ -5,7 +5,7 @@ let gen_main () =
   {|
 int main(void) {
   kha_obj * empty = make_tuple(0);
-  kha_obj * ret = main_____Khasm(1, &empty);
+  kha_obj * ret = main_____Khasm(empty);
   if (ret->tag != TUPLE) {
   fprintf(stderr, "RETURN VALUE NOT TUPLE - TYPE SYSTEM INVALID\n");
   }  
@@ -24,7 +24,7 @@ let prelude () =
 |}
 
 let flags =
-  {| -O3 -g -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra -L/usr/lib/ -lgc |}
+  {| -O3 -g -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra -L/usr/lib/ -lgc -Wno-incompatible-pointer-types |}
 
 let compile code (args : Args.cliargs) =
   let code = prelude () ^ Runtime_lib.runtime_c ^ code ^ gen_main () in
