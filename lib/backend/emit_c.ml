@@ -85,7 +85,8 @@ let rec emit_tuple tbl x =
 and emit_call tbl e1 e2 =
   let b1 = codegen_func e1 tbl in
   let b2 = codegen_func e2 tbl in
-  gen_new ("add_arg(" ^ b1 ^ ", " ^ b2 ^ ")")
+  let nm = gen_new ("add_arg(" ^ b1 ^ ", " ^ b2 ^ ")") in
+  nm
 
 and emit_unboxed b =
   match b with
@@ -152,6 +153,10 @@ let rec codegen code tbl =
               @@ List.map (fun x -> "unref(" ^ mangle x ^ ");\n") args)
               ^ String.concat ""
                   (List.map (fun x -> "unref(" ^ x ^ ");\n") (List.rev !adds))
+              ^ String.concat ""
+              @@ List.mapi
+                   (fun i _ -> "unref(a_" ^ string_of_int i ^ ");\n")
+                   args
             in
             let adds' =
               ensure_notempty !adds @@ "kha_obj "
@@ -171,7 +176,7 @@ let rec codegen code tbl =
       part ^ codegen xs tbl
 
 let prelude = {|
-u64 used;
+
 |}
 
 let emit_c khagm =

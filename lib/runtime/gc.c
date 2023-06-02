@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "gc.h"
-
+#include <jemalloc/jemalloc.h>
 
 kha_obj * new_kha_obj(kha_obj_typ t) {
   kha_obj * a = malloc(sizeof(kha_obj));

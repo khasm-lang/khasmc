@@ -21,19 +21,18 @@
   kha_obj * name##_impl (__VA_ARGS__)
 
 #define GET_ARGS(var, name)			\
-  u64 var = *((u64*) ((u64)&name - 8) )
+  u64 var = *((u64*) ((u64)(name) - 8) )
 
-#if __STDC_VERSION__ > 202000UL
 #ifdef __clang__
 #define MUSTTAIL  [[clang::musttail]]
 #endif
 #ifdef __GNUC__
-#define MUSTTAIL  __attribute__((musttail))
+#pragma message "Cannot ensure TCO on GNUC"
+#define MUSTTAIL
 #endif
 #ifdef  _MSC_VER
 #pragma message "Cannot ensure TCO on MSVC"
 #define MUSTTAIL
-#endif
 
 #else
 #define MUSTTAIL

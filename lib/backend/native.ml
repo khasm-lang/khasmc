@@ -9,7 +9,6 @@ int main(void) {
   if (ret->tag != TUPLE) {
   fprintf(stderr, "RETURN VALUE NOT TUPLE - TYPE SYSTEM INVALID\n");
   }  
-  unref(empty);
   unref(ret);  
   return 0;  
 }
@@ -24,7 +23,16 @@ let prelude () =
 |}
 
 let flags =
-  {| -O3 -g -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra -L/usr/lib/ -lgc -Wno-incompatible-pointer-types |}
+  KhasmUTF.utf8_map
+    (fun x -> if x = "\n" then "" else x)
+    {| -O3
+        -Wall
+        -Wextra
+        -Wno-incompatible-pointer-types 
+    -L`jemalloc-config --libdir`
+        -Wl,-rpath,`jemalloc-config --libdir`
+        -ljemalloc
+        `jemalloc-config --libs`  |}
 
 let compile code (args : Args.cliargs) =
   let code = prelude () ^ Runtime_lib.runtime_c ^ code ^ gen_main () in
@@ -41,6 +49,7 @@ let compile code (args : Args.cliargs) =
       let oc = open_out filename in
       Printf.fprintf oc "%s\n" code;
       close_out oc;
+      print_endline flags;
       let code' = Sys.command ("cc " ^ flags ^ filename ^ " -o " ^ args.out) in
       FileUtil.cp [ filename ] ("./" ^ args.out ^ ".c");
       (match code' with 0 -> () | _ -> raise @@ CompileError "CC failed");
