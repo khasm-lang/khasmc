@@ -49,7 +49,6 @@ let compile code (args : Args.cliargs) =
       let oc = open_out filename in
       Printf.fprintf oc "%s\n" code;
       close_out oc;
-      print_endline flags;
       let code' = Sys.command ("cc " ^ flags ^ filename ^ " -o " ^ args.out) in
       FileUtil.cp [ filename ] ("./" ^ args.out ^ ".c");
       (match code' with 0 -> () | _ -> raise @@ CompileError "CC failed");
