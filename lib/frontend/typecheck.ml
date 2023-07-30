@@ -348,7 +348,12 @@ and unify ?loop ctx l r =
             let typ = snd x in
             unify ctx typ r
         | None -> (combine { metas = [ (m, r) ] } ctx, r))
-    | TSForall (id, ts), _ -> unify ctx (inst_all (TSForall (id, ts))) r
+    | TSForall (id, ts), _ ->
+        if not (occurs_ts id ts) then unify ctx (inst_all (TSForall (id, ts))) r
+        else
+          raise
+            (UnifyErr
+               ("Can't unify " ^ pshow_typesig l ^ " and " ^ pshow_typesig r))
     | _, _ -> (
         match loop with
         | None -> unify ~loop:true ctx r l
@@ -457,7 +462,7 @@ and infer ctx tm =
         match infer ctx expr with
         | TSTuple t ->
             print_int @@ List.length t;
-            if List.length t >= i then
+            if List.length t < i then
               raise @@ TypeErr "Tuple access of too-small tuple"
             else (inf, List.nth t i)
         | _ ->

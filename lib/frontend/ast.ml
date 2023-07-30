@@ -40,7 +40,6 @@ let getid () =
 let mkinfo () = { id = getid (); complex = -1 }
 
 type kident = string [@@deriving show { with_path = false }]
-type tdecl = kident * typesig [@@deriving show { with_path = false }]
 
 type kbase =
   | Ident of info * kident
@@ -68,6 +67,7 @@ and kexpr =
   | ModAccess of info * kident list * kident
 [@@deriving show { with_path = false }]
 
+and tdecl = kident * typesig [@@deriving show { with_path = false }]
 and kass = kident * kident list * kexpr [@@deriving show { with_path = false }]
 
 and toplevel =
@@ -82,6 +82,7 @@ and toplevel =
 
 and program = Program of toplevel list [@@deriving show { with_path = false }]
 
+(* The following two are basically just α-renaming *)
 let base_subs i b x y =
   match b with
   | Ident (i', b') -> if b' = x then Base (i, Ident (i', y)) else Base (i, b)
@@ -107,6 +108,7 @@ let rec esubs expr x y =
   | ModAccess _ -> expr
   | Inst _ -> expr
 
+(*self explanatory*)
 let getinfo expr =
   match expr with
   | Base (inf, _)

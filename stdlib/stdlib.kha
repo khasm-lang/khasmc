@@ -1,21 +1,20 @@
-internal_extern 2 `int_add = iadd : ∀a, a -> a -> a 
-internal_extern 2 `int_sub = isub : ∀a, a -> a -> a
-internal_extern 2 `int_mul = imul : ∀a, a -> a -> a
-internal_extern 2 `int_div = idiv : ∀a, a -> a -> a
+internal_extern 2 `int_add : ∀a, a -> a -> a  = iadd 
+internal_extern 2 `int_sub : ∀a, a -> a -> a  = isub 
+internal_extern 2 `int_mul: ∀a, a -> a -> a   = imul 
+internal_extern 2 `int_div : ∀a, a -> a -> a = idiv 
 
-internal_extern 2 `float_add = fadd : ∀a, a -> a -> a
-internal_extern 2 `float_sub = fsub : ∀a, a -> a -> a
-internal_extern 2 `float_div = fdiv : ∀a, a -> a -> a
-internal_extern 2 `float_mul = fmul : ∀a, a -> a -> a
+internal_extern 2 `float_add: ∀a, a -> a -> a  = fadd 
+internal_extern 2 `float_sub: ∀a, a -> a -> a  = fsub 
+internal_extern 2 `float_div : ∀a, a -> a -> a = fdiv 
+internal_extern 2 `float_mul : ∀a, a -> a -> a = fmul 
 
-internal_extern 1 `print_int = print_int : int -> ()
-internal_extern 1 `print_str = print_str : str -> ()
-internal_extern 1 `print_float = print_float : float -> ()
+internal_extern 1 `print_int: int -> () = print_int 
+internal_extern 1 `print_str : string -> () = print_str
+internal_extern 1 `print_float : float -> () = print_float 
 
 
-internal_extern 1 `debug = debug : ∀a, a -> ()
 
-internal_extern 2 `s_eq = s_eq : ∀a, a -> a -> bool
+internal_extern 2 `s_eq : ∀a, a -> a -> bool = s_eq
 
 bind (=) = s_eq
 

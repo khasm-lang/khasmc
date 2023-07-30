@@ -18,6 +18,7 @@
     STRINGIFY(name) ":\n"						\
     "  jmp " STRINGIFY(name) "_impl\n"			\
        );					\
+  extern kha_obj *name (__VA_ARGS__);		\
   kha_obj * name##_impl (__VA_ARGS__)
 
 #define GET_ARGS(var, name)			\
