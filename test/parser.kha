@@ -1,0 +1,19 @@
+(* This file is meant to test as much of the parser as possible. It's not meant to typecheck or anything. *)
+
+
+module test = struct
+       let goofy : string = "hi"
+end
+
+open test
+
+bind (+) = goofy
+
+
+internal_extern 2 `wacky : int -> int = foo
+
+let rec foo x : int -> int = x
+
+let l1 : int =
+    let x : int -> int = fun x : int => x in
+    x 5

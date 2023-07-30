@@ -76,11 +76,13 @@ and gen_new s =
   n'
 
 let rec emit_tuple tbl x =
-  let codes = List.map (fun x -> codegen_func x tbl) x in
-  gen_new
-    ("make_tuple("
-    ^ (string_of_int @@ List.length x)
-    ^ ", " ^ String.concat ", " codes ^ ")")
+  if List.length x = 0 then gen_new "make_tuple(0)"
+  else
+    let codes = List.map (fun x -> codegen_func x tbl) x in
+    gen_new
+      ("make_tuple("
+      ^ (string_of_int @@ List.length x)
+      ^ ", " ^ String.concat ", " codes ^ ")")
 
 and emit_call tbl e1 e2 =
   let b1 = codegen_func e1 tbl in
@@ -170,8 +172,7 @@ let rec codegen code tbl =
             ^ "; return kha_return;}\n"
         | Extern (id, index, name) ->
             "/* EXTERN " ^ string_of_int id ^ " " ^ mangle index ^ " " ^ name
-            ^ " */\n" ^ "extern kha_obj *" ^ mangle_top tbl id
-            ^ "(u64, kha_obj **);"
+            ^ " */\n"
       in
       part ^ codegen xs tbl
 

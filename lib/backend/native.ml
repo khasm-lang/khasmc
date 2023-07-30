@@ -28,7 +28,8 @@ let flags =
     {| -O3
         -Wall
         -Wextra
-        -Wno-incompatible-pointer-types 
+        -Wno-incompatible-pointer-types
+        -Wno-sign-compare
     -L`jemalloc-config --libdir`
         -Wl,-rpath,`jemalloc-config --libdir`
         -ljemalloc

@@ -95,7 +95,6 @@ rule token = parse
      | "true" {incr_by lexbuf; TRUE}
      | "false" {incr_by lexbuf; FALSE}
      | "\\" {incr_by lexbuf; BSLASH}
-     | "&" {incr_by lexbuf; AND}
      | "?" {incr_by lexbuf; QMARK}
      | "#" {incr_by lexbuf; HASH}
      | "," {incr_by lexbuf; COMMA}
@@ -132,8 +131,8 @@ rule token = parse
      | "end"    {incr_by lexbuf; END}
      | "true"   {incr_by lexbuf; TRUE}
      | "false"  {incr_by lexbuf; FALSE}
-     | "fun"    {incr_by lexbuf; FUN}
-     | "tfun"   {incr_by lexbuf; TFUN}
+     | "lam"    {incr_by lexbuf; FUN}
+     | "tlam"   {incr_by lexbuf; TFUN}
      | "nomangle" {incr_by lexbuf; NOMANGLE}
      | "inline" {incr_by lexbuf; INLINE}
      | "ignore" {incr_by lexbuf; IGNORE}

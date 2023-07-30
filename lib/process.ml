@@ -13,14 +13,22 @@ let rec normalise files =
 let compile names asts args =
   print_endline "";
 
+  if args.dump_ast1 then
+    asts |> List.iter (fun x -> print_endline (Ast.show_program x))
+  else ();
+
   let asts' =
     asts
+    (*parsing puts them in reverse order,
+            so fix that*)
+    |> List.rev
     |> List.map Complexity.init_program
     |> List.map2 Modules.wrap_in names
-    |> List.rev |> Elim_modules.elim
+    |> Elim_modules.elim
   in
 
-  if args.dump_ast1 then
+  (* After here, program must have no modules remaining *)
+  if args.dump_ast2 then
     asts' |> List.iter (fun x -> print_endline (Ast.show_program x))
   else ();
 
@@ -29,14 +37,17 @@ let compile names asts args =
   |> List.map Typelam_init.init_program
   |> Typecheck.typecheck_program_list;
 
+  (* After here, program should be type correct *)
+
   (*codegen stage*)
   let kir = asts' |> Translateftm.front_to_middle in
   let kir' = kir |> Lamlift.lambda_lift in
 
-  if args.dump_ast2 then print_endline (Kir.show_kirprog kir') else ();
+  (* After here, program should have no lambdas or closures *)
+  if args.dump_ast3 then print_endline (Kir.show_kirprog kir') else ();
 
   let khagm = kir' |> Mtb.mtb in
-  if args.dump_ast3 then print_endline (Khagm.show_khagm khagm) else ();
+  if args.dump_ast4 then print_endline (Khagm.show_khagm khagm) else ();
   let out = khagm |> Emit_c.emit_c in
   let () = Native.compile out args in
 

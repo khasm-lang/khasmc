@@ -125,6 +125,8 @@ let parse_error lines (offsets : Lexing.position) actual follow_set =
     ^ delim ", " (List.map show_token follow_set)
     ^ "]"
 
+let print_token t = print_endline (show_token t)
+
 module ParserState = struct
   type state = {
     lex_func : Lexing.lexbuf -> token;
@@ -169,15 +171,15 @@ module ParserState = struct
       let t = !state.lex_func !(!state.lex_buf) in
       !state.buffer := !(!state.buffer) @ [ (t, !(!state.lex_buf).lex_curr_p) ]
     done;
-    try fst (List.nth !(!state.buffer) int)
+    try
+      let ret = fst (List.nth !(!state.buffer) int) in
+      ret
     with Failure _ -> error state EOF [ ANY ]
 
   let expect state tok =
     let t = pop state in
-    if t == tok then () else error state t [ tok ]
+    if t = tok then () else error state t [ tok ]
 end
-
-let print_token t = print_endline (show_token t)
 
 open ParserState
 open Exp
@@ -325,7 +327,9 @@ and parse_type state =
         | x :: xs -> TSForall (x, help xs)
       in
       help idents
-  | _ -> parse_type_pratt state
+  | _ ->
+      let ret = parse_type_pratt state in
+      ret
 
 and infix_bind_pow tok =
   let first = String.get tok 0 in
@@ -433,23 +437,26 @@ and parse_compound state =
   | LET -> (
       toss state;
       match pop state with
-      | T_IDENT var ->
-          (match pop state with
-          | EQ_OP "=" -> ()
-          | x -> error state x [ EQ_OP "=" ]);
-          let first = parse_expr state 0 in
-          expect state IN;
-          let second = parse_expr state 0 in
-          LetIn (mkinfo (), var, first, second)
+      | T_IDENT var -> (
+          match pop state with
+          | EQ_OP "=" ->
+              let first = parse_expr state 0 in
+              expect state IN;
+              let second = parse_expr state 0 in
+              LetIn (mkinfo (), var, first, second)
+          | COL_OP ":" ->
+              let ts = parse_type state in
+              expect state (EQ_OP "=");
+              let first = parse_expr state 0 in
+              expect state IN;
+              let second = parse_expr state 0 in
+              AnnotLet (mkinfo (), var, ts, first, second)
+          | x -> error state x [ EQ_OP "="; COL_OP ":" ])
       | REC ->
           let var = get_ident state in
-          (match pop state with
-          | COL_OP ":" -> ()
-          | x -> error state x [ COL_OP ":" ]);
+          expect state (COL_OP ":");
           let ts = parse_type state in
-          (match pop state with
-          | EQ_OP "=" -> ()
-          | x -> error state x [ EQ_OP "=" ]);
+          expect state (EQ_OP "=");
           let first = parse_expr state 0 in
           expect state IN;
           let second = parse_expr state 0 in
@@ -576,12 +583,14 @@ and parse_intextern state =
     | x -> error state x [ T_INT "1" ]
   in
   let nm =
-    match pop state with INTIDENT s -> s | x -> error state x [ EQ_OP "=" ]
+    match pop state with
+    | INTIDENT s -> s
+    | x -> error state x [ INTIDENT "`foo" ]
   in
-  (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
-  let id = get_ident state in
-  (match pop state with COL_OP ":" -> () | x -> error state x [ COL_OP ":" ]);
+  expect state (COL_OP ":");
   let ts = parse_type state in
+  expect state (EQ_OP "=");
+  let id = get_ident state in
   IntExtern (nm, id, arity, ts)
 
 and parse_open state =
@@ -610,7 +619,9 @@ and parse_toplevel_list state =
         toss state;
         Some (parse_open state)
     | EOF -> None
-    | _ -> None
+    | x ->
+        print_token x;
+        None
   in
   match first with Some x -> x :: parse_toplevel_list state | None -> []
 
@@ -620,7 +631,7 @@ and program token lexbuf file =
     print_endline (show_token t');
     t'
   in
-  let state = new_state token lexbuf file in
+  let state = new_state token' lexbuf file in
   let tmp = parse_toplevel_list state in
   if tmp = [] then (
     print_endline "EMPTY FILE";

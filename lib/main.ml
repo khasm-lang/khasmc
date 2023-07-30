@@ -23,6 +23,7 @@ let speclist =
     ("--dump-ast1", Arg.Set dast1, "Dump first AST");
     ("--dump-ast2", Arg.Set dast2, "Dump second AST");
     ("--dump-ast3", Arg.Set dast3, "Dump third AST");
+    ("--dump-ast4", Arg.Set dast4, "Dump fourth AST");
     ("--table", Arg.Set table, "Show type table");
     ("-o", Arg.Set_string outs, "Output file");
     ("--debug", Arg.Set debug, "Debug");
@@ -36,6 +37,7 @@ let parse_args () =
     files = !ins;
     out = !outs;
     dump_ast3 = !dast3;
+    dump_ast4 = !dast4;
     debug = !debug;
     table = !table;
   }

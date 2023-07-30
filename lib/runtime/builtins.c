@@ -123,3 +123,17 @@ KHASM_ENTRY(khasm_Stdlib775896895_print1597980479_int, 1, kha_obj *b) {
   unref(b);
   return make_tuple(0, NULL);
 }
+
+KHASM_ENTRY(khasm_675233599_692010815_, 2, kha_obj*t, kha_obj*b) {
+  if (t->tag != TUPLE) {
+    fprintf(stderr, "CAN'T TUPACC NONTUP\n");
+  }
+  if (b->tag != INT) {
+    fprintf(stderr, "CAN'T TUPACC WITH NONINT\n");
+  }
+  kha_obj *tmp = ref(t->data.tuple->tups[b->data.i]);
+  unref(t);
+  unref(b);
+  return tmp;
+}
+
