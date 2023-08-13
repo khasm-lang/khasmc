@@ -1,14 +1,13 @@
 open Args
-
 let rec normalise files =
   match files with
   | [] -> []
   | x :: xs -> (
       try
         (Filename.basename x |> Filename.chop_extension
-       |> Batteries.String.capitalize)
+       |> Batteries.String.capitalize_ascii)
         :: normalise xs
-      with _ -> Batteries.String.capitalize x :: normalise xs)
+      with _ -> Batteries.String.capitalize_ascii x :: normalise xs)
 
 let compile names asts args =
   print_endline "";
@@ -23,7 +22,7 @@ let compile names asts args =
             so fix that*)
     |> List.rev
     |> List.map Complexity.init_program
-    |> List.map2 Modules.wrap_in names
+    |> List.map2 Modules.wrap_in (List.rev names)
     |> Elim_modules.elim
   in
 

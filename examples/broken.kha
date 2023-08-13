@@ -1,5 +1,5 @@
 module s = struct
        let foo x : () -> () = Stdlib.print "hi"
 end
-
+open s
 let main x : () -> () = s.foo ()
