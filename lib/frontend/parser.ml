@@ -631,7 +631,7 @@ and program token lexbuf file =
     print_endline (show_token t');
     t'
   in
-  let state = new_state token' lexbuf file in
+  let state = new_state token lexbuf file in
   let tmp = parse_toplevel_list state in
   if tmp = [] then (
     print_endline "EMPTY FILE";

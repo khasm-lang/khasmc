@@ -6,7 +6,6 @@
   fmt
   batteries
   ppx_deriving
-  core
   yojson
   ppx_deriving_yojson.runtime)
  (modes byte exe)
