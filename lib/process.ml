@@ -1,4 +1,5 @@
 open Args
+
 let rec normalise files =
   match files with
   | [] -> []
