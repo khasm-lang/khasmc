@@ -1,0 +1,17 @@
+module A = struct
+       module B = struct
+       	      open Stdlib
+	      let b x : () -> () = print_int 10
+       end
+       open B
+       let a x : () -> () = Stdlib.print_int 5
+ end
+
+open A
+open B
+
+let main x : () -> () =
+    A.B.b ();
+    A.a ();
+    b ();
+    Stdlib.print_int 120

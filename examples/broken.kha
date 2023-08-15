@@ -1,5 +1,5 @@
 module s = struct
-       let foo x : () -> () = Stdlib.print "hi"
+       let foo x : () -> () = Stdlib.print_int 10
 end
 open s
-let main x : () -> () = s.foo ()
+let main x : () -> () = foo (); s.foo()

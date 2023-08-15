@@ -8,24 +8,11 @@ let mangler id =
   if asint >= 65 && asint < 65 + 26 then id
   else if asint >= 97 && asint < 97 + 26 then id
   else if asint >= 48 && asint < 48 + 10 then id
-  else
-    ((*these chars have to be invalid in identifiers
-       - they serve as padding to make everything an i32*)
-     (match unicode_len id with
-     | 1 -> "???" ^ id
-     | 2 -> "??" ^ id
-     | 3 -> "?" ^ id
-     | 4 -> id
-     | _ -> raise @@ Impossible "unicode char len")
-    |> (fun x -> String.get_int32_le x 0)
-    |> Int32.to_string)
-    ^ "_"
+  else "_" ^ string_of_int asint ^ "_"
 
 let mangle_top nms id =
   let nm = List.assoc id nms in
-  match nm with
-  | "main" -> "main_____Khasm"
-  | _ -> "khasm_" ^ utf8_map mangler nm
+  match nm with "main" -> "main_____Khasm" | _ -> utf8_map mangler nm
 
 let mangle id =
   if id >= 0 then

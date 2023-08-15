@@ -2,5 +2,6 @@ _build
 input
 output
 a.out*
-perf
-
+*perf*
+gmon*
+*.svg
