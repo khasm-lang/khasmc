@@ -1,1 +1,3 @@
-let () = Khasmc.Main.main_proc ()
+let () =
+  Khasmc.Main.main_proc ();
+  print_endline "Done."

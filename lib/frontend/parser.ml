@@ -128,6 +128,10 @@ let parse_error lines (offsets : Lexing.position) actual follow_set =
 let print_token t = print_endline (show_token t)
 
 module ParserState = struct
+  let pp t =
+    let t' = t in
+    t'
+
   type state = {
     lex_func : Lexing.lexbuf -> token;
     lex_buf : Lexing.lexbuf ref;
@@ -141,11 +145,14 @@ module ParserState = struct
   let new_state lex_func lex_buf file =
     ref { lex_func; lex_buf = ref lex_buf; buffer = ref []; file }
 
+  let rec last k =
+    match k with [] -> failwith "empty" | [ x ] -> x | _ :: xs -> last xs
+
   let error state actual follow_set =
     let offset =
       match !(!state.buffer) with
       | [] -> !(!state.lex_buf).lex_curr_p
-      | x :: _ -> snd x
+      | x :: y :: z -> snd y
     in
     let split = String.split_on_char '\n' !state.file in
     parse_error split offset actual follow_set;
@@ -156,7 +163,7 @@ module ParserState = struct
     | [] -> !state.lex_func !(!state.lex_buf)
     | x :: xs ->
         !state.buffer := xs;
-        fst x
+        pp @@ fst x
 
   let toss state =
     match !(!state.buffer) with
@@ -173,7 +180,7 @@ module ParserState = struct
     done;
     try
       let ret = fst (List.nth !(!state.buffer) int) in
-      ret
+      pp ret
     with Failure _ -> error state EOF [ ANY ]
 
   let expect state tok =

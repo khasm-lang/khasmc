@@ -27,6 +27,7 @@ let speclist =
     ("--table", Arg.Set table, "Show type table");
     ("-o", Arg.Set_string outs, "Output file");
     ("--debug", Arg.Set debug, "Debug");
+    ("--no-output", Arg.Set nocomp, "Don't compile the program");
   ]
 
 let parse_args () =
@@ -40,6 +41,7 @@ let parse_args () =
     dump_ast4 = !dast4;
     debug = !debug;
     table = !table;
+    nocompile = !nocomp;
   }
 
 let main_proc () =
