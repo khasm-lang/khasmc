@@ -13,9 +13,9 @@
  (preprocess
   (pps ppx_deriving.show ppx_deriving.make ppx_deriving.eq ppx_inline_test))
  (flags
-  (:standard -warn-error -A -g -annot))
+  (:standard -warn-error -A))
  (ocamlopt_flags
-  (:standard -g -annot -afl-instrument)))
+  (:standard -O3)))
 
 (rule
  (targets runtime_lib.ml)

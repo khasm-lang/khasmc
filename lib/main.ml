@@ -44,7 +44,10 @@ let parse_args () =
     nocompile = !nocomp;
   }
 
+let round2 n = Float.round (n *. 100.) /. 100.
+
 let main_proc () =
+  let t = Unix.gettimeofday () in
   Printexc.record_backtrace true;
   Random.self_init ();
   let args = parse_args () in
@@ -61,11 +64,15 @@ let main_proc () =
   in
   Debug.debug ("\nStatus: " ^ succ);
   print_endline
-    ("/* Used " ^ string_of_int !uniq ^ " typvars, " ^ string_of_int !muniq
+    ("Used " ^ string_of_int !uniq ^ " typvars, " ^ string_of_int !muniq
    ^ " metavars, "
     ^ string_of_int (getid () - 1)
     ^ " stage 1 nodes, "
     ^ string_of_int (Kir.get_random_num () - 1)
-    ^ " stage 2 nodes. */");
+    ^ " stage 2 nodes.");
+  print_endline
+    ("Took: "
+    ^ string_of_float (round2 @@ (Unix.gettimeofday () -. t))
+    ^ " seconds.");
   if args.table then Hash.print_table () else ();
   if args.debug || succ <> "Success" then Debug.log_debug_stdout true else ()

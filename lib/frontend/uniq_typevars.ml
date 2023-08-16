@@ -54,7 +54,7 @@ and make_uniq_ts ts env =
       let newenv = add_binds s env in
       TSForall (get_binds newenv, make_uniq_ts t (Some newenv))
   | TSTuple x -> TSTuple (List.map (fun x -> make_uniq_ts x (Some env)) x)
-  | TSApp (x, y) -> TSApp (make_uniq_ts x (Some env), y)
+  | TSApp (x, y) -> TSApp (List.map (fun x -> make_uniq_ts x (Some env)) x, y)
   | TSMeta m -> TSMeta m
 
 let rec make_uniq_toplevel t =

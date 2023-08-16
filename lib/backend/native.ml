@@ -9,7 +9,7 @@ int main(void) {
   if (ret->tag != TUPLE) {
   fprintf(stderr, "RETURN VALUE NOT TUPLE - TYPE SYSTEM INVALID\n");
   }  
-  unref(ret);  
+  unref(ret);
   return 0;  
 }
 |}
@@ -20,20 +20,24 @@ let prelude () =
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <time.h>
+#include <stdatomic.h>
+#include <assert.h>
 |}
 
 let flags =
   KhasmUTF.utf8_map
     (fun x -> if x = "\n" then "" else x)
-    {| -O3
+    {| -O0
         -Wall
         -Wextra
         -Wno-incompatible-pointer-types
         -Wno-sign-compare
-    -L`jemalloc-config --libdir`
-        -Wl,-rpath,`jemalloc-config --libdir`
-        -ljemalloc
-        `jemalloc-config --libs`  |}
+        -g 
+        |}
 
 let compile code (args : Args.cliargs) =
   let code = prelude () ^ Runtime_lib.runtime_c ^ code ^ gen_main () in

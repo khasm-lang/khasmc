@@ -201,6 +201,9 @@ let rec id_list state =
 let nonempty l exp state =
   match l with [] -> error state EMPTY [ exp ] | _ -> l
 
+let rec repeat_until f x =
+  match f x with None -> [] | Some t -> t :: repeat_until f x
+
 exception ParseExprHelper of kexpr
 
 let rec nop () = ()
@@ -275,42 +278,40 @@ and parse_type_tuple state =
   | RPAREN -> lhs :: []
   | x -> error state x [ COMMA; RPAREN ]
 
-and parse_type_mulop state =
-  let lhs = parse_type state in
-  match pop state with
-  | MUL_OP "*" -> lhs :: parse_type_tuple state
-  | RPAREN -> lhs :: []
-  | x -> error state x [ MUL_OP "*"; RPAREN ]
+and parse_type_compound state =
+  match parse_type_tuple state with
+  | [] -> impossible "empty type"
+  | [ x ] -> x
+  | x -> TSTuple x
 
-and parse_type_tuple_2 state =
-  let lhs = parse_type state in
-  match pop state with
-  | COMMA -> lhs :: parse_type_tuple state
-  | MUL_OP "*" -> lhs :: parse_type_mulop state
-  | RPAREN -> lhs :: []
-  | x -> error state x [ COMMA; RPAREN; MUL_OP "*" ]
+and parse_single state =
+  match peek state 1 with
+  | T_IDENT t ->
+      toss state;
+      Some (TSBase t)
+  | LPAREN ->
+      toss state;
+      Some (parse_type_compound state)
+  | _ -> None
 
 and parse_type_helper state =
-  let first =
-    match peek state 1 with
-    | T_IDENT s ->
-        toss state;
-        TSBase s
-    | LPAREN -> (
-        toss state;
-        let lhs = parse_type state in
-        match pop state with
-        | RPAREN -> lhs
-        | COMMA | MUL_OP "*" -> TSTuple (lhs :: parse_type_tuple_2 state)
-        | x -> error state x [ RPAREN; COMMA; MUL_OP "*" ])
-    | RPAREN -> TSTuple []
-    | x -> error state x [ T_IDENT "example1"; LPAREN ]
-  in
   match peek state 1 with
-  | T_IDENT s ->
+  | T_IDENT t -> (
       toss state;
-      TSApp (first, s)
-  | _ -> first
+      let list = repeat_until parse_single state in
+      match list with [] -> TSBase t | x -> TSApp (x, t))
+  | LPAREN -> (
+      toss state;
+      match peek state 1 with
+      | RPAREN ->
+          toss state;
+          TSTuple []
+      | _ -> (
+          match parse_type_tuple state with
+          | [] -> impossible "empty type"
+          | [ x ] -> x
+          | x -> TSTuple x))
+  | x -> error state x [ T_IDENT "example"; LPAREN ]
 
 and parse_type_pratt state =
   let lhs = parse_type_helper state in
