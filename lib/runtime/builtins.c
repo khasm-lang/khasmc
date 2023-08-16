@@ -124,6 +124,15 @@ KHASM_ENTRY(khasm_46_Stdlib_46_print_95_int, 1, kha_obj *b) {
   return make_tuple(0, NULL);
 }
 
+KHASM_ENTRY(khasm_46_Stdlib_46_print_95_str, 1, kha_obj *b) {
+  if (b->tag != STR) {
+    fprintf(stderr, "INVALID PRINT STR\n");
+  }
+  printf("%s\n", b->data.str->data);
+  unref(b);
+  return make_tuple(0, NULL);
+}
+
 KHASM_ENTRY(khasm_46__45__1, 2, kha_obj*t, kha_obj*b) {
   if (t->tag != TUPLE) {
     fprintf(stderr, "CAN'T TUPACC NONTUP\n");

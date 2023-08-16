@@ -30,6 +30,15 @@ kha_obj * make_float(f64 f) {
   return k;
 }
 
+kha_obj * make_string(char * f) {
+  kha_obj * k = new_kha_obj(STR);
+  k->data.str = malloc(sizeof(struct kha_obj_str));
+  k->data.str->data = strdup(f);
+  k->data.str->len = strlen(f);
+  k->gc = 1;
+  return k;
+}
+
 kha_obj * make_pap(u64 argnum, void * p, kha_obj ** args) {
   kha_obj * k = new_kha_obj(PAP);
   k->data.pap = malloc(sizeof(struct kha_obj_pap));

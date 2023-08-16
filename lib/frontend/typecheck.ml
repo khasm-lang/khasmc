@@ -44,7 +44,7 @@ let rec occurs_ts s ts =
     match ts with
     | TSBase x -> x = s
     | TSMeta _ -> false
-    | TSApp (x, _) -> occurs_ts s x
+    | TSApp (x, _) -> List.mem true (List.map (occurs_ts s) x)
     | TSMap (x, y) -> occurs_ts s x || occurs_ts s y
     | TSForall (x, y) -> if x = s then false else occurs_ts s y
     | TSTuple x -> List.map (fun x -> occurs_ts s x) x |> List.mem true
@@ -76,19 +76,10 @@ let rec validate_typ types ty =
       | false -> raise @@ TypeErr ("Cannot find type " ^ x))
   | TSMeta _ -> ty
   | TSApp (x, y) ->
-      (let n = typeprim_len types y in
-       match x with
-       | TSTuple l ->
-           if List.length l = n then ()
-           else
-             raise
-             @@ TypeErr ("Wrong amount of args to type-level function " ^ y)
-       | _ ->
-           if n = 1 then ()
-           else
-             raise
-             @@ TypeErr ("Wrong amount of args to type-level function " ^ y));
-      TSApp (validate_typ types x, y)
+      let n = typeprim_len types y in
+      if n <> List.length x then
+        raise @@ TypeErr ("Wrong number of args to type level function " ^ y)
+      else TSApp (List.map (validate_typ types) x, y)
   | TSMap (x, y) -> TSMap (validate_typ types x, validate_typ types y)
   | TSForall (x, y) -> TSForall (x, validate_typ (Bound x :: types) y)
   | TSTuple l -> TSTuple (List.map (validate_typ types) l)
@@ -100,8 +91,8 @@ let rec lift_ts_h t =
   | TSBase _ -> (t, false)
   | TSMeta _ -> (t, false)
   | TSApp (x, y) ->
-      let did = lift_ts_h x in
-      (TSApp (fst did, y), snd did)
+      let did = List.map lift_ts_h x in
+      (TSApp (List.map fst did, y), List.mem true (List.map snd did))
   | TSMap (x, TSForall (f, y)) ->
       if occurs_ts f x then
         let left = lift_ts_h x in
@@ -139,7 +130,7 @@ let rec subs typ nm newt =
   match typ with
   | TSBase x -> if x == nm then newt else typ
   | TSMeta _ -> typ
-  | TSApp (x, y) -> TSApp (subs x nm newt, y)
+  | TSApp (x, y) -> TSApp (List.map (fun y -> subs y nm newt) x, y)
   | TSMap (l, r) -> TSMap (subs l nm newt, subs r nm newt)
   | TSForall (nm', ts) ->
       if nm' == nm then typ else TSForall (nm', subs ts nm newt)
@@ -162,7 +153,7 @@ let rec inst_meta tp orig meta =
   match tp with
   | TSBase x -> if x = orig then meta else tp
   | TSMeta _ -> tp
-  | TSApp (ts, p) -> TSApp (inst_meta ts orig meta, p)
+  | TSApp (ts, p) -> TSApp (List.map (fun y -> inst_meta y orig meta) ts, p)
   | TSMap (a, b) -> TSMap (inst_meta a orig meta, inst_meta b orig meta)
   | TSForall (f, x) ->
       if f = orig then tp else TSForall (f, inst_meta x orig meta)
@@ -187,7 +178,7 @@ let rec elim_unused ts =
     match ts with
     | TSBase _ -> ts
     | TSMeta _ -> ts
-    | TSApp (a, b) -> TSApp (elim_unused a, b)
+    | TSApp (a, b) -> TSApp (List.map elim_unused a, b)
     | TSMap (a, b) -> TSMap (elim_unused a, elim_unused b)
     | TSForall (a, b) ->
         if occurs_ts a b then TSForall (a, elim_unused b) else elim_unused b
@@ -329,8 +320,14 @@ and unify ?loop ctx l r =
     | TSApp (a, b), TSApp (x, y) ->
         if b <> y then raise (UnifyErr ("can't unify" ^ b ^ " and " ^ y))
         else
-          let t = unify ctx a x in
-          (fst t, TSApp (snd t, b))
+          let t = List.map2 (unify ctx) a x in
+          let rec get_ctx list =
+            match list with
+            | [] -> empty_unify_ctx ()
+            | [ (c, _) ] -> c
+            | (c1, _) :: xs -> combine c1 (get_ctx xs)
+          in
+          (get_ctx t, TSApp (List.map snd t, b))
     | TSForall (a, b), TSForall (x, y) ->
         (*
          TODO: show how this works
@@ -371,7 +368,7 @@ let rec apply_unify ctx tp =
   match tp with
   | TSBase _ -> tp
   | TSMeta t -> ( match lookup_meta ctx t with Some x -> x | None -> tp)
-  | TSApp (f, x) -> TSApp (apply_unify ctx f, x)
+  | TSApp (f, x) -> TSApp (List.map (apply_unify ctx) f, x)
   | TSMap (a, b) -> TSMap (apply_unify ctx a, apply_unify ctx b)
   | TSForall (f, x) -> TSForall (f, apply_unify ctx x)
   | TSTuple t -> TSTuple (List.map (apply_unify ctx) t)
@@ -571,10 +568,17 @@ let rec typecheck_toplevel_list ctx tl =
       let ctx' =
         match x with
         | TopAssign ((id, ts), (_id, _args, body)) ->
+            if id = "main" then
+              ignore
+              @@ unify (empty_unify_ctx ()) ts (TSMap (TSTuple [], TSTuple []));
+
             let fixed = body in
             check ctx fixed ts;
             assume_typ ctx id ts
         | TopAssignRec ((id, ts), (_id, _args, body)) ->
+            if id = "main" then
+              ignore
+              @@ unify (empty_unify_ctx ()) ts (TSMap (TSTuple [], TSTuple []));
             let fixed = body in
             (*
               to check a recursive,            

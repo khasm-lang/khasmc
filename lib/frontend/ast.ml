@@ -4,7 +4,7 @@ type typeprim = Basic of string | Bound of string | Param of int * string
 type typesig =
   | TSBase of string
   | TSMeta of string
-  | TSApp of typesig * string
+  | TSApp of typesig list * string
   | TSMap of typesig * typesig
   | TSForall of string * typesig
   | TSTuple of typesig list
@@ -20,7 +20,8 @@ let rec pshow_typesig ts =
   match ts with
   | TSBase x -> x
   | TSMeta x -> x
-  | TSApp (x, y) -> brac (pshow_typesig x) ^ " " ^ y
+  | TSApp (x, y) ->
+      brac (y ^ " " ^ String.concat " " @@ List.map pshow_typesig x)
   | TSMap (x, y) -> brac (pshow_typesig x) ^ " -> " ^ brac (pshow_typesig y)
   | TSForall (x, y) -> "∀" ^ x ^ ", " ^ pshow_typesig y
   | TSTuple x -> brac (by_sep (List.map pshow_typesig x) ", ")
