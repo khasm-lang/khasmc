@@ -176,6 +176,7 @@ let rec codegen code tbl =
         | Extern (id, index, name) ->
             "/* EXTERN " ^ string_of_int id ^ " " ^ mangle index ^ " " ^ name
             ^ " */\n"
+        | Noop -> ""
       in
       part ^ codegen xs tbl
 

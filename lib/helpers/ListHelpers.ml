@@ -1,3 +1,5 @@
+open Exp
+
 let rec map_rev f l =
   match l with
   | [] -> []
@@ -16,3 +18,9 @@ let rec filter_extract_h fn list acn acy =
         filter_extract_h fn xs (x :: acn) acy
 
 let filter_extract fn list = filter_extract_h fn list [] []
+
+let rec last xs =
+  match xs with
+  | [] -> raise @@ Impossible "ListHelpers.last : empty list"
+  | [ x ] -> x
+  | _ :: xs -> last xs

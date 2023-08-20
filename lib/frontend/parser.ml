@@ -71,6 +71,7 @@ type token =
   | FUNCTOR
   | OPEN
   | BIND
+  | TYPE
   | LAND
   | LOR
   | NOMANGLE
@@ -89,6 +90,7 @@ type token =
 exception ParseError
 
 open Ast
+open ListHelpers
 
 module Lexing = struct
   include Lexing
@@ -152,7 +154,7 @@ module ParserState = struct
     let offset =
       match !(!state.buffer) with
       | [] -> !(!state.lex_buf).lex_curr_p
-      | x :: y :: z -> snd y
+      | x :: _ -> snd x
     in
     let split = String.split_on_char '\n' !state.file in
     parse_error split offset actual follow_set;
@@ -292,9 +294,13 @@ and parse_single state =
   | T_IDENT t ->
       toss state;
       Some (TSBase t)
-  | LPAREN ->
+  | LPAREN -> (
       toss state;
-      Some (parse_type_compound state)
+      match peek state 1 with
+      | RPAREN ->
+          toss state;
+          Some (TSTuple [])
+      | _ -> Some (parse_type_compound state))
   | _ -> None
 
 and parse_type_helper state =
@@ -315,6 +321,45 @@ and parse_type_helper state =
           | [ x ] -> x
           | x -> TSTuple x))
   | x -> error state x [ T_IDENT "example"; LPAREN ]
+
+and parse_type_helper_maybe_noapp state =
+  match peek state 1 with
+  | T_IDENT t ->
+      toss state;
+      Some (TSBase t)
+  | LPAREN -> (
+      toss state;
+      match peek state 1 with
+      | RPAREN ->
+          toss state;
+          Some (TSTuple [])
+      | _ ->
+          Some
+            (match parse_type_tuple state with
+            | [] -> impossible "empty type"
+            | [ x ] -> x
+            | x -> TSTuple x))
+  | _ -> None
+
+and parse_type_helper_maybe state =
+  match peek state 1 with
+  | T_IDENT t -> (
+      toss state;
+      let list = repeat_until parse_single state in
+      match list with [] -> Some (TSBase t) | x -> Some (TSApp (x, t)))
+  | LPAREN -> (
+      toss state;
+      match peek state 1 with
+      | RPAREN ->
+          toss state;
+          Some (TSTuple [])
+      | _ ->
+          Some
+            (match parse_type_tuple state with
+            | [] -> impossible "empty type"
+            | [ x ] -> x
+            | x -> TSTuple x))
+  | _ -> None
 
 and parse_type_pratt state =
   let lhs = parse_type_helper state in
@@ -341,6 +386,36 @@ and parse_type state =
   | _ ->
       let ret = parse_type_pratt state in
       ret
+
+and last_tail l acc =
+  match l with
+  | [] -> raise @@ Impossible "last_tale empty"
+  | [ x ] -> (x, List.rev acc)
+  | x :: xs -> last_tail xs (x :: acc)
+
+and parse_adt_pattern state =
+  let id = get_ident state in
+  match peek state 1 with
+  | COL_OP ":" ->
+      (* GADT *)
+      toss state;
+      let rec helper state =
+        match parse_type_helper_maybe state with
+        | Some x -> (
+            match peek state 1 with
+            | TS_TO ->
+                toss state;
+                x :: helper state
+            | _ -> [ x ])
+        | None -> []
+      in
+      let all = helper state in
+      let final, args = last_tail all [] in
+      { head = id; args; typ = Ok final }
+  | _ ->
+      (* ADT *)
+      let all = repeat_until parse_type_helper_maybe_noapp state in
+      { head = id; args = all; typ = Error () }
 
 and infix_bind_pow tok =
   let first = String.get tok 0 in
@@ -572,7 +647,11 @@ and parse_module state =
     | x -> error state x [ T_IDENT "example" ]
   in
   (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
-  (match pop state with STRUCT -> () | x -> error state x [ STRUCT ]);
+  (match peek state 1 with
+  | MODULE ->
+      toss state;
+      ()
+  | _ -> ());
   let top = parse_toplevel_list state in
   expect state END;
   SimplModule (name, top)
@@ -617,6 +696,39 @@ and parse_open state =
   let s = get_ident state in
   Open s
 
+and parse_typedecl_pats nm args state =
+  let p = parse_adt_pattern state in
+  let fixed =
+    match p.typ with
+    | Ok _ -> p
+    | Error () ->
+        let rec go xs =
+          match xs with [] -> [] | x :: xs -> TSBase x :: go xs
+        in
+        { p with typ = Ok (TSApp (go args, nm)) }
+  in
+  match peek state 1 with
+  | PIP_OP "|" ->
+      toss state;
+      fixed :: parse_typedecl_pats nm args state
+  | _ -> [ fixed ]
+
+and parse_typedecl state =
+  match id_list state with
+  | [] -> error state (peek state 1) [ T_IDENT "Type_example" ]
+  | x :: xs -> (
+      match pop state with
+      | EQ_OP "=" -> (
+          match peek state 1 with
+          | PIP_OP "|" ->
+              toss state;
+              let pats = parse_typedecl_pats x xs state in
+              Typedecl (x, xs, pats)
+          | _ ->
+              let typ = parse_type state in
+              Typealias (x, xs, typ))
+      | x -> error state x [ EQ_OP "=" ])
+
 and parse_toplevel_list state =
   let first =
     match peek state 1 with
@@ -638,6 +750,9 @@ and parse_toplevel_list state =
     | OPEN ->
         toss state;
         Some (parse_open state)
+    | TYPE ->
+        toss state;
+        Some (parse_typedecl state)
     | EOF -> None
     | x ->
         print_token x;

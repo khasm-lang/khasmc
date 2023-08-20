@@ -90,6 +90,7 @@ let rec llift_top top =
   | LetRec (ts, v, exp) ->
       let added, n = llift_expr (emptyctx ()) false exp in
       (added, LetRec (ts, v, n))
+  | Noop -> ([], Noop)
 
 let rec lambda_lift_h tops =
   match tops with
