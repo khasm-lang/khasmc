@@ -185,7 +185,10 @@ module ParserState = struct
 
   let expect state tok =
     let t = pop state in
-    if t = tok then () else error state t [ tok ]
+    if t = tok then
+      ()
+    else
+      error state t [ tok ]
 end
 
 open ParserState
@@ -343,10 +346,17 @@ and infix_bind_pow tok =
   let first = String.get tok 0 in
   let mab =
     if first = '*' then
-      try if String.get tok 1 = '*' then (16, 17) else (0, 0) with _ -> (0, 0)
-    else (0, 0)
+      try
+        if String.get tok 1 = '*' then
+          (16, 17)
+        else
+          (0, 0)
+      with _ -> (0, 0)
+    else
+      (0, 0)
   in
-  if mab <> (0, 0) then mab
+  if mab <> (0, 0) then
+    mab
   else
     match first with
     | ';' -> (1, 0)
@@ -506,7 +516,8 @@ and parse_expr_h state res prec =
         toss state;
         let next_prec = pr in
         parse_expr_h state (Join (mkinfo (), res, parse_expr state next_prec)) 0)
-      else res
+      else
+        res
   | Some s ->
       let pl, pr = infix_bind_pow s in
       if pl >= prec then (
@@ -518,7 +529,8 @@ and parse_expr_h state res prec =
                FCall (mkinfo (), Base (mkinfo (), Ident (mkinfo (), s)), res),
                parse_expr state next_prec ))
           0)
-      else res
+      else
+        res
 
 and parse_expr state prec =
   let lhs = parse_compound state in
@@ -644,4 +656,5 @@ and program token lexbuf file =
   if tmp = [] then (
     print_endline "EMPTY FILE";
     raise ParseError)
-  else Program tmp
+  else
+    Program tmp

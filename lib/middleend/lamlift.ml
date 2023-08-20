@@ -120,7 +120,8 @@ let%test "Basic Lambda Lifting" =
     ]
   in
   let (), before' = lambda_lift ((), before) in
-  if before' = after then true
+  if before' = after then
+    true
   else (
     print_endline "BEFORE: ";
     List.iter print_endline @@ List.map show_kirtop before';

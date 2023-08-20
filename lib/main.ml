@@ -74,5 +74,11 @@ let main_proc () =
     ("Took: "
     ^ string_of_float (round2 @@ (Unix.gettimeofday () -. t))
     ^ " seconds.");
-  if args.table then Hash.print_table () else ();
-  if args.debug || succ <> "Success" then Debug.log_debug_stdout true else ()
+  if args.table then
+    Hash.print_table ()
+  else
+    ();
+  if args.debug || succ <> "Success" then
+    Debug.log_debug_stdout true
+  else
+    ()

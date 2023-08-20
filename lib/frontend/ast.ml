@@ -86,7 +86,11 @@ and program = Program of toplevel list [@@deriving show { with_path = false }]
 (* The following two are basically just α-renaming *)
 let base_subs i b x y =
   match b with
-  | Ident (i', b') -> if b' = x then Base (i, Ident (i', y)) else Base (i, b)
+  | Ident (i', b') ->
+      if b' = x then
+        Base (i, Ident (i', y))
+      else
+        Base (i, b)
   | _ -> Base (i, b)
 
 let rec esubs expr x y =
@@ -94,18 +98,34 @@ let rec esubs expr x y =
   | Base (i, b) -> base_subs i b x y
   | FCall (i, f, x') -> FCall (i, esubs f x y, esubs x' x y)
   | LetIn (i, id, e1, e2) ->
-      if id <> x then LetIn (i, id, esubs e1 x y, esubs e2 x y) else expr
+      if id <> x then
+        LetIn (i, id, esubs e1 x y, esubs e2 x y)
+      else
+        expr
   | AnnotLet (i, id, ts, e1, e2) ->
-      if id <> x then AnnotLet (i, id, ts, esubs e1 x y, esubs e2 x y) else expr
+      if id <> x then
+        AnnotLet (i, id, ts, esubs e1 x y, esubs e2 x y)
+      else
+        expr
   | LetRecIn (i, ts, id, e1, e2) ->
-      if id <> x then LetRecIn (i, ts, id, esubs e1 x y, esubs e2 x y) else expr
+      if id <> x then
+        LetRecIn (i, ts, id, esubs e1 x y, esubs e2 x y)
+      else
+        expr
   | IfElse (i, c, e1, e2) -> IfElse (i, esubs c x y, esubs e1 x y, esubs e2 x y)
   | Join (info, e1, e2) -> Join (info, esubs e1 x y, esubs e2 x y)
-  | Lam (i, x', e) -> if x' <> x then Lam (i, x', esubs e x y) else expr
+  | Lam (i, x', e) ->
+      if x' <> x then
+        Lam (i, x', esubs e x y)
+      else
+        expr
   | TypeLam (i, t, e) -> TypeLam (i, t, esubs e x y)
   | TupAccess (i, e, i') -> TupAccess (i, esubs e x y, i')
   | AnnotLam (i, x', ts, e) ->
-      if x' <> x then AnnotLam (i, x', ts, esubs e x y) else expr
+      if x' <> x then
+        AnnotLam (i, x', ts, esubs e x y)
+      else
+        expr
   | ModAccess _ -> expr
   | Inst _ -> expr
 
