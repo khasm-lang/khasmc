@@ -1,4 +1,7 @@
-type typeprim = Basic of string | Bound of string | Param of int * string
+type typeprim =
+  | Basic of string
+  | Bound of string
+  | Param of int * string
 [@@deriving show { with_path = false }]
 
 type typesig =
@@ -28,7 +31,11 @@ let rec pshow_typesig ts =
 
 let str_of_typesig x = pshow_typesig x
 
-type info = { id : int; complex : int } [@@deriving show { with_path = false }]
+type info = {
+  id : int;
+  complex : int;
+}
+[@@deriving show { with_path = false }]
 
 let dummy_info () = { id = -1; complex = -2 }
 let idgen = ref 0
