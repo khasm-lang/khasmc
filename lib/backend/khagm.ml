@@ -22,6 +22,7 @@ type khagmexpr =
 type khagmtop =
   | Let of khagmid * khagmid list * khagmexpr
   | Extern of khagmid * int * string
+  | Noop
 [@@deriving show { with_path = false }]
 
 type khagm = khagmtop list * Kir.transtable

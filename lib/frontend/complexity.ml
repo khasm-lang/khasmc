@@ -77,6 +77,8 @@ let rec init_toplevel t =
   | IntExtern (_, _, _, _) -> t
   | Bind (_, _, _) -> t
   | Open _ -> t
+  | Typealias (_, _, _) -> t
+  | Typedecl (_, _, _) -> t
   | TopAssignRec (a, (id, args, body)) ->
       let body' = init_expr body in
       TopAssignRec (a, (id, args, body'))

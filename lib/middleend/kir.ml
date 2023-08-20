@@ -53,6 +53,7 @@ type kirtop =
   | LetRec of kirtype * kirval * kirexpr
   | Extern of kirtype * int * kirval * string
   | Bind of kirval * kirval
+  | Noop
 [@@deriving show { with_path = false }]
 
 type kirprog = transtable * kirtop list [@@deriving show { with_path = false }]

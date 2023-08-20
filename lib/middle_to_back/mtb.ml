@@ -38,6 +38,7 @@ let mtb_top code =
       Khagm.Let (kv_to_kg id, args, mtb_expr exp')
   | Extern (_, arity, v, s) -> Khagm.Extern (kv_to_kg v, arity, s)
   | Bind (a, b) -> Khagm.Let (a, [], Khagm.Val b)
+  | Noop -> Khagm.Noop
 
 let mtb kp =
   let typs, code = kp in

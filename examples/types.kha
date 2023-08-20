@@ -1,0 +1,5 @@
+type Foo a b = a -> b
+
+let do_thing x : Foo () () = Stdlib.print_str "hi"
+
+let main x : () -> () = do_thing ()

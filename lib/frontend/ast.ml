@@ -78,6 +78,13 @@ and kexpr =
 and tdecl = kident * typesig [@@deriving show { with_path = false }]
 and kass = kident * kident list * kexpr [@@deriving show { with_path = false }]
 
+and adt_pattern = {
+  head : kident;
+  args : typesig list;
+  typ : (typesig, unit) result;
+}
+[@@deriving show { with_path = false }]
+
 and toplevel =
   | TopAssign of tdecl * kass
   | TopAssignRec of tdecl * kass
@@ -86,6 +93,8 @@ and toplevel =
   | SimplModule of kident * toplevel list
   | Bind of kident * kident list * kident
   | Open of kident
+  | Typedecl of kident * kident list * adt_pattern list
+  | Typealias of kident * kident list * typesig
 [@@deriving show { with_path = false }]
 
 and program = Program of toplevel list [@@deriving show { with_path = false }]

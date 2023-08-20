@@ -100,7 +100,6 @@ rule token = parse
      | "," {incr_by lexbuf; COMMA}
      | ";" {incr_by lexbuf; SEMICOLON}
      | "->" {incr_by lexbuf; TS_TO}
-     | "→" {incr_by lexbuf; TS_TO}
      | "=>" {incr_by lexbuf; LAM_TO}
 	| bang_op {incr_by lexbuf; BANG_OP (Lexing.lexeme lexbuf)}
 	| tilde_op {incr_by lexbuf; TILDE_OP (Lexing.lexeme lexbuf)}
@@ -147,6 +146,7 @@ rule token = parse
      | "module" {incr_by lexbuf; MODULE}
      | "struct" {incr_by lexbuf; STRUCT}
      | "functor" {incr_by lexbuf; FUNCTOR}
+     | "type" {incr_by lexbuf; TYPE}
      | "open" {incr_by lexbuf; OPEN}
      | "∀" {incr_by lexbuf; FORALL}
      | "λ" {incr_by lexbuf; FUN}

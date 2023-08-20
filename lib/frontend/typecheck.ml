@@ -9,6 +9,7 @@ open Debug
 (* See below for more details *)
 
 type ctx = {
+  aliases : (kident * kident list * typesig) list;
   binds : (kident * typesig) list;
   types : typeprim list;
 }
@@ -20,21 +21,26 @@ type 'a infer_result =
 
 let empty_typ_ctx () =
   {
+    aliases = [];
     binds = [];
     types =
       [
         (* base types in khasm *)
-        Bound "int";
-        Bound "float";
-        Bound "string";
-        Bound "bool";
+        Basic "int";
+        Basic "float";
+        Basic "string";
+        Basic "bool";
       ];
   }
+
+let add_alias ctx id args ts =
+  { ctx with aliases = (id, args, ts) :: ctx.aliases }
 
 let assume_typ ctx id ts =
   { ctx with binds = (id, make_uniq_ts ts None) :: ctx.binds }
 
 let add_bound_typ ctx ts = { ctx with types = Bound ts :: ctx.types }
+let add_param_typ ctx i ts = { ctx with types = Param (i, ts) :: ctx.types }
 
 (** Looks up a value in a context *)
 let lookup ctx x =
@@ -103,7 +109,6 @@ let rec validate_typ types ty =
   | TSTuple l -> TSTuple (List.map (validate_typ types) l)
 
 (* see below *)
-
 let rec lift_ts_h t =
   match t with
   | TSBase _ -> (t, false)
@@ -136,32 +141,71 @@ let rec lift_ts_h t =
       let hm = List.map lift_ts_h t in
       (TSTuple (List.map fst hm), List.mem true (List.map snd hm))
 
-(** lifts types like ∀a, a -> (∀b, b) to ∀a b, a -> b *)
 let rec lift_ts ts =
   (* lifts types like
-     ∀a, a -> (∀b, b)
+     ∀ a, a -> (∀b, b)
      to
      ∀a b, a -> b
   *)
   match lift_ts_h ts with t, false -> t | t, true -> lift_ts t
 
-(** Substitutes forall vars within a type *)
+(** Substitutes vars within a type *)
 let rec subs typ nm newt =
-  match typ with
-  | TSBase x ->
-      if x == nm then
-        newt
-      else
-        typ
-  | TSMeta _ -> typ
-  | TSApp (x, y) -> TSApp (List.map (fun y -> subs y nm newt) x, y)
-  | TSMap (l, r) -> TSMap (subs l nm newt, subs r nm newt)
-  | TSForall (nm', ts) ->
-      if nm' == nm then
-        typ
-      else
-        TSForall (nm', subs ts nm newt)
-  | TSTuple l -> TSTuple (List.map (fun x -> subs x nm newt) l)
+  let ret =
+    match typ with
+    | TSBase x ->
+        if x = nm then
+          newt
+        else
+          typ
+    | TSMeta _ -> typ
+    | TSApp (x, y) -> TSApp (List.map (fun y -> subs y nm newt) x, y)
+    | TSMap (l, r) -> TSMap (subs l nm newt, subs r nm newt)
+    | TSForall (nm', ts) ->
+        if nm' = nm then
+          typ
+        else
+          TSForall (nm', subs ts nm newt)
+    | TSTuple l -> TSTuple (List.map (fun x -> subs x nm newt) l)
+  in
+  ret
+
+let rec multisubs typ nms newts =
+  match (nms, newts) with
+  | [], [] -> typ
+  | x :: xs, y :: ys -> multisubs (subs typ x y) xs ys
+  | _, _ -> raise @@ Impossible "Unbalanced multisubs"
+
+let rec remove_alias (id, args, ts) typ =
+  let ret =
+    match typ with
+    | TSBase a -> TSBase a
+    | TSMeta a -> TSMeta a
+    | TSApp (apps, fn) ->
+        if fn = id then
+          multisubs ts args apps
+        else
+          TSApp (List.map (remove_alias (id, args, ts)) apps, fn)
+    | TSMap (f, x) ->
+        TSMap (remove_alias (id, args, ts) f, remove_alias (id, args, ts) x)
+    | TSForall (a, e) ->
+        if a = id then
+          TSForall (a, e)
+        else
+          TSForall (a, remove_alias (id, args, ts) e)
+    | TSTuple l -> TSTuple (List.map (remove_alias (id, args, ts)) l)
+  in
+  ret
+
+let rec remove_aliases aliases ts =
+  match aliases with
+  | [] -> ts
+  | x :: xs -> remove_aliases xs @@ remove_alias x ts
+
+(* The unification section
+
+
+*)
 
 type unify_ctx = { metas : (string * typesig) list }
 [@@deriving show { with_path = false }]
@@ -376,6 +420,7 @@ and unify ?loop ctx l r =
     | TSForall (a, b), TSForall (x, y) ->
         (*
          TODO: show how this works
+           better, at least
         *)
         let sub = subs y x (TSBase a) in
         let met = subs b a (TSMeta (get_meta ())) in
@@ -528,7 +573,7 @@ and infer ctx tm =
   in
   let inf = fst res in
   let ts = validate_typ ctx.types @@ snd res in
-  let res' = elim_unused @@ lift_ts ts in
+  let res' = remove_aliases ctx.aliases @@ elim_unused @@ lift_ts ts in
   Hash.add_typ inf.id res';
   res'
 
@@ -537,7 +582,7 @@ and check ctx tm tp =
   (*
     check a type against a term
    *)
-  let tp = elim_unused tp in
+  let tp = remove_aliases ctx.aliases @@ elim_unused tp in
   let inf =
     match (tm, tp) with
     | Lam (inf, id, bd), TSMap (a, b) ->
@@ -607,6 +652,8 @@ let conv_ts_args_body_to_typelams ts args body =
   let fixed_2 = forall_to_typelam ts args args_fixed in
   snd fixed_2
 
+let type_simpl ctx t = t |> lift_ts |> remove_aliases ctx.aliases
+
 (** Typecheck a list of toplevel elems *)
 let rec typecheck_toplevel_list ctx tl =
   match tl with
@@ -614,7 +661,11 @@ let rec typecheck_toplevel_list ctx tl =
   | x :: xs ->
       let ctx' =
         match x with
-        | TopAssign ((id, ts), (_id, _args, body)) ->
+        | TopAssign ((id, ts), (_id, args, body)) ->
+            let ts = type_simpl ctx ts in
+
+            let body = conv_ts_args_body_to_typelams ts args body in
+
             if id = "main" then
               ignore
               @@ unify (empty_unify_ctx ()) ts (TSMap (TSTuple [], TSTuple []));
@@ -622,7 +673,10 @@ let rec typecheck_toplevel_list ctx tl =
             let fixed = body in
             check ctx fixed ts;
             assume_typ ctx id ts
-        | TopAssignRec ((id, ts), (_id, _args, body)) ->
+        | TopAssignRec ((id, ts), (_id, args, body)) ->
+            let ts = type_simpl ctx ts in
+            let body = conv_ts_args_body_to_typelams ts args body in
+
             if id = "main" then
               ignore
               @@ unify (empty_unify_ctx ()) ts (TSMap (TSTuple [], TSTuple []));
@@ -637,13 +691,25 @@ let rec typecheck_toplevel_list ctx tl =
         (*
          assume the type is correct
         *)
-        | Extern (id, _arity, ts) -> assume_typ ctx id ts
-        | IntExtern (_nm, id, _arity, ts) -> assume_typ ctx id ts
+        | Extern (id, _arity, ts) ->
+            let ts = type_simpl ctx ts in
+
+            assume_typ ctx id ts
+        | IntExtern (_nm, id, _arity, ts) ->
+            let ts = type_simpl ctx ts in
+
+            assume_typ ctx id ts
         | Open _ | SimplModule (_, _) ->
             raise @@ Impossible "Modules in typechecking"
         | Bind (id, _, ed) ->
             let typ = lookup ctx ed in
-            assume_typ ctx id typ
+            let ts = type_simpl ctx typ in
+            assume_typ ctx id ts
+        | Typealias (id, args, ts) ->
+            let ts = type_simpl ctx ts in
+            let ctx' = add_alias ctx id args ts in
+            add_param_typ ctx' (List.length args) id
+        | Typedecl (id, args, pats) -> raise @@ Todo "Typedecls"
       in
       typecheck_toplevel_list ctx' xs
 

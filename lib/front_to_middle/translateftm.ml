@@ -99,6 +99,7 @@ let rec ftm_toplevel table top =
       let _id1, tbl' = Kir.add_to_tbl id table in
       let id2, tbl'' = Kir.add_to_tbl id' tbl' in
       (Kir.Extern (ts, arity, id2, id), tbl'')
+  | Ast.Typealias (_, _, _) | Ast.Typedecl (_, _, _) -> (Kir.Noop, table)
   | Ast.Open _ | Ast.SimplModule (_, _) -> raise @@ Impossible "Modules in ftm"
 
 let rec ftm table prog =

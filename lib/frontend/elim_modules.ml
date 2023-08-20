@@ -6,6 +6,7 @@ open ListHelpers
 
 type local_ctx = { locals : string list }
 
+let empty_lctx () = { locals = [] }
 let add_local ctx local = { ctx with locals = local :: ctx.locals }
 let from_args args = { locals = args }
 let is_local ctx l = List.exists (fun x -> x = l) ctx.locals
@@ -84,6 +85,7 @@ let add_child ctx kid =
 
 let add_ident ctx id = { ctx with idents = (id, false) :: ctx.idents }
 let add_ident_extern ctx id = { ctx with idents = (id, true) :: ctx.idents }
+let add_typ ctx typ = { ctx with typs = typ :: ctx.typs }
 
 let rec get_parent_list ctx =
   match ctx.parent with
@@ -126,6 +128,32 @@ let rec get_full_from_open ctx id =
       ambigious
         ("Too many possible variables: " ^ String.concat "," (List.map fst k))
 
+let rec get_type_from_open ctx id =
+  match List.find_all (fun x -> x = id) ctx.typs with
+  | [] -> (
+      try
+        match
+          List.map
+            (fun x -> get_full_from_open x id)
+            (List.filter (fun x -> x.is_open) ctx.children)
+        with
+        | [] -> notfound ("Ident not found: " ^ id)
+        | [ x ] -> x
+        | k -> ambigious ("Too many possible variables: " ^ String.concat "," k)
+      with NotFound _ -> (
+        match ctx.parent with
+        | None -> notfound ("Ident not found: " ^ id)
+        | Some p -> (
+            let siblings = List.filter (fun x -> x.is_open) !p.children in
+            match List.map (fun x -> get_full_from_open x id) siblings with
+            | [] -> get_full_from_open !p id
+            | [ x ] -> x
+            | k ->
+                ambigious
+                  ("Too many possible vairiables: " ^ String.concat "," k))))
+  | [ x ] -> x
+  | k -> ambigious ("Too many possible variables: " ^ String.concat "," k)
+
 let rec deconstruct_modules ctx mods =
   match mods with
   | [] -> ctx
@@ -146,7 +174,26 @@ let rec get_full_id_mod ctx mods id =
   let tmp = get_full_from_open ctx' id in
   tmp
 
-let elim_ts ctx ts = ts
+let rec get_full_typ_mod ctx mods id =
+  let ctx' = deconstruct_modules ctx mods in
+  let tmp = get_type_from_open ctx' id in
+  tmp
+
+let rec elim_ts mctx lctx ts =
+  match ts with
+  | TSBase a ->
+      if is_local lctx a then
+        TSBase a
+      else
+        TSBase (get_full_typ_mod mctx [] a)
+  | TSMeta a -> TSMeta a
+  | TSApp (args, app) ->
+      TSApp (List.map (elim_ts mctx lctx) args, get_full_typ_mod mctx [] app)
+  | TSMap (f, x) -> TSMap (elim_ts mctx lctx f, elim_ts mctx lctx x)
+  | TSForall (a, ts) ->
+      let lctx' = add_local lctx a in
+      TSForall (a, elim_ts mctx lctx' ts)
+  | TSTuple l -> TSTuple (List.map (elim_ts mctx lctx) l)
 
 let rec elim_base mctx lctx i k : kexpr =
   match k with
@@ -194,7 +241,7 @@ let rec elim_toplevel ctx t =
   match t with
   | TopAssign (t, a) ->
       let (id, ts), (_id, args, expr) = (t, a) in
-      let ts' = elim_ts ctx ts in
+      let ts' = elim_ts ctx (empty_lctx ()) ts in
       let expr' = elim_expr ctx (from_args args) expr in
       let id' = get_mang ctx id in
       (add_ident ctx id, TopAssign ((id', ts'), (id', args, expr')) :: [])
@@ -202,7 +249,7 @@ let rec elim_toplevel ctx t =
       let (id, ts), (_id, args, expr) = (t, a) in
       let id' = get_mang ctx id in
       let ctx' = add_ident ctx id in
-      let ts' = elim_ts ctx ts in
+      let ts' = elim_ts ctx (empty_lctx ()) ts in
       let expr' = elim_expr ctx' (from_args args) expr in
       (ctx', TopAssignRec ((id', ts'), (id', args, expr')) :: [])
   | Extern (id, i, ts) -> (add_ident_extern ctx id, t :: [])
@@ -222,6 +269,13 @@ let rec elim_toplevel ctx t =
       let ctx', top = elim_toplevel_list newctx toplevels in
       let ctx' = close_all ctx' in
       (add_child ctx ctx', top)
+  | Typedecl (id, _args, _pats) ->
+      let newctx = add_typ ctx id in
+      (newctx, t :: [])
+  | Typealias (id, args, ts) ->
+      let newctx = add_typ ctx id in
+      let ts' = elim_ts ctx (from_args args) ts in
+      (newctx, Typealias (id, args, ts') :: [])
 
 and elim_toplevel_list ctx toplevels =
   match toplevels with
@@ -244,7 +298,7 @@ let elim programs =
   let rec all_but_last l =
     match l with
     | [] -> failwith "empty programs"
-    | [ x ] -> [ x ]
+    | [ _ ] -> []
     | x :: xs -> x :: all_but_last xs
   in
   all_but_last tmp
