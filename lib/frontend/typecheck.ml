@@ -8,10 +8,15 @@ open Debug
 
 (* See below for more details *)
 
-type ctx = { binds : (kident * typesig) list; types : typeprim list }
+type ctx = {
+  binds : (kident * typesig) list;
+  types : typeprim list;
+}
 [@@deriving show { with_path = false }]
 
-type 'a infer_result = One of 'a | Many of 'a list
+type 'a infer_result =
+  | One of 'a
+  | Many of 'a list
 
 let empty_typ_ctx () =
   {
