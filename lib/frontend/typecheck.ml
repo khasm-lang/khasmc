@@ -46,7 +46,11 @@ let rec occurs_ts s ts =
     | TSMeta _ -> false
     | TSApp (x, _) -> List.mem true (List.map (occurs_ts s) x)
     | TSMap (x, y) -> occurs_ts s x || occurs_ts s y
-    | TSForall (x, y) -> if x = s then false else occurs_ts s y
+    | TSForall (x, y) ->
+        if x = s then
+          false
+        else
+          occurs_ts s y
     | TSTuple x -> List.map (fun x -> occurs_ts s x) x |> List.mem true
   in
   res
@@ -57,7 +61,11 @@ let rec typeprim_is_basic tys x =
   | [] -> false
   | z :: zs -> (
       match z with
-      | Basic y | Bound y -> if x = y then true else typeprim_is_basic zs x
+      | Basic y | Bound y ->
+          if x = y then
+            true
+          else
+            typeprim_is_basic zs x
       | Param (_, _) -> typeprim_is_basic zs x)
 
 let rec typeprim_len tys x =
@@ -66,7 +74,11 @@ let rec typeprim_len tys x =
   | z :: zs -> (
       match z with
       | Bound _ | Basic _ -> typeprim_len zs x
-      | Param (l, y) -> if y = x then l else typeprim_len zs x)
+      | Param (l, y) ->
+          if y = x then
+            l
+          else
+            typeprim_len zs x)
 
 let rec validate_typ types ty =
   match ty with
@@ -79,7 +91,8 @@ let rec validate_typ types ty =
       let n = typeprim_len types y in
       if n <> List.length x then
         raise @@ TypeErr ("Wrong number of args to type level function " ^ y)
-      else TSApp (List.map (validate_typ types) x, y)
+      else
+        TSApp (List.map (validate_typ types) x, y)
   | TSMap (x, y) -> TSMap (validate_typ types x, validate_typ types y)
   | TSForall (x, y) -> TSForall (x, validate_typ (Bound x :: types) y)
   | TSTuple l -> TSTuple (List.map (validate_typ types) l)
@@ -98,7 +111,8 @@ let rec lift_ts_h t =
         let left = lift_ts_h x in
         let right = lift_ts_h (TSForall (f, y)) in
         (TSMap (fst left, fst right), snd left || snd right)
-      else (TSForall (f, TSMap (x, y)), true)
+      else
+        (TSForall (f, TSMap (x, y)), true)
   | TSMap (x, y) ->
       let left = lift_ts_h x in
       let right = lift_ts_h y in
@@ -108,7 +122,8 @@ let rec lift_ts_h t =
       let r' = lift_ts_h r in
       if occurs_ts y l then
         (TSForall (x, TSMap (fst l', TSForall (y, fst r'))), snd l' || snd r')
-      else (TSForall (x, TSForall (y, TSMap (fst l', fst r'))), true)
+      else
+        (TSForall (x, TSForall (y, TSMap (fst l', fst r'))), true)
   | TSForall (x, y) ->
       let r' = lift_ts_h y in
       (TSForall (x, fst r'), snd r')
@@ -128,12 +143,19 @@ let rec lift_ts ts =
 (** Substitutes forall vars within a type *)
 let rec subs typ nm newt =
   match typ with
-  | TSBase x -> if x == nm then newt else typ
+  | TSBase x ->
+      if x == nm then
+        newt
+      else
+        typ
   | TSMeta _ -> typ
   | TSApp (x, y) -> TSApp (List.map (fun y -> subs y nm newt) x, y)
   | TSMap (l, r) -> TSMap (subs l nm newt, subs r nm newt)
   | TSForall (nm', ts) ->
-      if nm' == nm then typ else TSForall (nm', subs ts nm newt)
+      if nm' == nm then
+        typ
+      else
+        TSForall (nm', subs ts nm newt)
   | TSTuple l -> TSTuple (List.map (fun x -> subs x nm newt) l)
 
 type unify_ctx = { metas : (string * typesig) list }
@@ -151,12 +173,19 @@ let lookup_meta ctx m =
 (** Instantiates foralls with metavars *)
 let rec inst_meta tp orig meta =
   match tp with
-  | TSBase x -> if x = orig then meta else tp
+  | TSBase x ->
+      if x = orig then
+        meta
+      else
+        tp
   | TSMeta _ -> tp
   | TSApp (ts, p) -> TSApp (List.map (fun y -> inst_meta y orig meta) ts, p)
   | TSMap (a, b) -> TSMap (inst_meta a orig meta, inst_meta b orig meta)
   | TSForall (f, x) ->
-      if f = orig then tp else TSForall (f, inst_meta x orig meta)
+      if f = orig then
+        tp
+      else
+        TSForall (f, inst_meta x orig meta)
   | TSTuple t -> TSTuple (List.map (fun x -> inst_meta x orig meta) t)
 
 (** Instantiate all toplevel foralls *)
@@ -181,13 +210,20 @@ let rec elim_unused ts =
     | TSApp (a, b) -> TSApp (List.map elim_unused a, b)
     | TSMap (a, b) -> TSMap (elim_unused a, elim_unused b)
     | TSForall (a, b) ->
-        if occurs_ts a b then TSForall (a, elim_unused b) else elim_unused b
+        if occurs_ts a b then
+          TSForall (a, elim_unused b)
+        else
+          elim_unused b
     | TSTuple t -> TSTuple (List.map elim_unused t)
   in
   af
 
 (** Unique list tools *)
-let uniq_cons x xs = if List.mem x xs then xs else x :: xs
+let uniq_cons x xs =
+  if List.mem x xs then
+    xs
+  else
+    x :: xs
 
 let mk_uniq_list xs = List.fold_right uniq_cons xs []
 let combine_uniq x y = mk_uniq_list (x @ y)
@@ -201,7 +237,8 @@ let combine ctx1 ctx2 =
         match List.find_opt (fun y -> fst y = fst x) b with
         | None -> x :: helper xs b
         | Some k ->
-            if snd k = snd x then helper xs b
+            if snd k = snd x then
+              helper xs b
             else
               raise
                 (UnifyErr
@@ -311,14 +348,17 @@ and unify ?loop ctx l r =
   let res =
     match (l, r) with
     | TSBase x, TSBase y ->
-        if x = y then (ctx, TSBase x)
-        else raise (UnifyErr ("can't unify " ^ x ^ " and " ^ y))
+        if x = y then
+          (ctx, TSBase x)
+        else
+          raise (UnifyErr ("can't unify " ^ x ^ " and " ^ y))
     | TSMap (a, b), TSMap (x, y) ->
         let lt = unify ctx a x in
         let rt = unify ctx b y in
         (combine (fst lt) (fst rt), TSMap (snd lt, snd rt))
     | TSApp (a, b), TSApp (x, y) ->
-        if b <> y then raise (UnifyErr ("can't unify" ^ b ^ " and " ^ y))
+        if b <> y then
+          raise (UnifyErr ("can't unify" ^ b ^ " and " ^ y))
         else
           let t = List.map2 (unify ctx) a x in
           let rec get_ctx list =
@@ -346,7 +386,8 @@ and unify ?loop ctx l r =
             unify ctx typ r
         | None -> (combine { metas = [ (m, r) ] } ctx, r))
     | TSForall (id, ts), _ ->
-        if not (occurs_ts id ts) then unify ctx (inst_all (TSForall (id, ts))) r
+        if not (occurs_ts id ts) then
+          unify ctx (inst_all (TSForall (id, ts))) r
         else
           raise
             (UnifyErr
@@ -461,7 +502,8 @@ and infer ctx tm =
             print_int @@ List.length t;
             if List.length t < i then
               raise @@ TypeErr "Tuple access of too-small tuple"
-            else (inf, List.nth t i)
+            else
+              (inf, List.nth t i)
         | _ ->
             raise
               (TypeErr ("can't tuple access non-tuple:\n" ^ show_kexpr expr)))

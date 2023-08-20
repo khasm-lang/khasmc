@@ -15,7 +15,8 @@ let compile names asts args =
 
   if args.dump_ast1 then
     asts |> List.iter (fun x -> print_endline (Ast.show_program x))
-  else ();
+  else
+    ();
 
   let asts' =
     asts
@@ -30,7 +31,8 @@ let compile names asts args =
   (* After here, program must have no modules remaining *)
   if args.dump_ast2 then
     asts' |> List.iter (fun x -> print_endline (Ast.show_program x))
-  else ();
+  else
+    ();
 
   (*typcheck stage*)
   asts'
@@ -44,12 +46,19 @@ let compile names asts args =
   let kir' = kir |> Lamlift.lambda_lift in
 
   (* After here, program should have no lambdas or closures *)
-  if args.dump_ast3 then print_endline (Kir.show_kirprog kir') else ();
+  if args.dump_ast3 then
+    print_endline (Kir.show_kirprog kir')
+  else
+    ();
 
   let khagm = kir' |> Mtb.mtb in
-  if args.dump_ast4 then print_endline (Khagm.show_khagm khagm) else ();
+  if args.dump_ast4 then
+    print_endline (Khagm.show_khagm khagm)
+  else
+    ();
   let out = khagm |> Emit_c.emit_c in
   if not args.nocompile then (
     Native.compile out args;
     "Output as: " ^ args.out)
-  else "Not output"
+  else
+    "Not output"

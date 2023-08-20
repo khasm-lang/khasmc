@@ -15,7 +15,12 @@ let get_random_num () =
   tmp
 
 let add_to_tbl str tbl =
-  let random = if str = "main" then 0 else get_random_num () in
+  let random =
+    if str = "main" then
+      0
+    else
+      get_random_num ()
+  in
   let tbl' = (random, str) :: tbl in
   (random, tbl')
 

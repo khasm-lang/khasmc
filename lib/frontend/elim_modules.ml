@@ -22,8 +22,10 @@ type module_ctx = {
 [@@deriving show { with_path = false }]
 
 let rec open_if_valid id orig ctx =
-  if ctx.name = id then { ctx with is_open = true }
-  else open_deep_module_h ctx id orig
+  if ctx.name = id then
+    { ctx with is_open = true }
+  else
+    open_deep_module_h ctx id orig
 
 and open_deep_module_h ctx id orig =
   {
@@ -89,7 +91,8 @@ let rec get_parent_list ctx =
   | Some x -> get_parent_list !x ^ "." ^ ctx.name
 
 let rec get_mang ctx id =
-  if id = "main" then "main"
+  if id = "main" then
+    "main"
   else
     match List.assoc_opt id ctx.idents with
     | Some true -> id
@@ -148,8 +151,10 @@ let elim_ts ctx ts = ts
 let rec elim_base mctx lctx i k : kexpr =
   match k with
   | Ident (i', k) ->
-      if is_local lctx k then Base (i, Ident (i', k))
-      else Base (i, Ident (i', get_full_id_mod mctx [] k))
+      if is_local lctx k then
+        Base (i, Ident (i', k))
+      else
+        Base (i, Ident (i', get_full_id_mod mctx [] k))
   | Int _ | Float _ | Str _ -> Base (i, k)
   | Tuple l -> Base (i, Tuple (List.map (elim_expr mctx lctx) l))
   | True | False -> Base (i, k)
@@ -205,7 +210,8 @@ let rec elim_toplevel ctx t =
       let id' = get_mang ctx id_e in
       (add_ident ctx id_e, IntExtern (id_i, id', i, ts) :: [])
   | Bind (id, ids, nm) ->
-      if ids <> [] then todo "bind with module args"
+      if ids <> [] then
+        todo "bind with module args"
       else
         let id' = get_mang ctx id in
         let nm' = get_mang ctx nm in

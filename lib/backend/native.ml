@@ -30,7 +30,11 @@ let prelude () =
 
 let flags =
   KhasmUTF.utf8_map
-    (fun x -> if x = "\n" then "" else x)
+    (fun x ->
+      if x = "\n" then
+        ""
+      else
+        x)
     {| -O0
         -Wall
         -Wextra

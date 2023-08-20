@@ -5,10 +5,14 @@ open KhasmUTF
 
 let mangler id =
   let asint = String.get_uint8 id 0 in
-  if asint >= 65 && asint < 65 + 26 then id
-  else if asint >= 97 && asint < 97 + 26 then id
-  else if asint >= 48 && asint < 48 + 10 then id
-  else "_" ^ string_of_int asint ^ "_"
+  if asint >= 65 && asint < 65 + 26 then
+    id
+  else if asint >= 97 && asint < 97 + 26 then
+    id
+  else if asint >= 48 && asint < 48 + 10 then
+    id
+  else
+    "_" ^ string_of_int asint ^ "_"
 
 let mangle_top nms id =
   let nm = List.assoc id nms in
@@ -30,7 +34,12 @@ let function_name name argnum =
       (List.mapi (fun i x -> x ^ "_" ^ string_of_int i)
       @@ n_of_i argnum "kha_obj * a")
   in
-  let args = if args = "" then "void" else args in
+  let args =
+    if args = "" then
+      "void"
+    else
+      args
+  in
   "extern kha_obj * " ^ name ^ "(" ^ args ^ ");\n" ^ "KHASM_ENTRY(" ^ name
   ^ ", " ^ string_of_int argnum ^ ", " ^ args ^ ") {\n"
 
@@ -63,7 +72,8 @@ and gen_new s =
   n'
 
 let rec emit_tuple tbl x =
-  if List.length x = 0 then gen_new "make_tuple(0)"
+  if List.length x = 0 then
+    gen_new "make_tuple(0)"
   else
     let codes = List.map (fun x -> codegen_func x tbl) x in
     gen_new
@@ -89,8 +99,10 @@ and add_to_emi s = emission := s :: !emission
 and codegen_func code tbl =
   match code with
   | Val v ->
-      if is_toplevel v tbl then gen_new (emit_ptr tbl v)
-      else gen_new (emit_ref (mangle v))
+      if is_toplevel v tbl then
+        gen_new (emit_ptr tbl v)
+      else
+        gen_new (emit_ref (mangle v))
   | Unboxed v -> gen_new (emit_unboxed v)
   | Tuple t -> emit_tuple tbl t
   | Call (e1, e2) -> emit_call tbl e1 e2
@@ -105,12 +117,16 @@ and codegen_func code tbl =
       let n1 = codegen_func c tbl in
       add_to_emi ("if (" ^ n1 ^ "->data.i) {\n");
       let t1 = codegen_func e1 tbl in
-      if t1 = "IFELSETEMP" then ()
-      else add_to_emi (";\n IFELSETEMP = ref(" ^ t1 ^ ");");
+      if t1 = "IFELSETEMP" then
+        ()
+      else
+        add_to_emi (";\n IFELSETEMP = ref(" ^ t1 ^ ");");
       add_to_emi "} else {";
       let t2 = codegen_func e2 tbl in
-      if t2 = "IFELSETEMP" then ()
-      else add_to_emi (";\n IFELSETEMP = ref(" ^ t2 ^ ");");
+      if t2 = "IFELSETEMP" then
+        ()
+      else
+        add_to_emi (";\n IFELSETEMP = ref(" ^ t2 ^ ");");
       add_to_emi "}\n";
       "IFELSETEMP"
 
