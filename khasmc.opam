@@ -12,8 +12,6 @@ depends: [
   "ppx_deriving"
   "ppx_inline_test"
   "batteries"
-  "menhir"
-  "ppx_deriving_yojson"
   "fileutils"
   "odoc" {with-doc}
 ]
