@@ -146,6 +146,8 @@ rule token = parse
      | "module" {incr_by lexbuf; MODULE}
      | "struct" {incr_by lexbuf; STRUCT}
      | "functor" {incr_by lexbuf; FUNCTOR}
+     | "match" {incr_by lexbuf; MATCH}
+     | "with" {incr_by lexbuf; WITH}
      | "type" {incr_by lexbuf; TYPE}
      | "open" {incr_by lexbuf; OPEN}
      | "∀" {incr_by lexbuf; FORALL}

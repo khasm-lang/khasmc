@@ -1,0 +1,18 @@
+open Stdlib
+
+type Foobar a b =
+     | Foo : a -> int -> Foobar a int
+     | Bar a b
+
+let extract x : forall a b, Foobar a b -> (b, a) =
+    match x with
+    | Foo y z => (z, y)
+    | Bar a b => (b, a)
+    end
+
+let main x : () -> () =
+    let f = Foo 1 2 in
+    let z = extract f in
+    print_int (z.0);
+    print_int (z.1);
+    print_str "done!"

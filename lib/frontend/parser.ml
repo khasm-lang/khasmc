@@ -75,6 +75,8 @@ type token =
   | LAND
   | LOR
   | NOMANGLE
+  | MATCH
+  | WITH
   | INLINE
   | EXTERN
   | LBRACE
@@ -235,10 +237,10 @@ and get_binop state =
   | EQ_OP s
   | LT_OP s
   | GT_OP s
-  | PIP_OP s
   | AND_OP s
   | DOL_OP s ->
       s
+  | PIP_OP s when String.length s > 1 -> s
   | x -> error state x [ BINARY_OP ]
 
 and get_binop_peek state =
@@ -255,10 +257,10 @@ and get_binop_peek state =
   | EQ_OP s
   | LT_OP s
   | GT_OP s
-  | PIP_OP s
   | AND_OP s
   | DOL_OP s ->
       Some s
+  | PIP_OP s when String.length s > 1 -> Some s
   | SEMICOLON -> Some ";"
   | _ -> None
 
@@ -392,6 +394,35 @@ and last_tail l acc =
   | [] -> raise @@ Impossible "last_tale empty"
   | [ x ] -> (x, List.rev acc)
   | x :: xs -> last_tail xs (x :: acc)
+
+and parse_match_pattern_tup state =
+  let rec go acc =
+    let tmp = parse_match_pattern state in
+    match pop state with
+    | RPAREN -> List.rev (tmp :: acc)
+    | COMMA -> go (tmp :: acc)
+    | x -> error state x [ RPAREN; COMMA ]
+  in
+  go []
+
+and parse_match_list state =
+  match peek state 1 with
+  | T_IDENT t ->
+      toss state;
+      MPId t :: parse_match_list state
+  | LPAREN ->
+      toss state;
+      let tmp = parse_match_pattern_tup state in
+      MPTup tmp :: parse_match_list state
+  | _ -> []
+
+and parse_match_pattern state =
+  match pop state with
+  | T_IDENT t -> (
+      match parse_match_list state with [] -> MPId t | xs -> MPApp (t, xs))
+  | LPAREN -> MPTup (parse_match_pattern_tup state)
+  | T_INT t -> MPInt t
+  | x -> error state x [ T_IDENT "MatchExample"; LPAREN; T_INT "0" ]
 
 and parse_adt_pattern state =
   let id = get_ident state in
@@ -571,6 +602,21 @@ and parse_compound state =
       (match pop state with LAM_TO -> () | x -> error state x [ COL_OP ":" ]);
       let expr = parse_expr state 0 in
       Ast.TypeLam (mkinfo (), v, expr)
+  | MATCH ->
+      toss state;
+      let pat = parse_expr state 0 in
+      expect state WITH;
+      let rec go acc =
+        match pop state with
+        | PIP_OP "|" ->
+            let p = parse_match_pattern state in
+            expect state LAM_TO;
+            let e = parse_expr state 0 in
+            go ((p, e) :: acc)
+        | END -> List.rev acc
+        | x -> error state x [ PIP_OP "|"; END ]
+      in
+      Match (mkinfo (), pat, go [])
   | _ -> (
       let b = parse_base state in
       match peek state 1 with

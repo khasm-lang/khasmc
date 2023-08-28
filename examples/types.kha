@@ -1,5 +1,6 @@
-type Foo a b = a -> b
+type Foo b =
+     | Goof b b
 
-let do_thing x : Foo () () = Stdlib.print_str "hi"
+let part_goofy : int -> Foo int = Goof 10 
 
-let main x : () -> () = do_thing ()
+let main x : () -> () = Stdlib.print_str "hi"

@@ -24,3 +24,9 @@ let rec last xs =
   | [] -> raise @@ Impossible "ListHelpers.last : empty list"
   | [ x ] -> x
   | _ :: xs -> last xs
+
+let rec fold_left' f xs =
+  match xs with
+  | [] -> raise @@ Impossible "fold_left' empty"
+  | [ x ] -> x
+  | x :: xs -> f x (fold_left' f xs)
