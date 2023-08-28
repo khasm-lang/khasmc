@@ -1,18 +1,17 @@
 open Stdlib
 
-type Foobar a b =
-     | Foo : a -> int -> Foobar a int
-     | Bar a b
+type List a =
+     | Nil
+     | Cons a (List a)
 
-let extract x : forall a b, Foobar a b -> (b, a) =
+let rec map f x : forall a b, (a -> b) -> List a -> List b =
     match x with
-    | Foo y z => (z, y)
-    | Bar a b => (b, a)
+    | Nil => Nil
+    | Cons x y => Cons (f x) (map f y)
     end
-
+    
 let main x : () -> () =
-    let f = Foo 1 2 in
-    let z = extract f in
-    print_int (z.0);
-    print_int (z.1);
-    print_str "done!"
+    let f = fun x : int => x + 1 in
+    let xs = Cons 1 (Cons 2 Nil) in
+    let t = map f xs in
+    ()

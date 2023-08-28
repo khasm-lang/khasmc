@@ -9,6 +9,8 @@ open Debug
 (*
    Notes about this code:
    - Foralls are order dependent due to typelam elaboration
+   - GADT typechecking is like, 70% confidence, not right 
+
 *)
 
 (* See below for more details *)
@@ -26,10 +28,6 @@ type ctx = {
   bound_foralls : (kident * typesig) list;
 }
 [@@deriving show { with_path = false }]
-
-type 'a infer_result =
-  | One of 'a
-  | Many of 'a list
 
 let empty_typ_ctx () =
   {
@@ -422,6 +420,9 @@ and unify ?loop ctx l r =
    *)
   let l = elim_unused @@ lift_ts l in
   let r = elim_unused @@ lift_ts r in
+  (*print_endline "unify:";
+    print_endline (pshow_typesig l);
+      print_endline (pshow_typesig r);*)
   let res =
     match (l, r) with
     | TSBase x, TSBase y ->
@@ -504,6 +505,15 @@ let rec apply_unify ctx tp =
   | TSForall (f, x) -> TSForall (f, apply_unify ctx x)
   | TSTuple t -> TSTuple (List.map (apply_unify ctx) t)
 
+let rec all_base_to_meta tp =
+  match tp with
+  | TSBase _ -> TSMeta (get_meta ())
+  | TSMeta _ -> tp
+  | TSApp (f, x) -> TSApp (List.map all_base_to_meta f, x)
+  | TSMap (a, b) -> TSMap (all_base_to_meta a, all_base_to_meta b)
+  | TSForall (f, x) -> TSForall (f, all_base_to_meta x)
+  | TSTuple t -> TSTuple (List.map all_base_to_meta t)
+
 let subtyping_valid _l _r = ()
 
 let are_equiv l r =
@@ -519,10 +529,21 @@ let are_equiv l r =
 let rec infer_base ctx tm =
   let typ =
     match tm with
-    | Ident (inf, i) ->
-        let typ = lookup ctx i in
-        Hash.add_typ inf.id typ;
-        typ
+    | Ident (inf, i) -> (
+        try
+          let ty = lookup_constr ctx i in
+          let head =
+            match ty.typ with
+            | Error () -> raise @@ Impossible "infer_base"
+            | Ok t -> t
+          in
+          match ty.args with
+          | [] -> all_base_to_meta head
+          | _ -> raise @@ Impossible "not seen"
+        with _ ->
+          let typ = lookup ctx i in
+          Hash.add_typ inf.id typ;
+          typ)
     | Int _ -> TSBase "int"
     | Float _ -> TSBase "float"
     | Str _ -> TSBase "string"
@@ -544,14 +565,21 @@ and infer_match ctx main pats =
           * this should be a fairly trivial fold over unification.
   *)
   let main_typ = infer ctx main in
-  let throw_t typ =
-    match typ with None -> raise @@ Impossible "MPId no type" | Some x -> x
+  let throw_t ctx id typ =
+    match typ with
+    | None -> (
+        try
+          match (lookup_constr ctx id).typ with
+          | Ok t -> t
+          | Error () -> raise @@ Impossible "Error(())"
+        with _ -> raise @@ Impossible "MPId no type")
+    | Some x -> x
   in
   let unwrap t = t.args in
   let rec frees_type pat typ =
     match pat with
     | MPInt _ -> []
-    | MPId t -> [ (t, throw_t typ) ]
+    | MPId t -> [ (t, throw_t ctx t typ) ]
     | MPApp (p, t) ->
         let typ' = unwrap @@ lookup_constr ctx p in
         List.concat @@ List.map2 (fun x y -> frees_type x (Some y)) t typ'
@@ -566,21 +594,22 @@ and infer_match ctx main pats =
     match pat with
     | MPInt _ -> TSBase "int"
     | MPId _ -> TSMeta (get_meta ())
-    | MPApp (p, f) ->
+    | MPApp (p, _f) ->
         let m = lookup_constr mctx p in
         let t =
           match m.typ with
           | Error () -> raise @@ Impossible "Error(()) adt_pattern typechecking"
           | Ok t -> t
         in
-        List.iter2
+        (*List.iter2
           (fun should is -> ignore @@ unify (empty_unify_ctx ()) should is)
           m.args
-          (List.map (pat_to_type mctx) f);
+          (List.map (pat_to_type mctx) f); *)
         t
     | MPTup t -> TSTuple (List.map (pat_to_type mctx) t)
   in
-  List.iter
+
+  (*List.iter
     (fun (p, _e) ->
       let ty = pat_to_type ctx p in
       let inst_main =
@@ -593,9 +622,12 @@ and infer_match ctx main pats =
           main_typ
           (List.map fst ctx.bound_foralls)
       in
-      ignore @@ unify (empty_unify_ctx ()) inst_main ty)
-    pats;
+      print_string(pshow_typesig inst_main);
+      print_string " & ";
+      print_endline (pshow_typesig ty);
 
+      ignore @@ unify (empty_unify_ctx ()) inst_main ty)
+    pats;*)
   let typs =
     List.map
       (fun (p, e) ->
@@ -605,6 +637,8 @@ and infer_match ctx main pats =
           List.fold_left (fun c (x, y) -> assume_typ c x y) ctx frees
         in
         let inf = infer ctx' e in
+        print_endline "match inferred:";
+        print_endline (pshow_typesig inf);
         let bounds =
           match (ty, main_typ) with
           | TSApp (q, _), TSApp (w, _) -> List.map2 (fun x y -> (x, y)) q w
@@ -679,6 +713,7 @@ and infer ctx tm =
     | Inst (_, _, _) -> raise (TypeErr "UNREACHABLE")
     | TypeLam (inf, t, b) ->
         let ctx' = add_bound_typ ctx t in
+        let ctx' = add_bound_forall ctx' t (TSMeta (get_meta ())) in
         let bodytyp = infer ctx' b in
         (inf, TSForall (t, bodytyp))
     | TupAccess (inf, expr, i) -> (
@@ -764,6 +799,16 @@ and check ctx tm tp =
             let fixed =
               List.fold_left (fun x (t1, t2) -> subs_bad x t2 t1) bd binds
             in
+            print_endline "binds:";
+            List.iter
+              (fun x ->
+                print_endline
+                  ((pshow_typesig @@ fst x) ^ " === " ^ pshow_typesig @@ snd x))
+              binds;
+            print_endline "fixed:";
+            print_endline (pshow_typesig fixed);
+            print_endline "new";
+            print_endline (pshow_typesig ty);
             ignore @@ unify (empty_unify_ctx ()) fixed ty)
           typs;
         Some inf

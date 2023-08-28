@@ -211,7 +211,7 @@ let rec elim_base mctx lctx i k : kexpr =
 and elim_pat mctx lctx p =
   match p with
   | MPInt _ -> p
-  | MPId _ -> p
+  | MPId t -> ( try MPId (get_full_id_mod mctx [] t) with _ -> p)
   | MPApp (t, p) ->
       MPApp (get_full_id_mod mctx [] t, List.map (elim_pat mctx lctx) p)
   | MPTup t -> MPTup (List.map (elim_pat mctx lctx) t)
@@ -219,9 +219,9 @@ and elim_pat mctx lctx p =
 and elim_pats mctx lctx pats =
   List.map
     (fun (p, e) ->
-      let frees = get_pat_frees p in
-      let lctx' = add_locals lctx frees in
       let p' = elim_pat mctx lctx p in
+      let frees = get_pat_frees p' in
+      let lctx' = add_locals lctx frees in
       (p', elim_expr mctx lctx' e))
     pats
 

@@ -62,7 +62,7 @@ let main_proc () =
       "Success"
     with
     | Lexer.EOF x -> "EOF:\n" ^ x
-    | TypeErr x -> "Type error: " ^ x
+    | TypeErr x -> x
   in
   Debug.debug ("\nStatus: " ^ succ);
   print_endline

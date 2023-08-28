@@ -410,17 +410,32 @@ and parse_match_list state =
   | T_IDENT t ->
       toss state;
       MPId t :: parse_match_list state
-  | LPAREN ->
+  | LPAREN -> (
       toss state;
-      let tmp = parse_match_pattern_tup state in
-      MPTup tmp :: parse_match_list state
+      match peek state 1 with
+      | RPAREN ->
+          toss state;
+          []
+      | _ ->
+          let tmp = parse_match_pattern_tup state in
+          let tmp = match tmp with [ x ] -> x | _ -> MPTup tmp in
+          tmp :: parse_match_list state)
   | _ -> []
 
 and parse_match_pattern state =
   match pop state with
   | T_IDENT t -> (
       match parse_match_list state with [] -> MPId t | xs -> MPApp (t, xs))
-  | LPAREN -> MPTup (parse_match_pattern_tup state)
+  | LPAREN -> (
+      match peek state 1 with
+      | RPAREN ->
+          toss state;
+          MPTup []
+      | _ -> (
+          match parse_match_pattern_tup state with
+          | [] -> raise @@ Impossible "parse_match_pattern"
+          | [ x ] -> x
+          | x -> MPTup x))
   | T_INT t -> MPInt t
   | x -> error state x [ T_IDENT "MatchExample"; LPAREN; T_INT "0" ]
 
