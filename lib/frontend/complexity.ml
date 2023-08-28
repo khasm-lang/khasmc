@@ -19,6 +19,7 @@ let cmpget expr =
   | TupAccess (inf, _, _)
   | AnnotLet (inf, _, _, _, _)
   | AnnotLam (inf, _, _, _)
+  | Match (inf, _, _)
   | ModAccess (inf, _, _) ->
       inf.complex
 
@@ -70,6 +71,7 @@ let rec init_expr expr =
       AnnotLam (cmpset inf (cmpget b), id, ts, b)
   | ModAccess (inf, exp, id) ->
       ModAccess (cmpset inf (List.length exp + 1), exp, id)
+  | Match (inf, p, pats) -> Match (inf, p, pats)
 
 let rec init_toplevel t =
   match t with

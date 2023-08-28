@@ -6,12 +6,24 @@ open Debug
 
 (* Typechecks a program with a flat file structure - ie, no modules. *)
 
+(*
+   Notes about this code:
+   - Foralls are order dependent due to typelam elaboration
+*)
+
 (* See below for more details *)
 
 type ctx = {
+  (* type aliases that can be simplified *)
   aliases : (kident * kident list * typesig) list;
+  (* bound functions / variables *)
   binds : (kident * typesig) list;
+  (* types that can't be simplified *)
   types : typeprim list;
+  (* constructors for types, used for match typechecking *)
+  constrs : adt_pattern list;
+  (* list of bound forall vars, uses for match typechecking (GADTs) *)
+  bound_foralls : (kident * typesig) list;
 }
 [@@deriving show { with_path = false }]
 
@@ -23,14 +35,9 @@ let empty_typ_ctx () =
   {
     aliases = [];
     binds = [];
-    types =
-      [
-        (* base types in khasm *)
-        Basic "int";
-        Basic "float";
-        Basic "string";
-        Basic "bool";
-      ];
+    types = List.map (fun x -> Basic x) khasm_default_types;
+    constrs = [];
+    bound_foralls = [];
   }
 
 let add_alias ctx id args ts =
@@ -41,12 +48,21 @@ let assume_typ ctx id ts =
 
 let add_bound_typ ctx ts = { ctx with types = Bound ts :: ctx.types }
 let add_param_typ ctx i ts = { ctx with types = Param (i, ts) :: ctx.types }
+let add_constrs ctx pats = { ctx with constrs = pats @ ctx.constrs }
+
+let add_bound_forall ctx f ty =
+  { ctx with bound_foralls = (f, ty) :: ctx.bound_foralls }
 
 (** Looks up a value in a context *)
 let lookup ctx x =
   match List.find_opt (fun y -> fst y = x) ctx.binds with
   | None -> raise (NotFound (x ^ " not found in ctx"))
   | Some x -> snd x
+
+let lookup_constr ctx x =
+  match List.find_opt (fun y -> y.head = x) ctx.constrs with
+  | None -> raise (NotFound ("Constructor " ^ x ^ " not found in ctx"))
+  | Some x -> x
 
 (** Checks whether a variable is free in a context *)
 let rec occurs_ts s ts =
@@ -169,6 +185,18 @@ let rec subs typ nm newt =
     | TSTuple l -> TSTuple (List.map (fun x -> subs x nm newt) l)
   in
   ret
+
+let rec subs_bad typ old new' =
+  if typ = old then
+    new'
+  else
+    match typ with
+    | TSBase _ -> typ
+    | TSMeta _ -> typ
+    | TSApp (x, y) -> TSApp (List.map (fun y -> subs_bad y old new') x, y)
+    | TSMap (l, r) -> TSMap (subs_bad l old new', subs_bad r old new')
+    | TSForall (nm', ts) -> TSForall (nm', subs_bad ts old new')
+    | TSTuple l -> TSTuple (List.map (fun x -> subs_bad x old new') l)
 
 let rec multisubs typ nms newts =
   match (nms, newts) with
@@ -400,14 +428,19 @@ and unify ?loop ctx l r =
         if x = y then
           (ctx, TSBase x)
         else
-          raise (UnifyErr ("can't unify " ^ x ^ " and " ^ y))
+          raise
+            (UnifyErr
+               ("can't unify " ^ x ^ " and " ^ y ^ " due to base mismatch"))
     | TSMap (a, b), TSMap (x, y) ->
         let lt = unify ctx a x in
         let rt = unify ctx b y in
         (combine (fst lt) (fst rt), TSMap (snd lt, snd rt))
     | TSApp (a, b), TSApp (x, y) ->
         if b <> y then
-          raise (UnifyErr ("can't unify" ^ b ^ " and " ^ y))
+          raise
+            (UnifyErr
+               ("can't unify" ^ b ^ " and " ^ y
+              ^ " due to type-level function mismatch"))
         else
           let t = List.map2 (unify ctx) a x in
           let rec get_ctx list =
@@ -435,13 +468,20 @@ and unify ?loop ctx l r =
             let typ = snd x in
             unify ctx typ r
         | None -> (combine { metas = [ (m, r) ] } ctx, r))
+    | _, TSMeta m -> (
+        match get_meta_opt ctx m with
+        | Some x ->
+            let typ = snd x in
+            unify ctx typ l
+        | None -> (combine { metas = [ (m, l) ] } ctx, l))
     | TSForall (id, ts), _ ->
         if not (occurs_ts id ts) then
           unify ctx (inst_all (TSForall (id, ts))) r
         else
           raise
             (UnifyErr
-               ("Can't unify " ^ pshow_typesig l ^ " and " ^ pshow_typesig r))
+               ("Can't unify " ^ pshow_typesig l ^ " and " ^ pshow_typesig r
+              ^ " due to forall mismatch"))
     | _, _ -> (
         match loop with
         | None -> unify ~loop:true ctx r l
@@ -464,6 +504,17 @@ let rec apply_unify ctx tp =
   | TSForall (f, x) -> TSForall (f, apply_unify ctx x)
   | TSTuple t -> TSTuple (List.map (apply_unify ctx) t)
 
+let subtyping_valid _l _r = ()
+
+let are_equiv l r =
+  subtyping_valid l r;
+  unify (empty_unify_ctx ()) l r
+
+(* The check-infer section
+
+
+*)
+
 (** Infers the type of a base *)
 let rec infer_base ctx tm =
   let typ =
@@ -479,6 +530,90 @@ let rec infer_base ctx tm =
     | True | False -> TSBase "bool"
   in
   typ
+
+and infer_match ctx main pats =
+  (* A few things happen here.
+     - 1. We need to figure out the types of all the
+         bound variables in `main`, and ensure there are no duplicates.
+     - 2. We need to figure out the type of `main`,
+         and make sure that it's valid.
+     - 3. We need to make sure that each match pattern has
+         the type of `main`.
+     - 4. We need to make sure all of the `pats` have the
+         same type
+          * this should be a fairly trivial fold over unification.
+  *)
+  let main_typ = infer ctx main in
+  let throw_t typ =
+    match typ with None -> raise @@ Impossible "MPId no type" | Some x -> x
+  in
+  let unwrap t = t.args in
+  let rec frees_type pat typ =
+    match pat with
+    | MPInt _ -> []
+    | MPId t -> [ (t, throw_t typ) ]
+    | MPApp (p, t) ->
+        let typ' = unwrap @@ lookup_constr ctx p in
+        List.concat @@ List.map2 (fun x y -> frees_type x (Some y)) t typ'
+    | MPTup t -> (
+        match typ with
+        | Some (TSTuple t') ->
+            List.concat @@ List.map2 (fun x y -> frees_type x (Some y)) t t'
+        | _ -> raise @@ TypeErr "Can't pattern match tuple pattern on non-tuple"
+        )
+  in
+  let rec pat_to_type mctx pat =
+    match pat with
+    | MPInt _ -> TSBase "int"
+    | MPId _ -> TSMeta (get_meta ())
+    | MPApp (p, f) ->
+        let m = lookup_constr mctx p in
+        let t =
+          match m.typ with
+          | Error () -> raise @@ Impossible "Error(()) adt_pattern typechecking"
+          | Ok t -> t
+        in
+        List.iter2
+          (fun should is -> ignore @@ unify (empty_unify_ctx ()) should is)
+          m.args
+          (List.map (pat_to_type mctx) f);
+        t
+    | MPTup t -> TSTuple (List.map (pat_to_type mctx) t)
+  in
+  List.iter
+    (fun (p, _e) ->
+      let ty = pat_to_type ctx p in
+      let inst_main =
+        List.fold_left
+          (fun typ id ->
+            if not @@ occurs_ts id ty then
+              inst_meta typ id (TSMeta (get_meta ()))
+            else
+              typ)
+          main_typ
+          (List.map fst ctx.bound_foralls)
+      in
+      ignore @@ unify (empty_unify_ctx ()) inst_main ty)
+    pats;
+
+  let typs =
+    List.map
+      (fun (p, e) ->
+        let ty = pat_to_type ctx p in
+        let frees = frees_type p None in
+        let ctx' =
+          List.fold_left (fun c (x, y) -> assume_typ c x y) ctx frees
+        in
+        let inf = infer ctx' e in
+        let bounds =
+          match (ty, main_typ) with
+          | TSApp (q, _), TSApp (w, _) -> List.map2 (fun x y -> (x, y)) q w
+          | _, _ -> []
+        in
+        (inf, bounds))
+      pats
+  in
+  typs
 
 (** Infers the type of a term *)
 and infer ctx tm =
@@ -566,6 +701,18 @@ and infer ctx tm =
         (inf, TSMap (ts, out))
     | ModAccess (_inf, _path, _id) ->
         raise @@ Impossible "modules in typechecking expr"
+    | Match (inf, main, pats) -> (
+        let typs = infer_match ctx main pats in
+        try
+          ( inf,
+            ListHelpers.fold_left'
+              (fun x y -> snd @@ unify (empty_unify_ctx ()) x y)
+              (List.map fst typs) )
+        with UnifyErr _e ->
+          raise
+          @@ TypeErr
+               ("Cannot infer match:\n" ^ show_kexpr tm
+              ^ "\n Maybe due to GADTs?"))
     | _ ->
         raise
           (TypeErr
@@ -588,17 +735,37 @@ and check ctx tm tp =
     | Lam (inf, id, bd), TSMap (a, b) ->
         ignore (check (assume_typ ctx id a) bd b);
         Some inf
+    | AnnotLam (inf, id, ts, bd), TSMap (a, b) ->
+        ignore (unify (empty_unify_ctx ()) a ts);
+        ignore (check (assume_typ ctx id a) bd b);
+        Some inf
     | TypeLam (inf, a, b), TSForall (fv, bd) ->
         let typ' = subs bd fv (TSBase a) in
         let ctx' = add_bound_typ ctx a in
+        let ctx' = add_bound_forall ctx' fv (TSMeta (get_meta ())) in
         ignore (check ctx' b typ');
         Some inf
     | LetIn (inf, id, e1, e2), bd ->
         let bdtyp = infer ctx e1 in
         ignore (check (assume_typ ctx id bdtyp) e2 bd);
         Some inf
+    | AnnotLet (inf, id, ts, e1, e2), bd ->
+        let bdtyp = infer ctx e1 in
+        ignore (unify (empty_unify_ctx ()) ts bdtyp);
+        ignore (check (assume_typ ctx id bdtyp) e2 bd);
+        Some inf
     | Base (inf, Tuple x), TSTuple ts ->
         List.iter2 (fun x y -> ignore (check ctx x y)) x ts;
+        Some inf
+    | Match (inf, main, pats), bd ->
+        let typs = infer_match ctx main pats in
+        List.iter
+          (fun (ty, binds) ->
+            let fixed =
+              List.fold_left (fun x (t1, t2) -> subs_bad x t2 t1) bd binds
+            in
+            ignore @@ unify (empty_unify_ctx ()) fixed ty)
+          typs;
         Some inf
     | term, exp ->
         let actual = infer ctx term in
@@ -608,10 +775,10 @@ and check ctx tm tp =
   match inf with Some s -> Hash.add_typ s.id tp | None -> ()
 
 (** See conv_args_body_to_typelams *)
-let rec forall_to_typelam ts args body =
-  match (ts, args) with
-  | TSForall (fv, bd), _ :: xs ->
-      let tmp = forall_to_typelam bd xs body in
+let rec forall_to_typelam ts body =
+  match ts with
+  | TSForall (fv, bd) ->
+      let tmp = forall_to_typelam bd body in
       (fst tmp, TypeLam (dummy_info (), fv, snd tmp))
   | _ -> (lift_ts ts, body)
 
@@ -647,10 +814,9 @@ let rec add_args ts args body =
            *)
 let conv_ts_args_body_to_typelams ts args body =
   let ts = elim_unused ts in
-  let fixed = forall_to_typelam ts args body in
-  let args_fixed = add_args (fst fixed) args body in
-  let fixed_2 = forall_to_typelam ts args args_fixed in
-  snd fixed_2
+  let type_without_foralls = fst @@ forall_to_typelam ts body in
+  let args_fixed = add_args type_without_foralls args body in
+  snd @@ forall_to_typelam ts args_fixed
 
 let type_simpl ctx t = t |> lift_ts |> remove_aliases ctx.aliases
 
@@ -708,8 +874,57 @@ let rec typecheck_toplevel_list ctx tl =
         | Typealias (id, args, ts) ->
             let ts = type_simpl ctx ts in
             let ctx' = add_alias ctx id args ts in
-            add_param_typ ctx' (List.length args) id
-        | Typedecl (id, args, pats) -> raise @@ Todo "Typedecls"
+            if List.length args = 0 then
+              add_bound_typ ctx' id
+            else
+              add_param_typ ctx' (List.length args) id
+        | Typedecl (id, args, pats) ->
+            let rec go xs p =
+              match xs with
+              | [] -> p
+              | [ x ] -> TSMap (x, p)
+              | x :: xs -> TSMap (x, go xs p)
+            in
+            let rec wrap_foralls fs e =
+              match fs with
+              | [] -> e
+              | y :: ys -> TSForall (y, wrap_foralls ys e)
+            in
+            let ctx' =
+              List.fold_left
+                (fun ctx pat ->
+                  match pat.typ with
+                  | Error () -> raise @@ Impossible "pat.typ Error"
+                  | Ok t ->
+                      (match t with
+                      | TSApp (_, nm) ->
+                          if nm <> id then
+                            raise
+                            @@ TypeErr
+                                 ("GADT constructor " ^ pat.head ^ " in " ^ id
+                                ^ " does not have valid return type (Must be \
+                                   application to " ^ id ^ ", is instead to "
+                                ^ nm ^ ")")
+                          else
+                            ()
+                      | x ->
+                          raise
+                          @@ TypeErr
+                               ("GADT constructor " ^ pat.head ^ " in " ^ id
+                              ^ " does not have valid return type (Must be \
+                                 application to " ^ id ^ ", is instead "
+                              ^ pshow_typesig x ^ ")"));
+                      let ts =
+                        wrap_foralls args @@ go pat.args t |> elim_unused
+                      in
+                      assume_typ ctx pat.head ts)
+                ctx pats
+            in
+            let ctx' = add_constrs ctx' pats in
+            if List.length args = 0 then
+              add_bound_typ ctx' id
+            else
+              add_param_typ ctx' (List.length args) id
       in
       typecheck_toplevel_list ctx' xs
 

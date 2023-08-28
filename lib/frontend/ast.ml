@@ -1,3 +1,5 @@
+let khasm_default_types = [ "int"; "float"; "string"; "bool" ]
+
 type typeprim =
   | Basic of string
   | Bound of string
@@ -22,11 +24,11 @@ let rec by_sep x y =
 let rec pshow_typesig ts =
   match ts with
   | TSBase x -> x
-  | TSMeta x -> x
+  | TSMeta x -> "$" ^ x
   | TSApp (x, y) ->
       brac (y ^ " " ^ String.concat " " @@ List.map pshow_typesig x)
   | TSMap (x, y) -> brac (pshow_typesig x) ^ " -> " ^ brac (pshow_typesig y)
-  | TSForall (x, y) -> "∀" ^ x ^ ", " ^ pshow_typesig y
+  | TSForall (x, y) -> "forall " ^ x ^ ", " ^ pshow_typesig y
   | TSTuple x -> brac (by_sep (List.map pshow_typesig x) ", ")
 
 let str_of_typesig x = pshow_typesig x
@@ -59,6 +61,13 @@ type kbase =
   | False
 [@@deriving show { with_path = false }]
 
+and matchpat =
+  | MPInt of kident
+  | MPId of kident
+  | MPApp of kident * matchpat list
+  | MPTup of matchpat list
+[@@deriving show { with_path = false }]
+
 and kexpr =
   | Base of info * kbase
   | FCall of info * kexpr * kexpr
@@ -73,6 +82,7 @@ and kexpr =
   | AnnotLet of info * kident * typesig * kexpr * kexpr
   | AnnotLam of info * kident * typesig * kexpr
   | ModAccess of info * kident list * kident
+  | Match of info * kexpr * (matchpat * kexpr) list
 [@@deriving show { with_path = false }]
 
 and tdecl = kident * typesig [@@deriving show { with_path = false }]
@@ -98,6 +108,27 @@ and toplevel =
 [@@deriving show { with_path = false }]
 
 and program = Program of toplevel list [@@deriving show { with_path = false }]
+
+(*comes up surprisingly often*)
+let rec get_pat_frees pat =
+  match pat with
+  | MPApp (_, t) | MPTup t -> List.concat_map get_pat_frees t
+  | MPId t -> [ t ]
+  | MPInt _ -> []
+
+let rec pat_to_expr pat =
+  match pat with
+  | MPId t -> Base (mkinfo (), Ident (mkinfo (), t))
+  | MPInt t -> Base (mkinfo (), Int t)
+  | MPTup t -> Base (mkinfo (), Tuple (List.map pat_to_expr t))
+  | MPApp (q, w) ->
+      let rec go a b =
+        match a with
+        | [] -> b
+        | [ x ] -> FCall (mkinfo (), b, x)
+        | x :: xs -> FCall (mkinfo (), go xs b, x)
+      in
+      go (List.map pat_to_expr w) (Base (mkinfo (), Ident (mkinfo (), q)))
 
 (* The following two are basically just α-renaming *)
 let base_subs i b x y =
@@ -144,6 +175,17 @@ let rec esubs expr x y =
         expr
   | ModAccess _ -> expr
   | Inst _ -> expr
+  | Match (i, p, ps) ->
+      Match
+        ( i,
+          p,
+          List.map
+            (fun (p, e) ->
+              if not (List.mem x (get_pat_frees p)) then
+                (p, esubs e x y)
+              else
+                (p, e))
+            ps )
 
 (*self explanatory*)
 let getinfo expr =
@@ -160,5 +202,6 @@ let getinfo expr =
   | AnnotLet (inf, _, _, _, _)
   | AnnotLam (inf, _, _, _)
   | ModAccess (inf, _, _)
+  | Match (inf, _, _)
   | LetRecIn (inf, _, _, _, _) ->
       inf

@@ -8,7 +8,9 @@ type local_ctx = { locals : string list }
 
 let empty_lctx () = { locals = [] }
 let add_local ctx local = { ctx with locals = local :: ctx.locals }
+let add_locals ctx locals = List.fold_left add_local ctx locals
 let from_args args = { locals = args }
+let from_args_and_defaults args = { locals = khasm_default_types @ args }
 let is_local ctx l = List.exists (fun x -> x = l) ctx.locals
 
 type module_ctx = {
@@ -110,7 +112,7 @@ let rec get_full_from_open ctx id =
             (List.filter (fun x -> x.is_open) ctx.children)
         with
         | [] -> notfound ("Ident not found: " ^ id)
-        | [ x ] -> x
+        | [ x ] -> get_mang ctx x
         | k -> ambigious ("Too many possible variables: " ^ String.concat "," k)
       with NotFound _ -> (
         match ctx.parent with
@@ -134,24 +136,24 @@ let rec get_type_from_open ctx id =
       try
         match
           List.map
-            (fun x -> get_full_from_open x id)
+            (fun x -> get_type_from_open x id)
             (List.filter (fun x -> x.is_open) ctx.children)
         with
         | [] -> notfound ("Ident not found: " ^ id)
-        | [ x ] -> x
+        | [ x ] -> get_mang ctx x
         | k -> ambigious ("Too many possible variables: " ^ String.concat "," k)
       with NotFound _ -> (
         match ctx.parent with
         | None -> notfound ("Ident not found: " ^ id)
         | Some p -> (
             let siblings = List.filter (fun x -> x.is_open) !p.children in
-            match List.map (fun x -> get_full_from_open x id) siblings with
-            | [] -> get_full_from_open !p id
-            | [ x ] -> x
+            match List.map (fun x -> get_type_from_open x id) siblings with
+            | [] -> get_type_from_open !p id
+            | [ x ] -> get_mang ctx x
             | k ->
                 ambigious
                   ("Too many possible vairiables: " ^ String.concat "," k))))
-  | [ x ] -> x
+  | [ x ] -> get_mang ctx x
   | k -> ambigious ("Too many possible variables: " ^ String.concat "," k)
 
 let rec deconstruct_modules ctx mods =
@@ -206,6 +208,23 @@ let rec elim_base mctx lctx i k : kexpr =
   | Tuple l -> Base (i, Tuple (List.map (elim_expr mctx lctx) l))
   | True | False -> Base (i, k)
 
+and elim_pat mctx lctx p =
+  match p with
+  | MPInt _ -> p
+  | MPId _ -> p
+  | MPApp (t, p) ->
+      MPApp (get_full_id_mod mctx [] t, List.map (elim_pat mctx lctx) p)
+  | MPTup t -> MPTup (List.map (elim_pat mctx lctx) t)
+
+and elim_pats mctx lctx pats =
+  List.map
+    (fun (p, e) ->
+      let frees = get_pat_frees p in
+      let lctx' = add_locals lctx frees in
+      let p' = elim_pat mctx lctx p in
+      (p', elim_expr mctx lctx' e))
+    pats
+
 and elim_expr mctx lctx expr =
   let default t = elim_expr mctx lctx t in
   match expr with
@@ -236,12 +255,13 @@ and elim_expr mctx lctx expr =
   | ModAccess (i, mods, id) ->
       let m = get_full_id_mod mctx mods id in
       Base (i, Ident (i, m))
+  | Match (i, p, pats) -> Match (i, p, elim_pats mctx lctx pats)
 
 let rec elim_toplevel ctx t =
   match t with
   | TopAssign (t, a) ->
       let (id, ts), (_id, args, expr) = (t, a) in
-      let ts' = elim_ts ctx (empty_lctx ()) ts in
+      let ts' = elim_ts ctx (from_args_and_defaults []) ts in
       let expr' = elim_expr ctx (from_args args) expr in
       let id' = get_mang ctx id in
       (add_ident ctx id, TopAssign ((id', ts'), (id', args, expr')) :: [])
@@ -249,7 +269,7 @@ let rec elim_toplevel ctx t =
       let (id, ts), (_id, args, expr) = (t, a) in
       let id' = get_mang ctx id in
       let ctx' = add_ident ctx id in
-      let ts' = elim_ts ctx (empty_lctx ()) ts in
+      let ts' = elim_ts ctx (from_args_and_defaults []) ts in
       let expr' = elim_expr ctx' (from_args args) expr in
       (ctx', TopAssignRec ((id', ts'), (id', args, expr')) :: [])
   | Extern (id, i, ts) -> (add_ident_extern ctx id, t :: [])
@@ -269,9 +289,34 @@ let rec elim_toplevel ctx t =
       let ctx', top = elim_toplevel_list newctx toplevels in
       let ctx' = close_all ctx' in
       (add_child ctx ctx', top)
-  | Typedecl (id, _args, _pats) ->
-      let newctx = add_typ ctx id in
-      (newctx, t :: [])
+  | Typedecl (id, args, pats) ->
+      let ctx' =
+        List.fold_left (fun ctx pat -> add_ident ctx pat.head) ctx pats
+      in
+      let newctx = add_typ ctx' id in
+      let mod_pats =
+        List.map
+          (fun x ->
+            {
+              x with
+              head = get_full_id_mod newctx [] x.head;
+              typ =
+                (match x.typ with
+                | Error () -> raise @@ Impossible "typ Error result"
+                | Ok t -> (
+                    match t with
+                    | TSApp (x, y) ->
+                        let tmp = get_full_typ_mod newctx [] y in
+                        Ok (TSApp (x, tmp))
+                    | x ->
+                        print_endline "bad?";
+                        Ok x));
+              args =
+                List.map (elim_ts newctx (from_args_and_defaults args)) x.args;
+            })
+          pats
+      in
+      (newctx, Typedecl (get_full_typ_mod newctx [] id, args, mod_pats) :: [])
   | Typealias (id, args, ts) ->
       let newctx = add_typ ctx id in
       let ts' = elim_ts ctx (from_args args) ts in
