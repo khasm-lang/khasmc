@@ -24,7 +24,63 @@ let rec fold_tup f s l =
       let c, d = f b x in
       (c :: a, d)
 
-let rec ftm_base tbl base =
+module MatchMap = Map.Make (String)
+
+let most_common tbl p =
+  let empty = MatchMap.empty in
+  let rec helper m x =
+    match fst x with
+    | Ast.MPInt _ -> m
+    | Ast.MPId t ->
+        if Kir.is_constr tbl t then
+          match MatchMap.find_opt t m with
+          | None -> MatchMap.add t 1 m
+          | Some n -> MatchMap.add t (n + 1) m
+        else
+          m
+    | Ast.MPApp (t, l) ->
+        if Kir.is_constr tbl t then
+          match MatchMap.find_opt t m with
+          | None -> MatchMap.add t 1 m
+          | Some n -> MatchMap.add t (n + 1) m
+        else
+          raise @@ Impossible "App not constr"
+    | Ast.MPTup _ -> m
+  in
+  let main = List.fold_left helper empty p in
+  let largest, _ =
+    MatchMap.fold
+      (fun key v i ->
+        if v > snd i then
+          (key, v)
+        else
+          i)
+      main ("IMPOSSIBLE", -1)
+  in
+  List.partition
+    (fun x ->
+      match fst x with
+      | Ast.MPInt _ -> false
+      | Ast.MPId a -> a = largest
+      | Ast.MPApp (a, _) -> a = largest
+      | Ast.MPTup _ -> false)
+    p
+
+let rec match_compilation tbl pats =
+  let rec helper p =
+    match p with
+    | [] -> []
+    | _ :: _ ->
+        let most, n = most_common tbl p in
+        most :: helper n
+  in
+  let tmp = helper pats in
+  let subproblems = List.map (match_subproblem tbl) tmp in
+  todo "MATCH COMPILATION"
+
+and match_subproblem tbl bases = todo "MATCH SUBPROBLEM"
+
+and ftm_base tbl base =
   match base with
   | Ast.Ident (id, str) ->
       let asint, _str = Kir.get_from_tbl str tbl in
@@ -76,6 +132,11 @@ and ftm_expr tbl expr =
       let typ = Hash.get_typ id.id in
       let e' = ftm_expr tbl expr in
       Kir.TupAcc (typ, e', i)
+  | Ast.Match (id, expr, i) ->
+      print_endline (Kir.show_kir_table tbl);
+      let matchee = ftm_expr tbl expr in
+      let patterns = match_compilation tbl i in
+      Kir.SwitchConstr (Hash.get_typ id.id, matchee, patterns)
   | Ast.ModAccess (_, _, _) -> raise @@ Impossible "Modules in middleend"
 
 let rec ftm_toplevel table top =
@@ -100,7 +161,16 @@ let rec ftm_toplevel table top =
       let id2, tbl'' = Kir.add_to_tbl id' tbl' in
       (Kir.Extern (ts, arity, id2, id), tbl'')
   | Ast.Typealias (_, _, _) -> (Kir.Noop, table)
-  | Ast.Typedecl (_, _, _) -> raise @@ Todo "add these bad boys to the backend"
+  | Ast.Typedecl (_nm, _args, pats) ->
+      let count = ref (-1) in
+      let table' =
+        List.fold_left
+          (fun t (p : Ast.adt_pattern) ->
+            count := !count + 1;
+            Kir.add_constr t p.head (List.length p.args) !count)
+          table pats
+      in
+      (Kir.Noop, table')
   | Ast.Open _ | Ast.SimplModule (_, _) -> raise @@ Impossible "Modules in ftm"
 
 let rec ftm table prog =

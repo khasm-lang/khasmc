@@ -25,5 +25,5 @@ type khagmtop =
   | Noop
 [@@deriving show { with_path = false }]
 
-type khagm = khagmtop list * Kir.transtable
+type khagm = khagmtop list * Kir.kir_table
 [@@deriving show { with_path = false }]
