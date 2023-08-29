@@ -15,7 +15,8 @@ let mangler id =
     "_" ^ string_of_int asint ^ "_"
 
 let mangle_top nms id =
-  let nm = List.assoc id nms in
+  let (Some nm) = Kir.get_bind_id nms id in
+  let nm = snd nm in
   match nm with "main" -> "main_____Khasm" | _ -> utf8_map mangler nm
 
 let mangle id =
@@ -44,7 +45,7 @@ let function_name name argnum =
   ^ ", " ^ string_of_int argnum ^ ", " ^ args ^ ") {\n"
 
 let is_toplevel id tbl =
-  match List.assoc_opt id tbl with Some _ -> true | None -> false
+  match Kir.get_bind_id tbl id with Some _ -> true | None -> false
 
 let lookup x (tbl : (khagmid * string) list) =
   match List.assoc_opt x tbl with
