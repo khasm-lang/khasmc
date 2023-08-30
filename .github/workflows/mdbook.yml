@@ -36,7 +36,7 @@ jobs:
       - name: Install mdBook
         run: |
           mkdir mdbin
-          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.34/mdbook-v0.4.34-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=bin
+          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.34/mdbook-v0.4.34-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=mdbin
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
@@ -51,7 +51,7 @@ jobs:
       - run: cp -r _build/default/_doc/_html/ docs/ocaml
       - name: Build with mdBook
         working-directory: docs/
-        run: ../mdbin/mdbook build
+        run: ./mdbin/mdbook build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
