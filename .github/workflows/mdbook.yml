@@ -22,7 +22,6 @@ permissions:
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
-  cancel-in-progress: false
 
 jobs:
   # Build job
@@ -37,6 +36,9 @@ jobs:
         run: |
           mkdir mdbin
           curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.34/mdbook-v0.4.34-x86_64-unknown-linux-gnu.tar.gz | tar -xz --directory=mdbin
+          ls -lah
+          ls -lah mdbin
+          pwd
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
