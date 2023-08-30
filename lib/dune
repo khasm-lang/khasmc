@@ -3,13 +3,7 @@
 (library
  (name khasmc)
  (public_name khasmc)
- (libraries
-  fmt
-  batteries
-  ppx_deriving
-  yojson
-  ppx_deriving_yojson.runtime
-  fileutils)
+ (libraries fmt batteries ppx_deriving fileutils)
  (inline_tests)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.make ppx_deriving.eq ppx_inline_test))
