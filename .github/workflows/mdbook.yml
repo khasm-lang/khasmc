@@ -53,7 +53,11 @@ jobs:
       - run: cp -r _build/default/_doc/_html/ docs/ocaml
       - name: Build with mdBook
         working-directory: docs/
-        run: ./mdbin/mdbook build
+        run: |
+          ls -lah
+          pwd
+          ls -lah mdbin
+          mdbin/mdbook build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
