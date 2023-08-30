@@ -54,8 +54,9 @@ jobs:
         run: |
           ../mdbin/mdbook build
       - name: Add OCaml docs
-      - run: mkdir docs/book/ocaml
-      - run: cp -r _build/default/_doc/_html/ docs/book/ocaml
+        run: |
+          mkdir docs/book/ocaml
+          cp -r _build/default/_doc/_html/ docs/book/ocaml
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
