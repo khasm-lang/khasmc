@@ -1,13 +1,14 @@
 open Exp
 
-(* The middleend IR *)
+(** The middleend IR *)
 
 type kirtype = Ast.typesig [@@deriving show { with_path = false }]
 type kirval = int [@@deriving show { with_path = false }]
 
 type kir_table = {
-  binds : (kirval * string) list; (*  name   arity  id within respective type *)
+  binds : (kirval * string) list;
   constrs : (string * int * kirval) list;
+      (**  name   arity  id within respective type *)
 }
 [@@deriving show { with_path = false }]
 
@@ -43,6 +44,10 @@ let add_to_tbl str tbl =
   let tbl' = add_bind tbl str random in
   (random, tbl')
 
+let new_var tbl =
+  let s = string_of_int @@ get_random_num () in
+  add_to_tbl s tbl
+
 let get_from_tbl str tbl =
   match get_bind tbl str with
   | Some a -> a
@@ -52,7 +57,31 @@ let add_alias_to_tbl str1 str2 tbl =
   let id, _ = get_from_tbl str2 tbl in
   (id, add_bind tbl str1 id)
 
-type kirexpr =
+type constructor =
+  (* constr number *)
+  | BindCtor of int
+  (* len of tuple *)
+  | BindTup of int
+  (* match int *)
+  | BindInt of int
+  (* match variable *)
+  | BindVar of int
+[@@deriving show { with_path = false }]
+
+type case = {
+  constr : constructor;
+  arg : kirval;
+  kid : matchtree;
+}
+[@@deriving show { with_path = false }]
+
+and matchtree =
+  | Success of kirexpr
+  | Failure
+  | Switch of kirval * case list * matchtree option
+[@@deriving show { with_path = false }]
+
+and kirexpr =
   | Val of kirtype * kirval
   | Int of string
   | Float of string
@@ -65,14 +94,7 @@ type kirexpr =
   | Lam of kirtype * kirval * kirexpr
   | Let of kirtype * kirval * kirexpr * kirexpr
   | IfElse of kirtype * kirexpr * kirexpr * kirexpr
-  | SwitchConstr of kirtype * kirexpr * (matchbind * kirexpr) list
-[@@deriving show { with_path = false }]
-
-and matchbind =
-  (* arity * constr number * bindto *)
-  | BindN of int * int * kirval list
-  (* arity * bindto *)
-  | BindTup of int * kirval list
+  | SwitchConstr of kirtype * kirexpr * matchtree
 [@@deriving show { with_path = false }]
 
 type kirtop =
@@ -99,3 +121,4 @@ let rec kirexpr_typ k =
   | Lam (t, _, _) -> t
   | Let (t, _, _, _) -> t
   | IfElse (t, _, _, _) -> t
+  | SwitchConstr (t, _, _) -> t
