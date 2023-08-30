@@ -10,7 +10,7 @@ Consider the below, for the moment, a wishlist for what this language will hopef
 
 ## What is khasm?
 
-Khasm is an experimental lazy programming language based on the System-F type system, with the goal of being rather polymorphic, and rather fast, utilising memoization.
+Khasm is an experimental programming language based on the System-F type system, with the goal of being rather polymorphic, and rather fast.
 
 ### The System-F type system
 
@@ -37,10 +37,10 @@ Khasm, unlike OCaml, does not have toplevel execution, so the `main` function is
 
 ## Goals:
 
-- Builtin memoization to allow for writing fast code without needing complex hand optimisation
 - Builtin proofing of typeclasses to allow for a seamlessly correct experience
 - A large standard library, to allow for easy usage
-- Uniqueness types, to correctly model IO and similar in the lazy context of khasm.
+- Linear types for resources
+- Uniqueness types for concurrent/multithreaded programming
 - The full power of the ML module and System-F type systems
 
 ## TODOs
