@@ -47,6 +47,7 @@ jobs:
         with:
           ocaml-compiler: 5.x.x
       - run: opam install . --deps-only
+      - run: opam install odoc
       - run: opam exec -- dune build @doc
       - run: mkdir docs/ocaml
       - run: cp -r _build/default/_doc/_html/ docs/ocaml
