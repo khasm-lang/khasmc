@@ -6,8 +6,8 @@ type List a =
 
 let rec map f x : forall a b, (a -> b) -> List a -> List b =
     match x with
-    | Nil        => Nil
-    | Cons x Nil => Cons (f x) Nil
+    | 'Nil        => Nil
+    | Cons x 'Nil => Cons (f x) Nil
     | Cons x y    => Cons (f x) (map f y)
     end
     

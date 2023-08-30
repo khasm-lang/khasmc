@@ -1,3 +1,5 @@
+(** The main process of compilation *)
+
 open Args
 
 let rec normalise files =
@@ -20,8 +22,8 @@ let compile names asts args =
 
   let asts' =
     asts
-    (*parsing puts them in reverse order,
-            so fix that*)
+    (* parsing puts them in reverse order,
+            so fix that *)
     |> List.rev
     |> List.map Complexity.init_program
     |> List.map2 Modules.wrap_in (List.rev names)
@@ -51,7 +53,7 @@ let compile names asts args =
   else
     ();
 
-  let khagm = kir' |> Mtb.mtb in
+  let khagm = kir' |> Translatemtb.mtb in
   if args.dump_ast4 then
     print_endline (Khagm.show_khagm khagm)
   else

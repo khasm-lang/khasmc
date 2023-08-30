@@ -565,15 +565,8 @@ and infer_match ctx main pats =
           * this should be a fairly trivial fold over unification.
   *)
   let main_typ = infer ctx main in
-  let throw_t ctx id typ =
-    match typ with
-    | None -> (
-        try
-          match (lookup_constr ctx id).typ with
-          | Ok t -> t
-          | Error () -> raise @@ Impossible "Error(())"
-        with _ -> raise @@ Impossible "MPId no type")
-    | Some x -> x
+  let throw_t _ctx _id typ =
+    match typ with None -> raise @@ TypeErr "MPId no type" | Some x -> x
   in
   let unwrap t = t.args in
   let rec frees_type pat typ =

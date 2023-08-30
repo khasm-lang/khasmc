@@ -46,7 +46,7 @@ let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
 let INT = (digit)+
 
-let start = ['a'-'z' 'A'-'Z' '_' '\'']
+let start = ['a'-'z' 'A'-'Z' '_']
 
 let all = ['a'-'z' 'A'-'Z' '_' '\'' '0'-'9' ]
 
@@ -57,6 +57,7 @@ let INTIDENT = '`' start all+
 
 let operator_chars = ['$'  '&'  '@'  '+'  '*'  '-'  '='  '>'  '<'  '?'  ':'  '!'  '.'  '%'  '~'  '|'  '/'  '['  ']'  '~' '^']
 
+let tick = '\''
 
 let bang_op = '!' operator_chars*
 let tilde_op = '~' operator_chars*
@@ -118,6 +119,7 @@ rule token = parse
 	| pip_op {incr_by lexbuf; PIP_OP (Lexing.lexeme lexbuf)}
 	| and_op {incr_by lexbuf; AND_OP (Lexing.lexeme lexbuf)}
 	| dol_op {incr_by lexbuf; DOL_OP (Lexing.lexeme lexbuf)}
+	| tick {incr_by lexbuf; TICK}	
      | "if"	{incr_by lexbuf; IF}
      | "of"	{incr_by lexbuf; OF}
      | "then"   {incr_by lexbuf; THEN}

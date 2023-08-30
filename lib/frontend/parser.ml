@@ -48,6 +48,7 @@ type token =
   | FUN
   | TFUN
   | END
+  | TICK
   | BANG_OP of string
   | TILDE_OP of string
   | POW_OP of string
@@ -407,6 +408,10 @@ and parse_match_pattern_tup state =
 
 and parse_match_list state =
   match peek state 1 with
+  | TICK ->
+      toss state;
+      let id = get_ident state in
+      MPApp (id, []) :: parse_match_list state
   | T_IDENT t ->
       toss state;
       MPId t :: parse_match_list state
@@ -424,6 +429,9 @@ and parse_match_list state =
 
 and parse_match_pattern state =
   match pop state with
+  | TICK ->
+      let t = get_ident state in
+      MPApp (t, [])
   | T_IDENT t -> (
       match parse_match_list state with [] -> MPId t | xs -> MPApp (t, xs))
   | LPAREN -> (
