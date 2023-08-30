@@ -54,10 +54,10 @@ jobs:
       - name: Build with mdBook
         working-directory: docs/
         run: |
-          ls -lah
-          pwd
-          ls -lah mdbin
-          mdbin/mdbook build
+          ls -lah ../
+          pwd ../
+          ls -lah ../mdbin
+          ../mdbin/mdbook build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
