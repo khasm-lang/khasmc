@@ -42,6 +42,14 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
+      - name: Use OCaml
+        uses: ocaml/setup-ocaml@v2
+	with:
+	  ocaml-compiler: 5.x.x
+      - run: opam install . --deps-only
+      - run: opam exec -- dune build @doc
+      - run: mkdir docs/ocaml
+      - run: cp -r _build/default/_doc/_html/ docs/ocaml
       - name: Build with mdBook
         working-directory: docs/
         run: mdbook build

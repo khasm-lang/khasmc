@@ -1,7 +1,8 @@
 open Ast
 open Exp
+
 open ListHelpers
-(* Elimintates modules from a list of programs, reducing them to a
+(** Elimintates modules from a list of programs, reducing them to a
    flat file structure with fully resolved names *)
 
 type local_ctx = { locals : string list }
@@ -211,7 +212,7 @@ let rec elim_base mctx lctx i k : kexpr =
 and elim_pat mctx lctx p =
   match p with
   | MPInt _ -> p
-  | MPId t -> ( try MPId (get_full_id_mod mctx [] t) with _ -> p)
+  | MPId _t -> p
   | MPApp (t, p) ->
       MPApp (get_full_id_mod mctx [] t, List.map (elim_pat mctx lctx) p)
   | MPTup t -> MPTup (List.map (elim_pat mctx lctx) t)
