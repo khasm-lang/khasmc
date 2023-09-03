@@ -24,78 +24,115 @@ let rec fold_tup f s l =
       let c, d = f b x in
       (c :: a, d)
 
-module MatchMap = Map.Make (String)
-
-let most_common tbl p =
-  match p with
-  | [] -> ([], [])
-  | _ ->
-      let empty = MatchMap.empty in
-      let rec helper m x =
-        match fst x with
-        | Ast.MPInt _ -> m
-        | Ast.MPId t ->
-            if Kir.is_constr tbl t then
-              match MatchMap.find_opt t m with
-              | None -> MatchMap.add t 1 m
-              | Some n -> MatchMap.add t (n + 1) m
-            else
-              m
-        | Ast.MPApp (t, l) ->
-            if Kir.is_constr tbl t then
-              match MatchMap.find_opt t m with
-              | None -> MatchMap.add t 1 m
-              | Some n -> MatchMap.add t (n + 1) m
-            else
-              raise @@ Impossible "App not constr"
-        | Ast.MPTup _ -> m
-      in
-      let main = List.fold_left helper empty p in
-      let largest, _ =
-        MatchMap.fold
-          (fun key v i ->
-            if v > snd i then
-              (key, v)
-            else
-              i)
-          main ("IMPOSSIBLE", -1)
-      in
-      let tmp =
-        List.partition
-          (fun x ->
-            match fst x with
-            | Ast.MPInt _ -> false
-            | Ast.MPId _ -> false
-            | Ast.MPApp (a, _) -> a = largest
-            | Ast.MPTup _ -> false)
-          p
-      in
-      if fst tmp = [] then
-        (List.hd p :: [], List.tl p)
-      else
-        tmp
-
-let rec compile_single tbl pat = todo "compile_single"
-
-and compile_match_h tbl pat e =
-  match pat with
-  | [] -> raise @@ Impossible "compile_match_h empty"
-  | [ x ] -> Kir.Switch (e, compile_single tbl x, None)
-  | x :: xs ->
-      let p = compile_single tbl x in
-      Kir.Switch (e, p, Some (compile_match_h tbl xs e))
-
-and match_compilation tbl pats expr =
-  let rec h p =
-    match most_common tbl p with [], [] -> [] | x, xs -> x :: h xs
+let most_common xs =
+  if xs = [] then
+    raise @@ NotFound "most_common empty";
+  let tbl =
+    let tbl' = Hashtbl.create 16 in
+    List.iter
+      (fun n ->
+        match Hashtbl.find_opt tbl' n with
+        | None -> Hashtbl.add tbl' n 0
+        | Some x -> Hashtbl.add tbl' n (x + 1))
+      xs;
+    tbl'
   in
-  let tmp = h pats in
-  let tvar, tbl = Kir.new_var tbl in
-  let pat' = compile_match_h tbl tmp tvar in
-  let t = Ast.TSTuple [] in
-  let swtch = Kir.SwitchConstr (t, Kir.Val (t, tvar), pat') in
-  let l : Kir.kirexpr = Kir.Let (Kir.kirexpr_typ expr, tvar, expr, swtch) in
-  l
+  Hashtbl.fold
+    (fun k v curr ->
+      if v > match Hashtbl.find_opt tbl curr with None -> -1 | Some n -> n
+      then
+        k
+      else
+        curr)
+    tbl (List.hd xs)
+
+let more_interesting e1 e2 =
+  let open Ast in
+  match (e1, e2) with
+  | _, MPTup _ -> e2
+  | _, MPApp (_, _) -> e2
+  | _, MPInt _ -> e2
+  | _, _ -> e1
+
+let rec frees e1 =
+  let open Ast in
+  match e1 with
+  | MPId a -> [ a ]
+  | MPApp (_, l) -> List.concat_map frees l
+  | MPTup l -> List.concat_map frees l
+  | MPWild -> []
+  | MPInt _ -> []
+
+let rec most_interesting curr ps =
+  match ps with
+  | [] -> impossible "empty pats most interesting"
+  | [ x ] -> more_interesting curr x
+  | x :: xs -> more_interesting (most_interesting curr xs) x
+
+let rec most_interesting_i curr ps =
+  let t = most_interesting curr ps in
+  let mb = ListHelpers.indexof ps t in
+  match mb with None -> (0, t) | Some x -> (x, t)
+
+let rec to_matrix _tbl expr pats =
+  let open Ast in
+  let ps = List.map fst pats in
+  let expr_column = List.map snd pats in
+  let input_row, pat_tbl = pat_to_matrix expr ps in
+  (input_row, pat_tbl, expr_column)
+
+and pat_to_matrix expr pats =
+  let open Ast in
+  match pats with
+  | [] -> impossible "empty pats"
+  | _ ->
+      let matrix =
+        List.map
+          (fun x ->
+            match x with
+            | MPApp (s, c) ->
+                if c = [] then
+                  MPApp (s, [ MPWild ]) :: []
+                else
+                  MPApp (s, c) :: []
+            | MPId i -> MPId i :: []
+            | MPInt i -> MPInt i :: []
+            | MPTup t -> t
+            | MPWild -> MPWild :: [])
+          pats
+      in
+      let mi = most_interesting MPWild pats in
+      let expr =
+        match mi with
+        | MPWild | MPId _ | MPApp _ | MPInt _ -> [ expr ]
+        | MPTup t -> List.mapi (fun i _x -> Kir.TupAcc (TSTuple [], expr, i)) t
+      in
+      (expr, matrix)
+
+and partition most pats res = todo "partition"
+
+and subprogram tbl input pats result =
+  let open Ast in
+  let interestings = List.map (most_interesting_i MPWild) pats in
+  let mostid, most =
+    match interestings with
+    | [] -> impossible "nothing interesting"
+    | x :: _ -> x
+  in
+  print_endline (string_of_int mostid);
+  print_endline (show_matchpat most);
+  let pats' = List.map (fun x -> ListHelpers.make_head x mostid) pats in
+  let input = ListHelpers.make_head input mostid in
+  let (goods, goodouts), (bads, badouts) = partition most pats res in
+  todo "bad good?"
+
+and match_compilation tbl pats (expr : Kir.kirexpr) =
+  let open Ast in
+  let newvar, tbl = Kir.new_var tbl in
+  let newvar = Kir.Val (TSTuple [], newvar) in
+  let inp, pats, res = to_matrix tbl expr pats in
+  let tmp = subprogram tbl inp pats res in
+  todo "matchcomp"
 
 and ftm_base tbl base =
   match base with
@@ -153,7 +190,7 @@ and ftm_expr tbl expr =
       print_endline (Kir.show_kir_table tbl);
       let matchee = ftm_expr tbl expr in
       let patterns = match_compilation tbl i matchee in
-      patterns
+      todo "what goes here"
   | Ast.ModAccess (_, _, _) -> raise @@ Impossible "Modules in middleend"
 
 let rec ftm_toplevel table top =

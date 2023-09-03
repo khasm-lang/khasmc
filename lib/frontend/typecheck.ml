@@ -571,6 +571,7 @@ and infer_match ctx main pats =
   let unwrap t = t.args in
   let rec frees_type pat typ =
     match pat with
+    | MPWild -> []
     | MPInt _ -> []
     | MPId t -> [ (t, throw_t ctx t typ) ]
     | MPApp (p, t) ->
@@ -585,6 +586,7 @@ and infer_match ctx main pats =
   in
   let rec pat_to_type mctx pat =
     match pat with
+    | MPWild -> TSMeta (get_meta ())
     | MPInt _ -> TSBase "int"
     | MPId _ -> TSMeta (get_meta ())
     | MPApp (p, _f) ->
@@ -594,44 +596,19 @@ and infer_match ctx main pats =
           | Error () -> raise @@ Impossible "Error(()) adt_pattern typechecking"
           | Ok t -> t
         in
-        (*List.iter2
-          (fun should is -> ignore @@ unify (empty_unify_ctx ()) should is)
-          m.args
-          (List.map (pat_to_type mctx) f); *)
         t
     | MPTup t -> TSTuple (List.map (pat_to_type mctx) t)
   in
-
-  (*List.iter
-    (fun (p, _e) ->
-      let ty = pat_to_type ctx p in
-      let inst_main =
-        List.fold_left
-          (fun typ id ->
-            if not @@ occurs_ts id ty then
-              inst_meta typ id (TSMeta (get_meta ()))
-            else
-              typ)
-          main_typ
-          (List.map fst ctx.bound_foralls)
-      in
-      print_string(pshow_typesig inst_main);
-      print_string " & ";
-      print_endline (pshow_typesig ty);
-
-      ignore @@ unify (empty_unify_ctx ()) inst_main ty)
-    pats;*)
+  print_endline (pshow_typesig main_typ);
   let typs =
     List.map
       (fun (p, e) ->
         let ty = pat_to_type ctx p in
-        let frees = frees_type p None in
+        let frees = frees_type p (Some main_typ) in
         let ctx' =
           List.fold_left (fun c (x, y) -> assume_typ c x y) ctx frees
         in
         let inf = infer ctx' e in
-        print_endline "match inferred:";
-        print_endline (pshow_typesig inf);
         let bounds =
           match (ty, main_typ) with
           | TSApp (q, _), TSApp (w, _) -> List.map2 (fun x y -> (x, y)) q w
@@ -792,16 +769,6 @@ and check ctx tm tp =
             let fixed =
               List.fold_left (fun x (t1, t2) -> subs_bad x t2 t1) bd binds
             in
-            print_endline "binds:";
-            List.iter
-              (fun x ->
-                print_endline
-                  ((pshow_typesig @@ fst x) ^ " === " ^ pshow_typesig @@ snd x))
-              binds;
-            print_endline "fixed:";
-            print_endline (pshow_typesig fixed);
-            print_endline "new";
-            print_endline (pshow_typesig ty);
             ignore @@ unify (empty_unify_ctx ()) fixed ty)
           typs;
         Some inf

@@ -62,6 +62,7 @@ type kbase =
 [@@deriving show { with_path = false }]
 
 and matchpat =
+  | MPWild
   | MPInt of kident
   | MPId of kident
   | MPApp of kident * matchpat list

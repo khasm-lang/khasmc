@@ -57,28 +57,15 @@ let add_alias_to_tbl str1 str2 tbl =
   let id, _ = get_from_tbl str2 tbl in
   (id, add_bind tbl str1 id)
 
-type constructor =
-  (* constr number *)
+type case =
+  | Wildcard
+  | Bind of kirval
   | BindCtor of int
-  (* len of tuple *)
-  | BindTup of int
-  (* match int *)
-  | BindInt of int
-  (* match variable *)
-  | BindVar of int
-[@@deriving show { with_path = false }]
-
-type case = {
-  constr : constructor;
-  arg : kirval;
-  kid : matchtree;
-}
-[@@deriving show { with_path = false }]
 
 and matchtree =
   | Success of kirexpr
   | Failure
-  | Switch of kirval * case list * matchtree option
+  | Switch of kirexpr * case * matchtree * matchtree
 [@@deriving show { with_path = false }]
 
 and kirexpr =
@@ -91,6 +78,7 @@ and kirexpr =
   | Call of kirtype * kirexpr * kirexpr
   | Seq of kirtype * kirexpr * kirexpr
   | TupAcc of kirtype * kirexpr * int
+  | CTorAcc of kirtype * kirexpr * int
   | Lam of kirtype * kirval * kirexpr
   | Let of kirtype * kirval * kirexpr * kirexpr
   | IfElse of kirtype * kirexpr * kirexpr * kirexpr

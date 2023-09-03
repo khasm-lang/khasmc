@@ -4,15 +4,10 @@ type List a =
      | Nil
      | Cons a (List a)
 
-let rec map f x : forall a b, (a -> b) -> List a -> List b =
+let rec map x : forall a b, (List a, List b) -> List a =
     match x with
-    | 'Nil        => Nil
-    | Cons x 'Nil => Cons (f x) Nil
-    | Cons x y    => Cons (f x) (map f y)
+    | ('Nil, 'Nil) => Nil
     end
     
 let main x : () -> () =
-    let f = fun x : int => x + 1 in
-    let xs = Cons 1 (Cons 2 Nil) in
-    let t = map f xs in
     ()
