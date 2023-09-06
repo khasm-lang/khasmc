@@ -17,6 +17,8 @@ type khagmexpr =
   | Seq of khagmexpr * khagmexpr
   | Let of khagmid * khagmexpr * khagmexpr
   | IfElse of khagmexpr * khagmexpr * khagmexpr
+  | CheckConstr of int * khagmexpr
+  | Fail of string
 [@@deriving show { with_path = false }]
 
 type khagmtop =

@@ -60,9 +60,7 @@ let main_proc () =
       let res = compile names programs args in
       print_endline res;
       "Success"
-    with
-    | Lexer.EOF x -> "EOF:\n" ^ x
-    | TypeErr x -> x
+    with Lexer.EOF x -> "EOF:\n" ^ x
   in
   Debug.debug ("\nStatus: " ^ succ);
   print_endline

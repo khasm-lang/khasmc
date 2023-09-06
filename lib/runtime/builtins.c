@@ -133,7 +133,7 @@ KHASM_ENTRY(khasm_46_Stdlib_46_print_95_str, 1, kha_obj *b) {
   return make_tuple(0, NULL);
 }
 
-KHASM_ENTRY(khasm_46__45__1, 2, kha_obj*t, kha_obj*b) {
+KHASM_ENTRY(khasm_95_tuple_95_acc, 2, kha_obj*b, kha_obj*t) {
   if (t->tag != TUPLE) {
     fprintf(stderr, "CAN'T TUPACC NONTUP\n");
   }

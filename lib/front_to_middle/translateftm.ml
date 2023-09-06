@@ -1,5 +1,6 @@
 open Exp
 
+open Either
 (** Converts between the frontend IR and the middleend IR. *)
 
 let rec fold_tup_flat f s l =
@@ -24,115 +25,253 @@ let rec fold_tup f s l =
       let c, d = f b x in
       (c :: a, d)
 
-let most_common xs =
-  if xs = [] then
-    raise @@ NotFound "most_common empty";
-  let tbl =
-    let tbl' = Hashtbl.create 16 in
-    List.iter
-      (fun n ->
-        match Hashtbl.find_opt tbl' n with
-        | None -> Hashtbl.add tbl' n 0
-        | Some x -> Hashtbl.add tbl' n (x + 1))
-      xs;
-    tbl'
+type patmatrix = {
+  inputs : Kir.kirexpr list;
+  body : Ast.matchpat list list;
+  outputs : (Ast.kexpr, Kir.kirexpr) result list;
+}
+[@@deriving show { with_path = false }]
+
+let print_matrix m =
+  List.iter
+    (fun y ->
+      List.iter
+        (fun x ->
+          print_string (Ast.show_matchpat x);
+          print_string ", ")
+        y;
+      print_endline "")
+    m
+
+let rec crashme () = crashme ()
+
+and gen_first_patmatrix pats exprs tmpvar =
+  let open Ast in
+  let body =
+    List.map
+      (fun pat ->
+        match pat with
+        | MPApp (i, l) ->
+            if List.length l >= 1 then
+              [ pat ]
+            else
+              [ MPApp (i, [ MPWild ]) ]
+        | MPId _ -> [ pat ]
+        | MPInt _ -> [ pat ]
+        | MPWild -> [ pat ]
+        | MPTup t -> t)
+      pats
   in
-  Hashtbl.fold
-    (fun k v curr ->
-      if v > match Hashtbl.find_opt tbl curr with None -> -1 | Some n -> n
-      then
-        k
-      else
-        curr)
-    tbl (List.hd xs)
-
-let more_interesting e1 e2 =
-  let open Ast in
-  match (e1, e2) with
-  | _, MPTup _ -> e2
-  | _, MPApp (_, _) -> e2
-  | _, MPInt _ -> e2
-  | _, _ -> e1
-
-let rec frees e1 =
-  let open Ast in
-  match e1 with
-  | MPId a -> [ a ]
-  | MPApp (_, l) -> List.concat_map frees l
-  | MPTup l -> List.concat_map frees l
-  | MPWild -> []
-  | MPInt _ -> []
-
-let rec most_interesting curr ps =
-  match ps with
-  | [] -> impossible "empty pats most interesting"
-  | [ x ] -> more_interesting curr x
-  | x :: xs -> more_interesting (most_interesting curr xs) x
-
-let rec most_interesting_i curr ps =
-  let t = most_interesting curr ps in
-  let mb = ListHelpers.indexof ps t in
-  match mb with None -> (0, t) | Some x -> (x, t)
-
-let rec to_matrix _tbl expr pats =
-  let open Ast in
-  let ps = List.map fst pats in
-  let expr_column = List.map snd pats in
-  let input_row, pat_tbl = pat_to_matrix expr ps in
-  (input_row, pat_tbl, expr_column)
-
-and pat_to_matrix expr pats =
-  let open Ast in
-  match pats with
-  | [] -> impossible "empty pats"
-  | _ ->
-      let matrix =
-        List.map
-          (fun x ->
-            match x with
-            | MPApp (s, c) ->
-                if c = [] then
-                  MPApp (s, [ MPWild ]) :: []
-                else
-                  MPApp (s, c) :: []
-            | MPId i -> MPId i :: []
-            | MPInt i -> MPInt i :: []
-            | MPTup t -> t
-            | MPWild -> MPWild :: [])
-          pats
+  let goods = List.filter (fun x -> List.length x > 1) body in
+  match goods with
+  | [] ->
+      (* no tuples at all, v. cool *)
+      { inputs = [ tmpvar ]; body; outputs = exprs }
+  | x :: _ ->
+      let rec goh e n =
+        if n = -1 then
+          []
+        else
+          Kir.TupAcc (TSTuple [], tmpvar, n) :: goh e (n - 1)
       in
-      let mi = most_interesting MPWild pats in
-      let expr =
-        match mi with
-        | MPWild | MPId _ | MPApp _ | MPInt _ -> [ expr ]
-        | MPTup t -> List.mapi (fun i _x -> Kir.TupAcc (TSTuple [], expr, i)) t
-      in
-      (expr, matrix)
+      let go e n = List.rev (goh e (n - 1)) in
+      let inputs = go tmpvar (List.length x) in
+      { inputs; body; outputs = exprs }
 
-and partition most pats res = todo "partition"
-
-and subprogram tbl input pats result =
+and gen_accesses_h l e n =
   let open Ast in
-  let interestings = List.map (most_interesting_i MPWild) pats in
-  let mostid, most =
-    match interestings with
-    | [] -> impossible "nothing interesting"
-    | x :: _ -> x
+  match l with
+  | [] -> []
+  | _ :: xs -> Kir.TupAcc (TSTuple [], e, n) :: gen_accesses_h xs e (n - 1)
+
+and gen_accesses l e = List.rev @@ gen_accesses_h l e (List.length l - 1)
+
+and find_useful_h row =
+  let rec go row acc =
+    let open Ast in
+    match row with
+    | [] -> None
+    | x :: xs -> (
+        match x with MPApp (_, _) -> Some (acc, x) | _ -> go xs (acc + 1))
   in
-  print_endline (string_of_int mostid);
-  print_endline (show_matchpat most);
-  let pats' = List.map (fun x -> ListHelpers.make_head x mostid) pats in
-  let input = ListHelpers.make_head input mostid in
-  let (goods, goodouts), (bads, badouts) = partition most pats res in
-  todo "bad good?"
+  go row 0
 
-and match_compilation tbl pats (expr : Kir.kirexpr) =
+and find_useful row inputs = (row, inputs, 0)
+
+and find_useful_matrix matrix =
+  match matrix with
+  | [] -> None
+  | x :: xs -> (
+      match find_useful_h x with
+      | Some n -> Some n
+      | None -> find_useful_matrix xs)
+
+and push_bind_into_expr tbl ident kirexpr kexpr =
+  match kexpr with
+  | Ok t ->
+      let gen = ftm_expr tbl t in
+      let id, _ = Kir.get_from_tbl ident tbl in
+      let l : Kir.kirexpr = Kir.Let (Ast.TSTuple [], id, kirexpr, gen) in
+      l
+  | Error t ->
+      let id, _ = Kir.get_from_tbl ident tbl in
+      let l : Kir.kirexpr = Kir.Let (Ast.TSTuple [], id, kirexpr, t) in
+      l
+
+and split_on head body outputs =
   let open Ast in
-  let newvar, tbl = Kir.new_var tbl in
-  let newvar = Kir.Val (TSTuple [], newvar) in
-  let inp, pats, res = to_matrix tbl expr pats in
-  let tmp = subprogram tbl inp pats res in
-  todo "matchcomp"
+  let open ListHelpers in
+  let comp i (pat, expr) =
+    match List.hd pat with
+    | MPApp (q, _) ->
+        if i = q then
+          True
+        else
+          False
+    | _ -> Both
+  in
+  match head with
+  | MPApp (i, _) ->
+      let left, right =
+        List.combine body outputs |> partition_three (fun x -> comp i x)
+      in
+      let l, le = List.split left in
+      let r, re = List.split right in
+      ((l, le), (r, re))
+  | _ -> (
+      match (body, outputs) with
+      | [], [] -> todo "empty body and outputs?"
+      | x :: xs, y :: ys -> (([ x ], [ y ]), (xs, ys))
+      | _, _ -> impossible "not-equal body and outputs length")
+
+and split_patmatrix ?(again = false) tbl pat =
+  let open Ast in
+  try
+    match pat.body with
+    | [] -> todo "empty body?"
+    | [ x ] ->
+        let tbl =
+          if not again then
+            let frees = List.concat_map Ast.get_pat_frees x in
+            List.fold_left (fun acc x -> snd (Kir.add_to_tbl x acc)) tbl frees
+          else
+            tbl
+        in
+        begin
+          let first :: rest, inputs, _index = find_useful x pat.inputs in
+          match first with
+          | MPApp (id, bd) ->
+              let case =
+                Kir.BindCtor
+                  (let (Some (_, _, a)) = Kir.get_constr tbl id in
+                   a)
+              in
+              let newins = gen_accesses bd (List.hd inputs) @ List.tl inputs in
+              let new' =
+                { outputs = pat.outputs; body = [ bd @ rest ]; inputs = newins }
+              in
+              (tbl, Right (Some (case, List.hd inputs), new'))
+          | MPTup bd ->
+              let case = Kir.BindTuple in
+              let newins = gen_accesses bd (List.hd inputs) @ List.tl inputs in
+              let new' =
+                { outputs = pat.outputs; body = [ bd @ rest ]; inputs = newins }
+              in
+              (tbl, Right (Some (case, List.hd inputs), new'))
+          | MPId i ->
+              let (curr :: inputrest) = inputs in
+              let (expr :: exprrest) = pat.outputs in
+              let expr = push_bind_into_expr tbl i curr expr in
+              let new' =
+                {
+                  outputs = Error expr :: exprrest;
+                  body = [ MPWild :: rest ];
+                  inputs = curr :: inputrest;
+                }
+              in
+              (tbl, Right (None, new'))
+          | MPInt _t -> todo "MPInt"
+          | MPWild ->
+              let (curr :: inputrest) = inputs in
+              let new' =
+                { outputs = pat.outputs; body = [ rest ]; inputs = inputrest }
+              in
+              (tbl, Right (Some (Kir.Wildcard, curr), new'))
+        end
+        [@warning "-8"]
+    | _ :: _ -> (
+        match find_useful_matrix pat.body with
+        | None -> todo "no useful stuff"
+        | Some (index, useful) ->
+            let inputs = ListHelpers.make_head pat.inputs index in
+            let body =
+              List.map (fun x -> ListHelpers.make_head x index) pat.body
+            in
+            let (left, leftouts), (right, rightouts) =
+              split_on useful body pat.outputs
+            in
+            let left'pat = { inputs; body = left; outputs = leftouts } in
+            let right'pat = { inputs; body = right; outputs = rightouts } in
+            let case =
+              match useful with
+              | MPApp (i, _) ->
+                  Kir.BindCtor
+                    (let[@warning "-8"] (Some (_, _, a)) =
+                       Kir.get_constr tbl i
+                     in
+                     a)
+              | MPTup _ -> Kir.BindTuple
+              | _ -> todo "other stuff here?"
+            in
+            ( tbl,
+              Left
+                ( Some (case, List.hd (ListHelpers.make_head pat.inputs index)),
+                  left'pat,
+                  right'pat ) ))
+  with Match_failure (a, b, c) ->
+    impossible @@ "Match failure in pattern matching compl split" ^ a ^ " "
+    ^ string_of_int b ^ " " ^ string_of_int c
+
+and subproblem ?(aroundagain = false) tbl patmatrix =
+  let open Ast in
+  match split_patmatrix tbl patmatrix ~again:aroundagain with
+  | tbl, Left (caseandexpr, one, two) -> (
+      match caseandexpr with
+      | None -> todo "caseandexpr blank on return from multi?"
+      | Some (case, expr) ->
+          let left = subproblem tbl one ~aroundagain in
+          let right = subproblem tbl two ~aroundagain in
+          Kir.Switch (expr, case, left, right))
+  | tbl, Right (caseandexpr, one) -> (
+      match one.body with
+      | [] :: _ :: _ | [] -> impossible "empty body"
+      | [ [] ] -> (
+          match one.outputs with
+          | [ x ] -> (
+              match x with
+              | Ok t -> Kir.Success (ftm_expr tbl t)
+              | Error t -> Kir.Success t)
+          | _ :: _ | [] -> impossible "bad output?")
+      | (_ :: _) :: _ -> (
+          let sub = subproblem tbl one ~aroundagain:true in
+          match caseandexpr with
+          | None -> sub
+          | Some (case, expr) -> Kir.Switch (expr, case, sub, Kir.Failure)))
+
+and match_compilation tbl (pats : (Ast.matchpat * Ast.kexpr) list)
+    (matchee : Kir.kirexpr) =
+  let pats, exprs = List.split pats in
+  let tid, tbl = Kir.new_var tbl in
+  let tmpvar = Kir.Val (TSTuple [], tid) in
+  let firstpat =
+    gen_first_patmatrix pats (List.map (fun x -> Ok x) exprs) tmpvar
+  in
+  let result = subproblem tbl firstpat in
+  let swch =
+    Kir.SwitchConstr (Ast.TSTuple [], Kir.Val (Ast.TSTuple [], tid), result)
+  in
+  let l : Kir.kirexpr = Kir.Let (Ast.TSTuple [], tid, matchee, swch) in
+  l
 
 and ftm_base tbl base =
   match base with
@@ -187,10 +326,9 @@ and ftm_expr tbl expr =
       let e' = ftm_expr tbl expr in
       Kir.TupAcc (typ, e', i)
   | Ast.Match (id, expr, i) ->
-      print_endline (Kir.show_kir_table tbl);
       let matchee = ftm_expr tbl expr in
-      let patterns = match_compilation tbl i matchee in
-      todo "what goes here"
+      let m = match_compilation tbl i matchee in
+      m
   | Ast.ModAccess (_, _, _) -> raise @@ Impossible "Modules in middleend"
 
 let rec ftm_toplevel table top =

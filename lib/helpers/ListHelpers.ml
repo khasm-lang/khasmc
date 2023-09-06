@@ -58,3 +58,37 @@ let rec indexof xs i =
       else
         let* x = indexof xs i in
         Some (x + 1)
+
+let rec double_partition f a b =
+  match (a, b) with
+  | [], [] -> (([], []), ([], []))
+  | x :: xs, y :: ys ->
+      let (fa, fb), (ga, gb) = double_partition f xs ys in
+      if f x then
+        ((x :: fa, fb), (y :: ga, gb))
+      else
+        ((fa, x :: fb), (ga, y :: gb))
+  | _ -> raise @@ NotFound "double_partition uneq lists"
+
+type threestate =
+  | True
+  | False
+  | Both
+
+let partition_three p l =
+  let rec part yes no = function
+    | [] -> (List.rev yes, List.rev no)
+    | x :: l -> (
+        match p x with
+        | True -> part (x :: yes) no l
+        | False -> part yes (x :: no) l
+        | Both -> part (x :: yes) (x :: no) l)
+  in
+  part [] [] l
+
+let[@tail_mod_cons] rec map f x =
+  match x with
+  | [] -> []
+  | x :: xs ->
+      let y = f x in
+      y :: map f xs

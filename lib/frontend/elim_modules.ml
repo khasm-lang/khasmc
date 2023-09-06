@@ -216,6 +216,7 @@ and elim_pat mctx lctx p =
   | MPApp (t, p) ->
       MPApp (get_full_id_mod mctx [] t, List.map (elim_pat mctx lctx) p)
   | MPTup t -> MPTup (List.map (elim_pat mctx lctx) t)
+  | MPWild -> MPWild
 
 and elim_pats mctx lctx pats =
   List.map
@@ -295,11 +296,23 @@ let rec elim_toplevel ctx t =
         List.fold_left (fun ctx pat -> add_ident ctx pat.head) ctx pats
       in
       let newctx = add_typ ctx' id in
+      let rec conv_to_metas args ts =
+        match ts with
+        | TSBase a ->
+            if List.mem a args then
+              TSMeta a
+            else
+              ts
+        | TSApp (a', b) -> TSApp (List.map (conv_to_metas args) a', b)
+        | TSForall (a, b) -> TSForall (a, conv_to_metas args b)
+        | TSMap (a, b) -> TSMap (conv_to_metas args a, conv_to_metas args b)
+        | TSTuple t -> TSTuple (List.map (conv_to_metas args) t)
+        | TSMeta _a -> ts
+      in
       let mod_pats =
         List.map
           (fun x ->
             {
-              x with
               head = get_full_id_mod newctx [] x.head;
               typ =
                 (match x.typ with

@@ -116,20 +116,7 @@ let rec get_pat_frees pat =
   | MPApp (_, t) | MPTup t -> List.concat_map get_pat_frees t
   | MPId t -> [ t ]
   | MPInt _ -> []
-
-let rec pat_to_expr pat =
-  match pat with
-  | MPId t -> Base (mkinfo (), Ident (mkinfo (), t))
-  | MPInt t -> Base (mkinfo (), Int t)
-  | MPTup t -> Base (mkinfo (), Tuple (List.map pat_to_expr t))
-  | MPApp (q, w) ->
-      let rec go a b =
-        match a with
-        | [] -> b
-        | [ x ] -> FCall (mkinfo (), b, x)
-        | x :: xs -> FCall (mkinfo (), go xs b, x)
-      in
-      go (List.map pat_to_expr w) (Base (mkinfo (), Ident (mkinfo (), q)))
+  | MPWild -> []
 
 (* The following two are basically just α-renaming *)
 let base_subs i b x y =

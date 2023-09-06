@@ -110,7 +110,7 @@ let rec validate_typ types ty =
   | TSBase x -> (
       match typeprim_is_basic types x with
       | true -> ty
-      | false -> raise @@ TypeErr ("Cannot find type " ^ x))
+      | false -> raise @@ TypeErr ("cannot validate: " ^ x))
   | TSMeta _ -> ty
   | TSApp (x, y) ->
       let n = typeprim_len types y in
@@ -599,11 +599,12 @@ and infer_match ctx main pats =
         t
     | MPTup t -> TSTuple (List.map (pat_to_type mctx) t)
   in
-  print_endline (pshow_typesig main_typ);
+  print_endline @@ "main_type: " ^ pshow_typesig main_typ;
   let typs =
     List.map
       (fun (p, e) ->
         let ty = pat_to_type ctx p in
+        print_endline @@ "got_type: " ^ pshow_typesig ty;
         let frees = frees_type p (Some main_typ) in
         let ctx' =
           List.fold_left (fun c (x, y) -> assume_typ c x y) ctx frees
@@ -919,13 +920,35 @@ let rec typecheck_toplevel_list ctx tl =
                               ^ " does not have valid return type (Must be \
                                  application to " ^ id ^ ", is instead "
                               ^ pshow_typesig x ^ ")"));
-                      let ts =
-                        wrap_foralls args @@ go pat.args t |> elim_unused
+                      let ts = go pat.args t in
+                      let ts' =
+                        List.fold_left
+                          (fun acc x -> subs acc x (TSMeta (get_meta ())))
+                          ts args
+                        |> inst_all
                       in
-                      assume_typ ctx pat.head ts)
+                      print_endline "NEWER, BETTER:";
+                      print_endline (pshow_typesig @@ ts');
+                      assume_typ ctx pat.head ts')
                 ctx pats
             in
-            let ctx' = add_constrs ctx' pats in
+            let pats' =
+              List.map
+                (fun x ->
+                  {
+                    head = x.head;
+                    args =
+                      List.map
+                        (fun y ->
+                          List.fold_left
+                            (fun acc x -> subs acc x (TSMeta (get_meta ())))
+                            y args)
+                        x.args;
+                    typ = x.typ;
+                  })
+                pats
+            in
+            let ctx' = add_constrs ctx' pats' in
             if List.length args = 0 then
               add_bound_typ ctx' id
             else

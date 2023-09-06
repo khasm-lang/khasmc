@@ -130,10 +130,18 @@ and codegen_func code tbl =
         add_to_emi (";\n IFELSETEMP = ref(" ^ t2 ^ ");");
       add_to_emi "}\n";
       "IFELSETEMP"
+  | CheckConstr (id, expr) ->
+      let v = codegen_func expr tbl in
+      let content = v ^ "->data.i == " ^ string_of_int id in
+      let full = "make_int(" ^ content ^ ")" in
+      full
+  | Fail s ->
+      add_to_emi @@ {|printf("FAILURE: |} ^ s ^ {|, ABORTING\n");exit(1);|};
+      "NULL"
 
 let ensure_notempty args str = match args with [] -> "/*EMPTY*/" | _ -> str
 
-let rec codegen code tbl =
+let[@tail_mod_cons] rec codegen code tbl =
   match code with
   | [] -> ""
   | x :: xs ->
