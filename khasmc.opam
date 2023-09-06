@@ -10,8 +10,9 @@ depends: [
   "dune" {>= "3.6"}
   "fmt"
   "ppx_deriving"
-  "ppx_inline_test"
   "batteries"
+  "menhir"
+  "ppx_deriving.show"
   "fileutils"
   "odoc" {with-doc}
 ]

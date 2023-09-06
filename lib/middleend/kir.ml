@@ -26,7 +26,9 @@ let is_constr tbl nm =
   | _ :: _ -> true
   | [] -> false
 
-let empty_transtable () = { binds = [ (-1, ""); (-2, "()") ]; constrs = [] }
+let empty_transtable () =
+  { binds = [ (-1, ""); (-2, "khasm_tuple_acc") ]; constrs = [] }
+
 let rint = ref 1
 
 let get_random_num () =
@@ -59,8 +61,8 @@ let add_alias_to_tbl str1 str2 tbl =
 
 type case =
   | Wildcard
-  | Bind of kirval
   | BindCtor of int
+  | BindTuple
 
 and matchtree =
   | Success of kirexpr
@@ -78,7 +80,6 @@ and kirexpr =
   | Call of kirtype * kirexpr * kirexpr
   | Seq of kirtype * kirexpr * kirexpr
   | TupAcc of kirtype * kirexpr * int
-  | CTorAcc of kirtype * kirexpr * int
   | Lam of kirtype * kirval * kirexpr
   | Let of kirtype * kirval * kirexpr * kirexpr
   | IfElse of kirtype * kirexpr * kirexpr * kirexpr

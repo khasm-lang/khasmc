@@ -8,7 +8,20 @@ let kv_to_kg = kirval_to_khagmid
 let tuple_access i =
   Khagm.Call (Khagm.Val (-2), Khagm.Unboxed (Khagm.Int' (string_of_int i)))
 
-let rec mtb_expr exp =
+let rec mtb_swchtree exp =
+  match exp with
+  | Kir.Failure -> Khagm.Fail "Match failure"
+  | Kir.Success x -> mtb_expr x
+  | Kir.Switch (e, case, tree1, tree2) -> (
+      match case with
+      | Kir.Wildcard | Kir.BindTuple -> mtb_swchtree tree1
+      | Kir.BindCtor i ->
+          Khagm.IfElse
+            ( Khagm.CheckConstr (i, mtb_expr e),
+              mtb_swchtree tree1,
+              mtb_swchtree tree2 ))
+
+and mtb_expr exp =
   match exp with
   | Kir.Val (_, v) -> Khagm.Val (kv_to_kg v)
   | Int s -> Khagm.Unboxed (Khagm.Int' s)
@@ -23,6 +36,7 @@ let rec mtb_expr exp =
   | Let (_, v, e1, e2) -> Khagm.Let (kv_to_kg v, mtb_expr e1, mtb_expr e2)
   | IfElse (_, e1, e2, e3) ->
       Khagm.IfElse (mtb_expr e1, mtb_expr e2, mtb_expr e3)
+  | SwitchConstr (_, _var, tree) -> mtb_swchtree tree
 
 let rec get_from_lams exp =
   match exp with
@@ -40,7 +54,24 @@ let mtb_top code =
   | Bind (a, b) -> Khagm.Let (a, [], Khagm.Val b)
   | Noop -> Khagm.Noop
 
+let rec make_constr tbl (name, arity, _id) =
+  let make_tup arity =
+    let rec args n =
+      if n = -1000 then
+        []
+      else
+        n :: args (n + 1)
+    in
+    let a = args (-arity - 1000) in
+    let b = List.map (fun x -> Khagm.Val x) a in
+    (a, Khagm.Tuple b)
+  in
+  let args, body = make_tup arity in
+  Khagm.Let (fst @@ Kir.get_from_tbl name tbl, args, body)
+
 let mtb kp =
-  let typs, code = kp in
-  let code' = List.map mtb_top code in
-  (code', typs)
+  let (typs : Kir.kir_table), code = kp in
+  let constrs = typs.constrs in
+  let ctors = ListHelpers.map (make_constr typs) constrs in
+  let code' = ListHelpers.map mtb_top code in
+  (ctors @ code', typs)

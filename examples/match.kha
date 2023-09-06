@@ -4,10 +4,11 @@ type List a =
      | Nil
      | Cons a (List a)
 
-let rec map x : forall a b, (List a, List b) -> List a =
+let rec map f x : forall q w, (q -> w) -> List q -> List w =
     match x with
-    | ('Nil, 'Nil) => Nil
+    | 'Nil => Nil
+    | Cons q w => Cons (f q) (map f w)
     end
     
-let main x : () -> () =
+let main q : () -> () =
     ()

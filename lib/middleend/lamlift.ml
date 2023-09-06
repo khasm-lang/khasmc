@@ -37,6 +37,18 @@ and gen_fcall ctx'frees inner =
       let t = gen_fcall xs inner in
       Call (kirexpr_typ t, t, Val (ts, v))
 
+and llift_swchtree ctx dolift expr =
+  match expr with
+  | Failure -> ([], Failure)
+  | Success e ->
+      let a, b = llift_expr ctx dolift e in
+      (a, Success b)
+  | Switch (e, case, t1, t2) ->
+      let top1, e' = llift_expr ctx dolift e in
+      let top2, t1' = llift_swchtree ctx dolift t1 in
+      let top3, t2' = llift_swchtree ctx dolift t2 in
+      (top1 @ top2 @ top3, Switch (e', case, t1', t2'))
+
 and llift_expr ctx dolift expr =
   match expr with
   | Val (_, _) | Int _ | Float _ | Str _ | Bool _ -> ([], expr)
@@ -79,6 +91,10 @@ and llift_expr ctx dolift expr =
       let c, d = llift_expr ctx true e2 in
       let e, f = llift_expr ctx true e3 in
       (a @ c @ e, IfElse (ts, b, d, f))
+  | SwitchConstr (t, e, tree) ->
+      let a, b = llift_expr ctx true e in
+      let rest, tree' = llift_swchtree ctx true tree in
+      (a @ rest, SwitchConstr (t, b, tree'))
 
 let rec llift_top top =
   match top with
@@ -92,7 +108,7 @@ let rec llift_top top =
       (added, LetRec (ts, v, n))
   | Noop -> ([], Noop)
 
-let rec lambda_lift_h tops =
+let[@tail_mod_cons] rec lambda_lift_h tops =
   match tops with
   | [] -> []
   | x :: xs ->
@@ -102,7 +118,6 @@ let rec lambda_lift_h tops =
 let lambda_lift kir = (fst kir, lambda_lift_h @@ snd kir)
 
 let%test "Basic Lambda Lifting" =
-  print_endline "TEST: Basic Lambda Lifting";
   let before =
     [
       Let
