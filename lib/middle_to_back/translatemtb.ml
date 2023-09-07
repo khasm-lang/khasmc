@@ -54,7 +54,7 @@ let mtb_top code =
   | Bind (a, b) -> Khagm.Let (a, [], Khagm.Val b)
   | Noop -> Khagm.Noop
 
-let rec make_constr tbl (name, arity, _id) =
+let rec make_constr tbl (name, arity, d) =
   let make_tup arity =
     let rec args n =
       if n = -1000 then
@@ -64,7 +64,7 @@ let rec make_constr tbl (name, arity, _id) =
     in
     let a = args (-arity - 1000) in
     let b = List.map (fun x -> Khagm.Val x) a in
-    (a, Khagm.Tuple b)
+    (a, Khagm.Ctor (arity, d, b))
   in
   let args, body = make_tup arity in
   Khagm.Let (fst @@ Kir.get_from_tbl name tbl, args, body)

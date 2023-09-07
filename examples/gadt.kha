@@ -1,0 +1,11 @@
+open Stdlib
+
+type Gadt a =
+     | All a
+     | Int : int -> Gadt int
+
+let unwrap x : forall a, Gadt a -> a =
+    match x with
+    | All q => q
+    | Int w => w
+    end

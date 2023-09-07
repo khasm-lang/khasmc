@@ -62,7 +62,16 @@ let gen_uniq_name () =
 let emission = ref []
 let adds_default () = [ "IFELSETEMP" ]
 let adds = ref [ "IFELSETEMP" ]
-let emit_ptr tbl name = "make_raw_ptr(&" ^ mangle_top tbl name ^ ")"
+
+let emit_ptr tbl name =
+  let (Some (_, nm')) = Kir.get_bind_id tbl name in
+  match Kir.get_constr tbl nm' with
+  | Some (_, arity, _) ->
+      if arity = 0 then
+        mangle_top tbl name ^ "()"
+      else
+        "make_raw_ptr(&" ^ mangle_top tbl name ^ ")"
+  | None -> "make_raw_ptr(&" ^ mangle_top tbl name ^ ")"
 
 let emit_ref name = "ref(" ^ name ^ ")"
 
@@ -128,16 +137,23 @@ and codegen_func code tbl =
         ()
       else
         add_to_emi (";\n IFELSETEMP = ref(" ^ t2 ^ ");");
-      add_to_emi "}\n";
+      add_to_emi @@ "}; \n";
       "IFELSETEMP"
   | CheckConstr (id, expr) ->
       let v = codegen_func expr tbl in
-      let content = v ^ "->data.i == " ^ string_of_int id in
+      let andunref = "((" ^ v ^ "), " ^ v ^ ")" in
+      let content = andunref ^ "->data.adt->tag == " ^ string_of_int id in
       let full = "make_int(" ^ content ^ ")" in
       full
   | Fail s ->
       add_to_emi @@ {|printf("FAILURE: |} ^ s ^ {|, ABORTING\n");exit(1);|};
       "NULL"
+  | Ctor (arity, tag, bod) ->
+      let tup = emit_tuple tbl bod in
+      add_to_emi @@ "\n/* ARITY OF CTOR: " ^ string_of_int arity ^ " */\n";
+      add_to_emi @@ "\n/* TAG OF CTOR: " ^ string_of_int tag ^ " */\n";
+      add_to_emi (tup ^ "->data.adt->tag = " ^ string_of_int tag ^ ";\n");
+      tup
 
 let ensure_notempty args str = match args with [] -> "/*EMPTY*/" | _ -> str
 

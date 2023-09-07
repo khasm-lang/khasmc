@@ -9,6 +9,14 @@ let rec map f x : forall q w, (q -> w) -> List q -> List w =
     | 'Nil => Nil
     | Cons q w => Cons (f q) (map f w)
     end
-    
+
+let rec make i : int -> List int =
+    if i = 0 then
+       Nil
+    else
+       Cons i (make (i - 1))
+
 let main q : () -> () =
+    let l = make 1000 in
+    let p = map print_int l in
     ()
