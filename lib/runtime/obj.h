@@ -31,7 +31,6 @@ typedef struct kha_obj {
 
     struct kha_obj_adt {
       u64 tag;
-      u64 num;
       struct kha_obj **data;
     } *adt;
     
@@ -51,7 +50,7 @@ typedef struct kha_obj {
       u64 len;
       struct kha_obj ** tups;
     } *tuple;
-    
+
     struct kha_obj_str {
       char * data;
       i64 len;

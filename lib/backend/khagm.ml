@@ -14,6 +14,7 @@ type khagmexpr =
   | Unboxed of unboxed
   | Tuple of khagmexpr list
   | Call of khagmexpr * khagmexpr
+  | Ctor of int * int * khagmexpr list
   | Seq of khagmexpr * khagmexpr
   | Let of khagmid * khagmexpr * khagmexpr
   | IfElse of khagmexpr * khagmexpr * khagmexpr
