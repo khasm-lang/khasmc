@@ -361,3 +361,48 @@ let elim programs =
     | x :: xs -> x :: all_but_last xs
   in
   all_but_last tmp
+
+let%test "Elim modules all" =
+  let prog =
+    Program
+      [
+        SimplModule
+          ( "a",
+            [
+              SimplModule
+                ( "b",
+                  [
+                    SimplModule
+                      ( "c",
+                        [
+                          TopAssign
+                            ( ("d", TSBase "int"),
+                              ("d", [], Base (mkinfo (), Int "1")) );
+                        ] );
+                  ] );
+            ] );
+        TopAssign
+          ( ("one", TSBase "int"),
+            ("one", [], ModAccess (mkinfo (), [ "a"; "b"; "c" ], "d")) );
+      ]
+  in
+  match elim [ prog ] with
+  | after :: [] ->
+      let should =
+        Program
+          [
+            TopAssign
+              ( ("khasm.a.b.c.d", TSBase "int"),
+                ("khasm.a.b.c.d", [], Base ({ id = 1; complex = -1 }, Int "1"))
+              );
+            TopAssign
+              ( ("khasm.one", TSBase "int"),
+                ( "khasm.one",
+                  [],
+                  Base
+                    ( { id = 0; complex = -1 },
+                      Ident ({ id = 0; complex = -1 }, "khasm.a.b.c.d") ) ) );
+          ]
+      in
+      after = should
+  | _ -> false
