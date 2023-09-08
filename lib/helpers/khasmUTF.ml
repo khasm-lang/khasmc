@@ -1,5 +1,7 @@
 open Exp
 
+(** Helpers for unicode *)
+
 exception Malformed_Unicode
 
 let split_unicode s =

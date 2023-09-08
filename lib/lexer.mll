@@ -1,7 +1,7 @@
 {
 
   open Lexing
-  open Parser
+  open Frontend.Parser
   exception SyntaxError of string
   exception NotImpl of string
   exception EOF of string

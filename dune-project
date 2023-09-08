@@ -10,11 +10,10 @@
 
 (license MPL-2.0)
 
-
 (package
  (name khasmc)
  (synopsis "Compiler for khasm programming language")
- (depends ocaml dune fmt ppx_deriving batteries fileutils)
+ (depends ocaml dune fmt ppx_deriving batteries fileutils ppx_inline_test)
  (tags
   ("compiler" "khasm" "programming language")))
 

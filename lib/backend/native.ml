@@ -1,4 +1,4 @@
-open Exp
+open Helpers.Exp
 open Args
 
 let gen_main () =
@@ -29,7 +29,7 @@ let prelude () =
 |}
 
 let flags =
-  KhasmUTF.utf8_map
+  Helpers.KhasmUTF.utf8_map
     (fun x ->
       if x = "\n" then
         ""

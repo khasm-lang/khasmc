@@ -1,30 +1,33 @@
-open Exp
+open Helpers.Exp
 open Ast
 open Uniq_typevars
 open Hash
 open Debug
 
-(* Typechecks a program with a flat file structure - ie, no modules. *)
+open Helpers
 
-(*
+(**
+   This file serves as *the* typechecker for khasm programs.
+   It handles everything related to ensuring a program is well typed.
+   TODO: Split this into multiple files.
+
    Notes about this code:
    - Foralls are order dependent due to typelam elaboration
    - GADT typechecking is like, 70% confidence, not right 
-
 *)
 
 (* See below for more details *)
 
 type ctx = {
-  (* type aliases that can be simplified *)
+  (** type aliases that can be simplified *)
   aliases : (kident * kident list * typesig) list;
-  (* bound functions / variables *)
+  (** bound functions / variables *)
   binds : (kident * typesig) list;
-  (* types that can't be simplified *)
+  (** types that can't be simplified *)
   types : typeprim list;
-  (* constructors for types, used for match typechecking *)
+  (** constructors for types, used for match typechecking *)
   constrs : adt_pattern list;
-  (* list of bound forall vars, uses for match typechecking (GADTs) *)
+  (** list of bound forall vars, uses for match typechecking (GADTs) *)
   bound_foralls : (kident * typesig) list;
 }
 [@@deriving show { with_path = false }]

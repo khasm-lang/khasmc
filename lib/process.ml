@@ -1,6 +1,11 @@
 (** The main process of compilation *)
 
 open Args
+open Frontend
+open Front_to_middle
+open Middleend
+open Middle_to_back
+open Backend
 
 let rec normalise files =
   match files with
@@ -37,9 +42,7 @@ let compile names asts args =
     ();
 
   (*typcheck stage*)
-  asts'
-  |> List.map Typelam_init.init_program
-  |> Typecheck.typecheck_program_list;
+  asts' |> Typecheck.typecheck_program_list;
 
   (* After here, program should be type correct *)
 
