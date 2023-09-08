@@ -1,4 +1,7 @@
-open Exp
+open Helpers.Exp
+open Frontend
+open Middleend
+open Helpers
 
 open Either
 (** Converts between the frontend IR and the middleend IR. *)

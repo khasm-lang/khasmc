@@ -1,7 +1,7 @@
 open Ast
-open Exp
+open Helpers.Exp
 
-open ListHelpers
+open Helpers.ListHelpers
 (** Elimintates modules from a list of programs, reducing them to a
    flat file structure with fully resolved names *)
 
@@ -14,23 +14,32 @@ let from_args args = { locals = args }
 let from_args_and_defaults args = { locals = khasm_default_types @ args }
 let is_local ctx l = List.exists (fun x -> x = l) ctx.locals
 
+
+(**
+   Provides information about the current state of the modules in the
+   program.
+*)
 type module_ctx = {
   name : string;
+  (** Name of current module *)
   is_open : bool;
-  (* bool is for mangling *)
+  (** Whether it's open *)
   idents : (string * bool) list;
+  (** Identifiers avalible in the context (bool is whether they can be safely mangled) *)
   typs : string list;
   children : module_ctx list;
   parent : module_ctx ref option;
 }
 [@@deriving show { with_path = false }]
 
+(** Opens a given module, searching by both child & parent *)
 let rec open_if_valid id orig ctx =
   if ctx.name = id then
     { ctx with is_open = true }
   else
     open_deep_module_h ctx id orig
 
+(** See open_if_valid *)
 and open_deep_module_h ctx id orig =
   {
     ctx with
@@ -44,6 +53,7 @@ and open_deep_module_h ctx id orig =
       | Some p -> Some (ref @@ open_deep_module_h !p id ctx.name));
   }
 
+(** Helper for open_deep_module_h *)
 let open_deep_module ctx id =
   let tmp = open_deep_module_h ctx id ctx.name in
   tmp
@@ -67,7 +77,7 @@ let ctx_with name parent =
     children = [];
     parent = Some (ref parent);
   }
-
+(** Closes all modules currently open *)
 let rec close_all_h n m =
   {
     m with
@@ -79,6 +89,7 @@ let rec close_all_h n m =
       | Some p -> Some (ref @@ close_all_h m.name !p));
   }
 
+(** Helper for close_all_h *)
 let close_all m =
   let tmp = close_all_h m.name m in
   tmp
@@ -90,11 +101,14 @@ let add_ident ctx id = { ctx with idents = (id, false) :: ctx.idents }
 let add_ident_extern ctx id = { ctx with idents = (id, true) :: ctx.idents }
 let add_typ ctx typ = { ctx with typs = typ :: ctx.typs }
 
+
+(** Helper for get_mang *)
 let rec get_parent_list ctx =
   match ctx.parent with
   | None -> ctx.name
   | Some x -> get_parent_list !x ^ "." ^ ctx.name
 
+(** Get a mangled name *)
 let rec get_mang ctx id =
   if id = "main" then
     "main"
@@ -103,6 +117,7 @@ let rec get_mang ctx id =
     | Some true -> id
     | Some false | None -> get_parent_list ctx ^ "." ^ id
 
+(** Finds a function's full name from a context and a partial name *)
 let rec get_full_from_open ctx id =
   match List.find_all (fun x -> fst x = id) ctx.idents with
   | [] -> (
@@ -131,6 +146,7 @@ let rec get_full_from_open ctx id =
       ambigious
         ("Too many possible variables: " ^ String.concat "," (List.map fst k))
 
+(** Finds a type's full name from a context and a partial name *)
 let rec get_type_from_open ctx id =
   match List.find_all (fun x -> x = id) ctx.typs with
   | [] -> (
@@ -157,6 +173,7 @@ let rec get_type_from_open ctx id =
   | [ x ] -> get_mang ctx x
   | k -> ambigious ("Too many possible variables: " ^ String.concat "," k)
 
+(** Opens a given module given a list of modules to open, like Open A.B.C *)
 let rec deconstruct_modules ctx mods =
   match mods with
   | [] -> ctx
@@ -172,16 +189,19 @@ let rec deconstruct_modules ctx mods =
             ("Too many possible modules: "
             ^ String.concat "," (List.map (fun x -> x.name) k)))
 
+(** Wrapper for get_full_from_open *)
 let rec get_full_id_mod ctx mods id =
   let ctx' = deconstruct_modules ctx mods in
   let tmp = get_full_from_open ctx' id in
   tmp
 
+(** Wrapper for get_type_from_open *)
 let rec get_full_typ_mod ctx mods id =
   let ctx' = deconstruct_modules ctx mods in
   let tmp = get_type_from_open ctx' id in
   tmp
 
+(** Eliminate modules from a type signature *)
 let rec elim_ts mctx lctx ts =
   match ts with
   | TSBase a ->
@@ -198,6 +218,7 @@ let rec elim_ts mctx lctx ts =
       TSForall (a, elim_ts mctx lctx' ts)
   | TSTuple l -> TSTuple (List.map (elim_ts mctx lctx) l)
 
+(** Eliminate modules from a kexpr *)
 let rec elim_base mctx lctx i k : kexpr =
   match k with
   | Ident (i', k) ->
@@ -209,6 +230,7 @@ let rec elim_base mctx lctx i k : kexpr =
   | Tuple l -> Base (i, Tuple (List.map (elim_expr mctx lctx) l))
   | True | False -> Base (i, k)
 
+(** Eliminate modules from a pattern *)
 and elim_pat mctx lctx p =
   match p with
   | MPInt _ -> p
@@ -218,6 +240,7 @@ and elim_pat mctx lctx p =
   | MPTup t -> MPTup (List.map (elim_pat mctx lctx) t)
   | MPWild -> MPWild
 
+(** Eliminate modules from many patterns *)
 and elim_pats mctx lctx pats =
   List.map
     (fun (p, e) ->
@@ -226,7 +249,8 @@ and elim_pats mctx lctx pats =
       let lctx' = add_locals lctx frees in
       (p', elim_expr mctx lctx' e))
     pats
-
+    
+(** Eliminate modules from an expr *)
 and elim_expr mctx lctx expr =
   let default t = elim_expr mctx lctx t in
   match expr with
@@ -259,6 +283,7 @@ and elim_expr mctx lctx expr =
       Base (i, Ident (i, m))
   | Match (i, p, pats) -> Match (i, p, elim_pats mctx lctx pats)
 
+(** Eliminate modules from a toplevel *)
 let rec elim_toplevel ctx t =
   match t with
   | TopAssign (t, a) ->
@@ -351,7 +376,8 @@ let rec elim_helper ctx progs =
       let (Program x) = x in
       let ctx', prog = elim_toplevel_list ctx x in
       Program prog :: elim_helper ctx' xs
-
+        
+(** Eliminate modules from a list of programs *)
 let elim programs =
   let tmp = elim_helper (empty_ctx ()) programs in
   let rec all_but_last l =

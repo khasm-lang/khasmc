@@ -93,7 +93,7 @@ type token =
 exception ParseError
 
 open Ast
-open ListHelpers
+open Helpers.ListHelpers
 
 module Lexing = struct
   include Lexing
@@ -197,7 +197,7 @@ module ParserState = struct
 end
 
 open ParserState
-open Exp
+open Helpers.Exp
 
 let rec id_list state =
   match peek state 1 with

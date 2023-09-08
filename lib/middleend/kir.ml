@@ -1,5 +1,6 @@
-open Exp
+open Helpers.Exp
 
+open Frontend
 (** The middleend IR *)
 
 type kirtype = Ast.typesig [@@deriving show { with_path = false }]

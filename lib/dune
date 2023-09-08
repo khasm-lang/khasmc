@@ -1,4 +1,6 @@
-(include_subdirs unqualified)
+(include_subdirs qualified)
+
+(ocamllex lexer)
 
 (library
  (name khasmc)

@@ -1,3 +1,5 @@
+(** Contains useful exceptions. *)
+
 exception TypeErr of string
 exception NotFound of string
 exception NotImpl of string

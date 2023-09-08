@@ -12,6 +12,7 @@ depends: [
   "ppx_deriving"
   "batteries"
   "fileutils"
+  "ppx_inline_test"
   "odoc" {with-doc}
 ]
 build: [

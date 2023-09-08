@@ -1,5 +1,5 @@
 open Ast
-open Exp
+open Helpers.Exp
 
 (* Computes a complexity for each node. Not currently used. *)
 
