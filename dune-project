@@ -1,4 +1,4 @@
-(lang dune 3.6)
+(lang dune 3.10)
 
 (name khasmc)
 
@@ -14,7 +14,7 @@
 (package
  (name khasmc)
  (synopsis "Compiler for khasm programming language")
- (depends ocaml dune fmt ppx_deriving batteries menhir ppx_deriving.show fileutils)
+ (depends ocaml dune fmt ppx_deriving batteries fileutils)
  (tags
   ("compiler" "khasm" "programming language")))
 
