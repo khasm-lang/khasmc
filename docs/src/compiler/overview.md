@@ -1,3 +1,3 @@
 # Compiler docs
 
-Please see the OCaml [khasmc/ocaml/index.html](docs).
+Please see the OCaml [docs](khasmc/ocaml/index.html).
