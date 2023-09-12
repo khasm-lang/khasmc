@@ -18,6 +18,7 @@ open Helpers
 
 (* See below for more details *)
 
+(** The global context for typechecking *)
 type ctx = {
   (** type aliases that can be simplified *)
   aliases : (kident * kident list * typesig) list;
@@ -107,7 +108,7 @@ let rec typeprim_len tys x =
             l
           else
             typeprim_len zs x)
-
+(** Ensures all sub-elements of a type are valid, eg. only using bound variables and typefuns*)
 let rec validate_typ types ty =
   match ty with
   | TSBase x -> (
@@ -118,7 +119,7 @@ let rec validate_typ types ty =
   | TSApp (x, y) ->
       let n = typeprim_len types y in
       if n <> List.length x then
-        raise @@ TypeErr ("Wrong number of args to type level function " ^ y)
+        raise @@ TypeErr ("Wrong number of args to type " ^ y)
       else
         TSApp (List.map (validate_typ types) x, y)
   | TSMap (x, y) -> TSMap (validate_typ types x, validate_typ types y)
@@ -158,12 +159,12 @@ let rec lift_ts_h t =
       let hm = List.map lift_ts_h t in
       (TSTuple (List.map fst hm), List.mem true (List.map snd hm))
 
-let rec lift_ts ts =
-  (* lifts types like
-     ∀ a, a -> (∀b, b)
+(** lifts types like
+     ∀ a, a -> (∀b, a -> b)
      to
-     ∀a b, a -> b
+     ∀a b, a -> a -> b
   *)
+let rec lift_ts ts =
   match lift_ts_h ts with t, false -> t | t, true -> lift_ts t
 
 (** Substitutes vars within a type *)
@@ -187,6 +188,7 @@ let rec subs typ nm newt =
   in
   ret
 
+(** Substitues types within a type - not efficient *)
 let rec subs_bad typ old new' =
   if typ = old then
     new'
@@ -199,12 +201,14 @@ let rec subs_bad typ old new' =
     | TSForall (nm', ts) -> TSForall (nm', subs_bad ts old new')
     | TSTuple l -> TSTuple (List.map (fun x -> subs_bad x old new') l)
 
+(** Substitutes multiple variables *)
 let rec multisubs typ nms newts =
   match (nms, newts) with
   | [], [] -> typ
   | x :: xs, y :: ys -> multisubs (subs typ x y) xs ys
   | _, _ -> raise @@ Impossible "Unbalanced multisubs"
 
+(** Takes an alias and a type, removing the alias from the type *)
 let rec remove_alias (id, args, ts) typ =
   let ret =
     match typ with
@@ -226,6 +230,7 @@ let rec remove_alias (id, args, ts) typ =
   in
   ret
 
+(** Wrapper to remove multiple aliases *)
 let rec remove_aliases aliases ts =
   match aliases with
   | [] -> ts
@@ -236,6 +241,7 @@ let rec remove_aliases aliases ts =
 
 *)
 
+(** Contains a list of things that have been unified *)
 type unify_ctx = { metas : (string * typesig) list }
 [@@deriving show { with_path = false }]
 
@@ -279,7 +285,7 @@ let rec inst_all ts =
   | TSMeta x -> TSMeta x
   | TSTuple t -> TSTuple (List.map inst_all t)
 
-(* eliminates unused forall variables *)
+(** eliminates unused forall variables *)
 let rec elim_unused ts =
   let af =
     match ts with
@@ -338,7 +344,7 @@ let rec unify_list ctx l1 l2 =
       (fst rest, snd tmp :: snd rest)
   | _, _ -> raise (UnifyErr "unequal tuple len")
 
-(* TODO
+(** TODO
    Credit to AradArbel10 on rpl
 
    if you're doing this in ocaml (or any language with ref cells) there's
@@ -357,7 +363,7 @@ let rec unify_list ctx l1 l2 =
    couple of other subtleties but I think it's worth it.
 *)
 
-(*
+(**
   MetaVar strategy:
 ```
 given f x
@@ -455,7 +461,7 @@ and unify ?loop ctx l r =
           in
           (get_ctx t, TSApp (List.map snd t, b))
     | TSForall (a, b), TSForall (x, y) ->
-        (*
+        (**
          TODO: show how this works
            better, at least
         *)
@@ -508,6 +514,7 @@ let rec apply_unify ctx tp =
   | TSForall (f, x) -> TSForall (f, apply_unify ctx x)
   | TSTuple t -> TSTuple (List.map (apply_unify ctx) t)
 
+(** Converts all base types in something to metavariables - only occationaly useful*)
 let rec all_base_to_meta tp =
   match tp with
   | TSBase _ -> TSMeta (get_meta ())
@@ -516,12 +523,6 @@ let rec all_base_to_meta tp =
   | TSMap (a, b) -> TSMap (all_base_to_meta a, all_base_to_meta b)
   | TSForall (f, x) -> TSForall (f, all_base_to_meta x)
   | TSTuple t -> TSTuple (List.map all_base_to_meta t)
-
-let subtyping_valid _l _r = ()
-
-let are_equiv l r =
-  subtyping_valid l r;
-  unify (empty_unify_ctx ()) l r
 
 (* The check-infer section
 
@@ -555,8 +556,9 @@ let rec infer_base ctx tm =
   in
   typ
 
+(** Infers the type of a match expression. *)
 and infer_match ctx main pats =
-  (* A few things happen here.
+  (** A few things happen here.
      - 1. We need to figure out the types of all the
          bound variables in `main`, and ensure there are no duplicates.
      - 2. We need to figure out the type of `main`,
@@ -632,19 +634,21 @@ and infer ctx tm =
     match tm with
     | Base (inf, x) -> (inf, infer_base ctx x)
     | FCall (inf, f, x) -> (
-        (*
+        (**
 
        alright, so this mess. Basically what this does is
        infer instation of a function - ie, it takes
        f x
        and turns it into
-       f [typeof x] x
+       f \[typeof x\] x
 
        but it's not always that simple
        does this by inserting metavariables into all the foralls,
        then unifying the LHS of the function with the argument,
        then applying that to the RHS.
 
+           this is basically just normal sysF with unification? kinda?
+           
       *)
         let typ_r = infer ctx f in
         let inst_r = inst_all typ_r in
@@ -819,7 +823,12 @@ let rec add_args ts args body =
             λx : A =>
             λf : A -> B =>
             f x
-            
+
+   this is currently *really hacky* and also depends on the order
+   of the typevars if there aren't enough arguments to the function,
+   so uh
+   maybe refactor?
+   
            *)
 let conv_ts_args_body_to_typelams ts args body =
   let ts = elim_unused ts in
