@@ -12,42 +12,40 @@ internal_extern 1 `print_int: int -> () = print_int
 internal_extern 1 `print_str : string -> () = print_str
 internal_extern 1 `print_float : float -> () = print_float 
 
-
-
 internal_extern 2 `s_eq : ∀a, a -> a -> bool = s_eq
 
-bind (=) = s_eq
+bind = = s_eq
 
-bind (+) = iadd
-bind (-) = isub
-bind (/) = idiv
-bind ( * ) = imul
+bind + = iadd
+bind - = isub
+bind / = idiv
+bind * = imul
 
-bind (+.) = fadd
-bind (-.) = fsub
-bind ( *. ) = fmul
-bind (/.) = fdiv
+bind +. = fadd
+bind -. = fsub
+bind *. = fmul
+bind /. = fdiv
 
 let pipe x0 f1
     : ∀a b, a -> (a -> b) -> b
     = f1 x0
 
-bind (|>) = pipe
+bind |> = pipe
 
 let apply f2 x3
     : ∀a b, (a -> b) -> a -> b 
     = f2 x3
 
-bind ($) = apply
+bind $ = apply
 
 let compose f4 g5 x6
     : ∀a b c, (b -> c) -> (a -> b) -> a -> c
     = f4 (g5 x6)
 
-bind (%) = compose
+bind % = compose
 
 let rcompose f7 g8 x9
     : ∀a b c, (a -> b) -> (b -> c) -> a -> c
     = g8 (f7 x9)
 
-bind (%>) = rcompose
+bind %> = rcompose

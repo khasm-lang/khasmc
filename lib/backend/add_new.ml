@@ -1,6 +1,5 @@
 open Khagm
-open Middleend
-(* Gives the lambda lifted things names *)
+(** Gives the lambda lifted things names *)
 
 let rec add_new top nms =
   match top with

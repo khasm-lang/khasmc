@@ -39,7 +39,7 @@ type info = {
 }
 [@@deriving show { with_path = false }]
 
-let dummy_info () = { id = -1; complex = -2 }
+let dummyinfo = { id = 0; complex = 0 }
 let idgen = ref 0
 
 let getid () =

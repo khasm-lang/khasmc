@@ -1,6 +1,6 @@
 open Exp
 
-(** Helpers for unicode *)
+(** for unicode *)
 
 exception Malformed_Unicode
 

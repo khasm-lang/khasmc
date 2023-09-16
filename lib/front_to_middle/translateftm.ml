@@ -1,9 +1,7 @@
-open Helpers.Exp
-open Frontend
-open Middleend
-open Helpers
-
+open Exp
 open Either
+
+open ListHelpers
 (** Converts between the frontend IR and the middleend IR. *)
 
 let rec fold_tup_flat f s l =
@@ -123,12 +121,12 @@ and push_bind_into_expr tbl ident kirexpr kexpr =
 
 and split_on head body outputs =
   let open Ast in
-  let open ListHelpers in
+  let open List in
   let comp i (pat, expr) =
     match List.hd pat with
     | MPApp (q, _) ->
         if i = q then
-          True
+          ListHelpers.True
         else
           False
     | _ -> Both

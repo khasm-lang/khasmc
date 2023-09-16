@@ -1,9 +1,5 @@
-open Helpers.Exp
-open Middleend
-open Backend
-
-(* Converts the middleend format to the backend format *)
-open Helpers
+open Exp
+(** Converts the middleend format to the backend format *)
 
 let kirval_to_khagmid x = x
 let kv_to_kg = kirval_to_khagmid

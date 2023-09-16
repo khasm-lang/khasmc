@@ -1,6 +1,5 @@
 open Khagm
 open Add_new
-open Helpers
 open Exp
 open KhasmUTF
 
@@ -16,7 +15,7 @@ let mangler id =
     "_" ^ string_of_int asint ^ "_"
 
 let mangle_top nms id =
-  let (Some nm) = Middleend.Kir.get_bind_id nms id in
+  let (Some nm) = Kir.get_bind_id nms id in
   let nm = snd nm in
   match nm with "main" -> "main_____Khasm" | _ -> utf8_map mangler nm
 
@@ -46,7 +45,7 @@ let function_name name argnum =
   ^ ", " ^ string_of_int argnum ^ ", " ^ args ^ ") {\n"
 
 let is_toplevel id tbl =
-  match Middleend.Kir.get_bind_id tbl id with Some _ -> true | None -> false
+  match Kir.get_bind_id tbl id with Some _ -> true | None -> false
 
 let lookup x (tbl : (khagmid * string) list) =
   match List.assoc_opt x tbl with
@@ -65,8 +64,8 @@ let adds_default () = [ "IFELSETEMP" ]
 let adds = ref [ "IFELSETEMP" ]
 
 let emit_ptr tbl name =
-  let (Some (_, nm')) = Middleend.Kir.get_bind_id tbl name in
-  match Middleend.Kir.get_constr tbl nm' with
+  let (Some (_, nm')) = Kir.get_bind_id tbl name in
+  match Kir.get_constr tbl nm' with
   | Some (_, arity, _) ->
       if arity = 0 then
         mangle_top tbl name ^ "()"

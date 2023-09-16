@@ -1,22 +1,34 @@
-open Helpers.Exp
+open Exp
 open Ast
 open Uniq_typevars
 open Hash
 open Debug
 
-open Helpers
-
 (**
-   This file serves as *the* typechecker for khasm programs.
+   This file serves as the typechecker for khasm programs.
    It handles everything related to ensuring a program is well typed.
    TODO: Split this into multiple files.
 
+   In a long story short, this is a:
+   - Bidirectional typechecking algorithm, based around:
+   - Unification, using subs contexts instead of refs (TODO)
+   - There's some special care needed to properly handle typechecking GADTs,
+     but it's mostly self-contained - ie, the GADT code doesn't
+     make anything else more complicated for any reason.
+
+   At some point we need to think about how this can be properly split
+   into multiple files without encountering ocaml's lack of multi-file
+   mutual recursion as a major issue.
+
+   The main problem I see is the plans in the future for linear types / a borrow checker,
+   as that'll majorly complicate the typechecker even more then it already is,
+   which is less then ideal seeing as it's almost 1,000 lines already :P
+   
    Notes about this code:
    - Foralls are order dependent due to typelam elaboration
    - GADT typechecking is like, 70% confidence, not right 
 *)
 
-(* See below for more details *)
 
 (** The global context for typechecking *)
 type ctx = {
@@ -349,7 +361,7 @@ let rec unify_list ctx l1 l2 =
 
    if you're doing this in ocaml (or any language with ref cells) there's
    actually a really neat trick to optimize (and simplify 😄) metavars.
-   ```
+   {[
    type meta_state =
    | Solved of typ
    | Unsolved of name (* used for pretty printing *)
@@ -357,24 +369,21 @@ let rec unify_list ctx l1 l2 =
    | Arrow of typ * typ
    | ...
    | Meta of meta_state ref
-   ```
+    ]}
    so now the metavar is mutable, and when you solve it it gets
    "propagated up" automatically. actually implementing it introduces a
    couple of other subtleties but I think it's worth it.
-*)
 
-(**
-  MetaVar strategy:
-```
+{[
 given f x
 instantiate f with metavariables until reaching a non-forall type
 check that f's type matches 'a -> 'b
 unify x's type and 'a
 apply that unification to 'b
 return that type
-```
-so, for example:
-```
+
+    so, for example:
+
 f : ∀'a, 'a -> 'a
 x : float
 
@@ -390,48 +399,14 @@ f : float -> float
 (in this application)
 →
 return RHS(f) : float
-```
+    ]}
 
+    returns a tuple of env, typ
 
-*)
-
-(*
-  returns a tuple of env, typ 
- *)
-
-(** Unifies two types, solving all needed metavars. *)
+  Unifies two types, solving all needed metavars. *)
 and unify ?loop ctx l r =
-  (*
-    unification takes something with metavariables, eg
-    $m1 -> $m1
-
-    and figures out what the metavariables should be:
-
-    unify
-    $m1 -> $m1
-    int -> int
-    ∴
-    $m1 = int
-
-    it does this by returning a tuple of (ctx, tm)
-
-    where the ctx contains metavariable info.
-    on a map, it can then check that the metavar info is the same on
-    both sides, and go forth as such.
-
-
-    note that metavars can appear on both sides -
-    this is why there's a default case at the bottom to switch
-    the arguments around, using an optional param to make sure
-    that it doesn't loop forever (way easier then rewriting the
-    logic for both sides lol)
-
-   *)
   let l = elim_unused @@ lift_ts l in
   let r = elim_unused @@ lift_ts r in
-  (*print_endline "unify:";
-    print_endline (pshow_typesig l);
-      print_endline (pshow_typesig r);*)
   let res =
     match (l, r) with
     | TSBase x, TSBase y ->
@@ -556,9 +531,8 @@ let rec infer_base ctx tm =
   in
   typ
 
-(** Infers the type of a match expression. *)
-and infer_match ctx main pats =
-  (** A few things happen here.
+(** Infers the type of a match expression.
+ A few things happen here.
      - 1. We need to figure out the types of all the
          bound variables in `main`, and ensure there are no duplicates.
      - 2. We need to figure out the type of `main`,
@@ -568,7 +542,8 @@ and infer_match ctx main pats =
      - 4. We need to make sure all of the `pats` have the
          same type
           * this should be a fairly trivial fold over unification.
-  *)
+*)
+and infer_match ctx main pats =
   let main_typ = infer ctx main in
   let throw_t _ctx _id typ =
     match typ with None -> raise @@ TypeErr "MPId no type" | Some x -> x
@@ -604,12 +579,10 @@ and infer_match ctx main pats =
         t
     | MPTup t -> TSTuple (List.map (pat_to_type mctx) t)
   in
-  print_endline @@ "main_type: " ^ pshow_typesig main_typ;
   let typs =
     List.map
       (fun (p, e) ->
         let ty = pat_to_type ctx p in
-        print_endline @@ "got_type: " ^ pshow_typesig ty;
         let frees = frees_type p (Some main_typ) in
         let ctx' =
           List.fold_left (fun c (x, y) -> assume_typ c x y) ctx frees
@@ -625,7 +598,26 @@ and infer_match ctx main pats =
   in
   typs
 
-(** Infers the type of a term *)
+(** Infers the type of a term
+
+    w.r.t function inference:
+    
+       alright, so this mess. Basically what this does is
+       infer instation of a function - ie, it takes
+    {[
+       f x
+       and turns it into
+       f [typeof x] x
+     ]}
+       but it's not always that simple
+    
+       does this by inserting metavariables into all the foralls,
+       then unifying the LHS of the function with the argument,
+       then applying that to the RHS.
+
+           this is basically just normal sysF with unification? kinda?
+
+*)
 and infer ctx tm =
   (*
     infer the type of a term
@@ -634,22 +626,6 @@ and infer ctx tm =
     match tm with
     | Base (inf, x) -> (inf, infer_base ctx x)
     | FCall (inf, f, x) -> (
-        (**
-
-       alright, so this mess. Basically what this does is
-       infer instation of a function - ie, it takes
-       f x
-       and turns it into
-       f \[typeof x\] x
-
-       but it's not always that simple
-       does this by inserting metavariables into all the foralls,
-       then unifying the LHS of the function with the argument,
-       then applying that to the RHS.
-
-           this is basically just normal sysF with unification? kinda?
-           
-      *)
         let typ_r = infer ctx f in
         let inst_r = inst_all typ_r in
         let typ_l = infer ctx x in
@@ -792,7 +768,7 @@ let rec forall_to_typelam ts body =
   match ts with
   | TSForall (fv, bd) ->
       let tmp = forall_to_typelam bd body in
-      (fst tmp, TypeLam (dummy_info (), fv, snd tmp))
+      (fst tmp, TypeLam (dummyinfo, fv, snd tmp))
   | _ -> (lift_ts ts, body)
 
 (** See conv_args_body_to_typelams *)
@@ -811,6 +787,7 @@ let rec add_args ts args body =
 (**
             The purpose of this is to transform arguments into
             typelams and annotlams so that you can do
+   {[
             sig ∀a b, a -> (a -> b) -> b in
             let apply x f = f x
 
@@ -823,7 +800,7 @@ let rec add_args ts args body =
             λx : A =>
             λf : A -> B =>
             f x
-
+            ]}
    this is currently *really hacky* and also depends on the order
    of the typevars if there aren't enough arguments to the function,
    so uh
@@ -903,11 +880,6 @@ let rec typecheck_toplevel_list ctx tl =
               | [ x ] -> TSMap (x, p)
               | x :: xs -> TSMap (x, go xs p)
             in
-            let rec wrap_foralls fs e =
-              match fs with
-              | [] -> e
-              | y :: ys -> TSForall (y, wrap_foralls ys e)
-            in
             let ctx' =
               List.fold_left
                 (fun ctx pat ->
@@ -939,8 +911,6 @@ let rec typecheck_toplevel_list ctx tl =
                           ts args
                         |> inst_all
                       in
-                      print_endline "NEWER, BETTER:";
-                      print_endline (pshow_typesig @@ ts');
                       assume_typ ctx pat.head ts')
                 ctx pats
             in
@@ -983,3 +953,19 @@ let rec typecheck_program_list_h pl ctx =
 
 (** Helper *)
 let typecheck_program_list pl = typecheck_program_list_h pl None
+
+let%test "Typechecking general" =
+  let tm =
+    Program(
+      [
+        TopAssign(("test",TSBase("int")),("test",[],
+                                          Base(dummyinfo, Int("5"))
+                                         )) 
+      ]
+    )
+  in
+  try
+    typecheck_program_list [tm];
+    true
+  with
+  | _ -> false

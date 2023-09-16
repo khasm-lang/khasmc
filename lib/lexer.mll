@@ -1,7 +1,7 @@
 {
 
   open Lexing
-  open Frontend.Parser
+  open Parser
   exception SyntaxError of string
   exception NotImpl of string
   exception EOF of string
@@ -46,11 +46,11 @@ let digit = ['0'-'9']
 let alpha = ['a'-'z' 'A'-'Z']
 let INT = (digit)+
 
-let start = ['a'-'z' 'A'-'Z' '_']
+let start = ['a'-'z' 'A'-'Z']
 
 let all = ['a'-'z' 'A'-'Z' '_' '\'' '0'-'9' ]
 
-let IDENT = start all*
+let IDENT = (start all*) | ('_' all+)
 
 let INTIDENT = '`' start all+
 
@@ -100,6 +100,7 @@ rule token = parse
      | "#" {incr_by lexbuf; HASH}
      | "," {incr_by lexbuf; COMMA}
      | ";" {incr_by lexbuf; SEMICOLON}
+     | "_" {incr_by lexbuf; UNDERSCORE}
      | "->" {incr_by lexbuf; TS_TO}
      | "=>" {incr_by lexbuf; LAM_TO}
 	| bang_op {incr_by lexbuf; BANG_OP (Lexing.lexeme lexbuf)}

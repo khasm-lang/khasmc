@@ -1,11 +1,8 @@
 open Batteries
 open Lexing
 open Lexer
-open Frontend
 open Typecheck
 open Uniq_typevars
-open Middleend
-open Helpers
 open Exp
 open Ast
 open Hash
