@@ -1,30 +1,29 @@
 open Exp
 
-type khagmid = int [@@deriving show { with_path = false }]
+type id = int [@@deriving show { with_path = false }]
 
-type unboxed =
-  | Int' of string
-  | String' of string
-  | Float' of string
-  | Bool' of bool
+type value =
+  | Val of id
+  | Int of string
+  | String of string
+  | Float of string
+  | Bool of string
+  | Tuple of value list
 [@@deriving show { with_path = false }]
 
 type khagmexpr =
-  | Val of khagmid
-  | Unboxed of unboxed
-  | Tuple of khagmexpr list
-  | Call of khagmexpr * khagmexpr
-  | Ctor of int * int * khagmexpr list
-  | Seq of khagmexpr * khagmexpr
-  | Let of khagmid * khagmexpr * khagmexpr
-  | IfElse of khagmexpr * khagmexpr * khagmexpr
-  | CheckConstr of int * khagmexpr
   | Fail of string
+  | LetInVal of id * value
+  | LetInCall of id * value list
+  | IfElse of id * id * khagmexpr list * khagmexpr list
+  | CheckCtor of value * value
+  | Return of id
 [@@deriving show { with_path = false }]
 
 type khagmtop =
-  | Let of khagmid * khagmid list * khagmexpr
-  | Extern of khagmid * int * string
+  | Let of id * id list * khagmexpr list
+  | Ctor of id * int  (** name * arity *)
+  | Extern of id * int * string
   | Noop
 [@@deriving show { with_path = false }]
 

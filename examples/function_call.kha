@@ -1,0 +1,5 @@
+let foo a b c d e : forall a, (a -> a -> a -> a -> a) -> a -> a -> a -> a -> a = a b c d e
+
+let a b c d : forall a, (() -> ()) -> (a -> a) -> a -> a =
+    b ();
+    c d
