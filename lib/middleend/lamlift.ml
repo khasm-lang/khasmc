@@ -1,7 +1,7 @@
-open Helpers.Exp
+open Exp
+
 open Kir
-open Frontend
-(* Performs lambda lifting, putting all lambdas on the toplevel *)
+(** Performs lambda lifting, putting all lambdas on the toplevel *)
 
 type lamctx = { frees : (kirval * kirtype) list }
 [@@deriving show { with_path = false }]

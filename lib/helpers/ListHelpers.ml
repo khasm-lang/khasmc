@@ -21,7 +21,7 @@ let filter_extract fn list = filter_extract_h fn list [] []
 
 let rec last xs =
   match xs with
-  | [] -> raise @@ Impossible "ListHelpers.last : empty list"
+  | [] -> raise @@ Impossible "Listlast : empty list"
   | [ x ] -> x
   | _ :: xs -> last xs
 

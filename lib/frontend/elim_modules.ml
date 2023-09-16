@@ -1,7 +1,7 @@
 open Ast
-open Helpers.Exp
+open Exp
 
-open Helpers.ListHelpers
+open ListHelpers
 (** Elimintates modules from a list of programs, reducing them to a
    flat file structure with fully resolved names *)
 
@@ -403,13 +403,13 @@ let%test "Elim modules all" =
                         [
                           TopAssign
                             ( ("d", TSBase "int"),
-                              ("d", [], Base (mkinfo (), Int "1")) );
+                              ("d", [], Base (dummyinfo, Int "1")) );
                         ] );
                   ] );
             ] );
         TopAssign
           ( ("one", TSBase "int"),
-            ("one", [], ModAccess (mkinfo (), [ "a"; "b"; "c" ], "d")) );
+            ("one", [], ModAccess (dummyinfo, [ "a"; "b"; "c" ], "d")) );
       ]
   in
   match elim [ prog ] with
@@ -419,16 +419,24 @@ let%test "Elim modules all" =
           [
             TopAssign
               ( ("khasm.a.b.c.d", TSBase "int"),
-                ("khasm.a.b.c.d", [], Base ({ id = 1; complex = -1 }, Int "1"))
+                ("khasm.a.b.c.d", [], Base (dummyinfo, Int "1"))
               );
             TopAssign
               ( ("khasm.one", TSBase "int"),
                 ( "khasm.one",
                   [],
                   Base
-                    ( { id = 0; complex = -1 },
-                      Ident ({ id = 0; complex = -1 }, "khasm.a.b.c.d") ) ) );
+                    (dummyinfo,
+                      Ident (dummyinfo, "khasm.a.b.c.d") ) ) );
           ]
       in
-      after = should
-  | _ -> false
+      if after = should then
+        true
+      else
+        begin
+          print_endline (show_program after);
+          print_endline (show_program should);
+          false
+        end 
+  | _ ->
+    false

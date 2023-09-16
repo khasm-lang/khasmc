@@ -88,12 +88,13 @@ type token =
   | RPAREN
   | EMPTY
   | ANY
+  | UNDERSCORE
 [@@deriving show { with_path = false }]
 
 exception ParseError
 
 open Ast
-open Helpers.ListHelpers
+open ListHelpers
 
 module Lexing = struct
   include Lexing
@@ -122,7 +123,7 @@ let parse_error lines (offsets : Lexing.position) actual follow_set =
     print_endline @@ "Expected ["
     ^ delim ", " (List.map show_token follow_set)
     ^ "]"
-  with Invalid_argument _ ->
+  with Invalid_argument _ | Failure _ ->
     print_endline @@ "Error in file " ^ offsets.pos_fname ^ " line "
     ^ string_of_int offsets.pos_lnum;
     print_endline @@ "Got " ^ show_token actual;
@@ -197,7 +198,7 @@ module ParserState = struct
 end
 
 open ParserState
-open Helpers.Exp
+open Exp
 
 let rec id_list state =
   match peek state 1 with
@@ -415,6 +416,9 @@ and parse_match_list state =
   | T_IDENT t ->
       toss state;
       MPId t :: parse_match_list state
+  | UNDERSCORE ->
+      toss state;
+      MPWild :: parse_match_list state
   | LPAREN -> (
       toss state;
       match peek state 1 with
@@ -434,6 +438,7 @@ and parse_match_pattern state =
       MPApp (t, [])
   | T_IDENT t -> (
       match parse_match_list state with [] -> MPId t | xs -> MPApp (t, xs))
+  | UNDERSCORE -> MPWild
   | LPAREN -> (
       match peek state 1 with
       | RPAREN ->
@@ -726,9 +731,7 @@ and parse_module state =
   SimplModule (name, top)
 
 and parse_bind state =
-  expect state LPAREN;
   let op = get_binop state in
-  expect state RPAREN;
   (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
   let name = get_ident state in
   Bind (op, [], name)

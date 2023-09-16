@@ -1,11 +1,6 @@
 (** The main process of compilation *)
 
 open Args
-open Frontend
-open Front_to_middle
-open Middleend
-open Middle_to_back
-open Backend
 
 let rec normalise files =
   match files with

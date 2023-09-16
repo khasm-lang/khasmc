@@ -1,4 +1,4 @@
-open Helpers.Exp
+open Exp
 
 type khagmid = int [@@deriving show { with_path = false }]
 
@@ -28,5 +28,5 @@ type khagmtop =
   | Noop
 [@@deriving show { with_path = false }]
 
-type khagm = khagmtop list * Middleend.Kir.kir_table
+type khagm = khagmtop list * Kir.kir_table
 [@@deriving show { with_path = false }]
