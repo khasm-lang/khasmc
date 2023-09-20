@@ -4,6 +4,9 @@ extern u64 used;
 
 
 kha_obj * copy_pap(kha_obj *a) {
+  if (a->gc == 1) {
+    return a;
+  }
   if (a->tag != PAP) {
     fprintf(stderr, "Can't copy_pap non-pap\n");
     exit(1);

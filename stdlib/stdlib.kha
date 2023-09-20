@@ -36,16 +36,16 @@ let apply f2 x3
     : ∀a b, (a -> b) -> a -> b 
     = f2 x3
 
-bind $ = apply
+bind <| = apply
 
 let compose f4 g5 x6
     : ∀a b c, (b -> c) -> (a -> b) -> a -> c
     = f4 (g5 x6)
 
-bind % = compose
+bind >> = compose
 
 let rcompose f7 g8 x9
     : ∀a b c, (a -> b) -> (b -> c) -> a -> c
     = g8 (f7 x9)
 
-bind %> = rcompose
+bind << = rcompose

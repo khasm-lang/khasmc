@@ -10,4 +10,4 @@ let rec ack m n : int -> int -> int =
     	(ack m (n - 1))
 
 let main x : () -> () =
-    print_int $ ack 3 5
+    print_int <| ack 3 5

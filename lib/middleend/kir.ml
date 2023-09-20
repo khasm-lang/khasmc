@@ -84,6 +84,7 @@ and kirexpr =
   | Let of kirtype * kirval * kirexpr * kirexpr
   | IfElse of kirtype * kirexpr * kirexpr * kirexpr
   | SwitchConstr of kirtype * kirexpr * matchtree
+  | Fail of string
 [@@deriving show { with_path = false }]
 
 type kirtop =

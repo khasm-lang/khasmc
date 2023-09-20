@@ -52,11 +52,14 @@ let compile names asts args =
     ();
 
   let khagm = kir' |> Translatemtb.mtb in
-  if args.dump_ast4 then
-    print_endline (Khagm.show_khagm khagm)
-  else
-    ();
-  let out = khagm |> Emit_c.emit_c in
+  if args.dump_ast4 then (
+    print_endline "KHAGM BEFORE OPTS:\n";
+    print_endline (Khagm.show_khagm khagm));
+  let opt = khagm |> Khagm_elim_dups.elim_dups in
+  if args.dump_ast4 then (
+    print_endline "\n\n\nKHAGM AFTER OPTS:\n";
+    print_endline (Khagm.show_khagm opt));
+  let out = opt |> Emit_c.emit_c in
   if not args.nocompile then (
     Native.compile out args;
     "Output as: " ^ args.out)
