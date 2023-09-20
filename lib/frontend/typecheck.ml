@@ -112,14 +112,20 @@ let rec typeprim_is_basic tys x =
 let rec typeprim_len tys x =
   match tys with
   | [] -> raise @@ TypeErr ("Type not found: " ^ x)
-  | z :: zs -> (
-      match z with
-      | Bound _ | Basic _ -> typeprim_len zs x
-      | Param (l, y) ->
-          if y = x then
-            l
-          else
-            typeprim_len zs x)
+  | z :: zs -> 
+    match z with
+    | Basic _ -> typeprim_len zs x
+    | Bound s ->
+      if s = x then
+        0
+      else
+        typeprim_len zs x
+    | Param (l, y) ->
+      if y = x then
+        l
+      else
+        typeprim_len zs x
+              
 (** Ensures all sub-elements of a type are valid, eg. only using bound variables and typefuns*)
 let rec validate_typ types ty =
   match ty with
@@ -420,6 +426,9 @@ and unify ?loop ctx l r =
         let lt = unify ctx a x in
         let rt = unify ctx b y in
         (combine (fst lt) (fst rt), TSMap (snd lt, snd rt))
+    (* Hack to get nullary-argument types to check properly *)
+    | TSApp ([], b), _ ->
+      unify ctx (TSBase (b)) r
     | TSApp (a, b), TSApp (x, y) ->
         if b <> y then
           raise
@@ -466,7 +475,7 @@ and unify ?loop ctx l r =
           raise
             (UnifyErr
                ("Can't unify " ^ pshow_typesig l ^ " and " ^ pshow_typesig r
-              ^ " due to forall mismatch"))
+                ^ " due to forall mismatch"))
     | _, _ -> (
         match loop with
         | None -> unify ~loop:true ctx r l

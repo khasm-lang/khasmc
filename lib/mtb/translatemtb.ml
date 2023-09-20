@@ -7,7 +7,27 @@ let new_let val' =
   let id = Kir.get_random_num () in
   ([ LetInVal (id, val') ], id)
 
-let rec mtb_expr_h exp =
+let rec mtb_matchtree mt =
+  match mt with
+  | Kir.Success e -> mtb_expr e
+  | Kir.Failure -> [ Fail "Match failure" ]
+  | Kir.Switch (e, case, mt1, mt2) -> (
+      match case with
+      | Wildcard | BindTuple ->
+          let e' = mtb_expr e in
+          let code = mtb_matchtree mt1 in
+          e' @ code
+      | BindCtor i ->
+          let ret = Kir.get_random_num () in
+          let tmp = Kir.get_random_num () in
+          let expr, exprid = mtb_expr_h e in
+          let cond = CheckCtor (tmp, exprid, i) in
+          let case1code = mtb_matchtree mt1 in
+          let case2code = mtb_matchtree mt2 in
+          let if' = IfElse (ret, tmp, case1code, case2code) in
+          expr @ [ cond; if'; Return ret ])
+
+and mtb_expr_h exp =
   match exp with
   | Kir.Val (_, i) -> new_let (Val i)
   | Kir.Int s -> new_let (Int s)
@@ -22,7 +42,7 @@ let rec mtb_expr_h exp =
       in
       let all = List.append vals val' in
       (all, id)
-  | Kir.Call (_, e1, e2) ->
+  | Kir.Call (_, e1, e2) -> (
       let rec greedy_matchcall acc g =
         match g with
         | Kir.Call (_, e1, e2) -> greedy_matchcall (e2 :: acc) e1
@@ -33,14 +53,44 @@ let rec mtb_expr_h exp =
       let code = List.concat @@ List.map fst codeandids in
       let ids = List.map snd codeandids in
       let id' = Kir.get_random_num () in
-      let ours = LetInCall (id', List.map (fun x -> Val x) ids) in
-      (code @ [ ours ], id')
+      match ids with
+      | [ x; y ] ->
+          let ours = LetInCall (id', x, [ Val y ]) in
+          (code @ [ ours ], id')
+      | x :: xs ->
+          let ours = LetInCall (id', x, List.map (fun x -> Val x) xs) in
+          (code @ [ ours ], id')
+      | _ -> impossible "zero args to function call in mtb")
   | Kir.Seq (_, e1, e2) ->
-      let codes, id = mtb_expr_h e1 in
+      let codes, _ = mtb_expr_h e1 in
       let codes', id' = mtb_expr_h e2 in
       (codes @ codes', id')
+  | Kir.IfElse (_, c, e1, e2) ->
+      let condcode, condid = mtb_expr_h c in
+      let e1code = mtb_expr e1 in
+      let e2code = mtb_expr e2 in
+      let id = Kir.get_random_num () in
+      let ifelse = IfElse (id, condid, e1code, e2code) in
+      (condcode @ [ ifelse ], id)
+  | Kir.TupAcc (_, e, i) ->
+      let code, e' = mtb_expr_h e in
+      let id = Kir.get_random_num () in
+      (code @ [ Special (id, Val e', TupAcc i) ], id)
+  | Kir.Let (_, id, exp1, exp2) ->
+      let code1, expr1 = mtb_expr_h exp1 in
+      let l = LetInVal (id, Val expr1) in
+      let code2, expr2 = mtb_expr_h exp2 in
+      (code1 @ (l :: code2), expr2)
+  | Kir.SwitchConstr (_, e, mt) ->
+      let code, _id = mtb_expr_h e in
+      let mtcode = mtb_matchtree mt in
+      let ret = Kir.get_random_num () in
+      let sub = SubExpr (ret, mtcode) in
+      (code @ [ sub ], ret)
+  | Kir.Fail s -> ([ Fail s ], -1)
+  | Kir.Lam (_, _, _) -> impossible "lam in translation mtb"
 
-let mtb_expr t =
+and mtb_expr t =
   let code, id = mtb_expr_h t in
   code @ (Return id :: [])
 
