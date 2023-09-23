@@ -683,7 +683,7 @@ and infer ctx tm =
         match infer ctx expr with
         | TSTuple t ->
             print_int @@ List.length t;
-            if List.length t < i then
+            if List.length t <= i then
               raise @@ TypeErr "Tuple access of too-small tuple"
             else
               (inf, List.nth t i)

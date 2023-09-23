@@ -42,6 +42,7 @@ kha_obj * add_arg(kha_obj *a, kha_obj *b) {
     kha_obj **args = malloc(sizeof(kha_obj *));
     args[0] = ref(b);
     kha_obj *k = make_pap(1, a->data.ptr, args);
+    unref(a);
     MUSTTAIL
     return call(k);
   } else {
@@ -72,7 +73,7 @@ kha_obj *reconcile(u64 arg, kha_obj *pap, kha_obj *ret) {
     for (int i = 0; i < (pap->data.pap->argnum - arg); i++) {
       args[i] = ref(pap->data.pap->args[i]);
     }
-    
+
     kha_obj * new = make_pap(pap->data.pap->argnum - arg, ret->data.ptr, args);
     
     unref(ret);
@@ -101,7 +102,7 @@ kha_obj *call(kha_obj *a) {
     case 1: {
       kha_obj *tmp_0;
       kha_obj *(*f)(kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
+      tmp_0 = (a->data.pap->args[0]);
       unref(a);
       return MUSTTAIL f(tmp_0);
     }
@@ -109,8 +110,8 @@ kha_obj *call(kha_obj *a) {
     case 2: {
       kha_obj *tmp_0, *tmp_1;
       kha_obj *(*f)(kha_obj *, kha_obj *)  = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1);
     }
@@ -118,9 +119,9 @@ kha_obj *call(kha_obj *a) {
     case 3: {
       kha_obj *tmp_0, *tmp_1, *tmp_2;
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2);
     }
@@ -128,10 +129,10 @@ kha_obj *call(kha_obj *a) {
     case 4: {
       kha_obj *tmp_0, *tmp_1, *tmp_2, *tmp_3;
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3);
     }
@@ -139,11 +140,11 @@ kha_obj *call(kha_obj *a) {
     case 5: {
       kha_obj *tmp_0, *tmp_1, *tmp_2, *tmp_3, *tmp_4;
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4);
     }
@@ -152,12 +153,12 @@ kha_obj *call(kha_obj *a) {
       kha_obj *tmp_0, *tmp_1, *tmp_2, *tmp_3, *tmp_4, *tmp_5;
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5);
     }
@@ -166,13 +167,13 @@ kha_obj *call(kha_obj *a) {
       kha_obj *tmp_0, *tmp_1, *tmp_2, *tmp_3, *tmp_4, *tmp_5, *tmp_6;
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
-      tmp_6 = ref(a->data.pap->args[6]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
+      tmp_6 = (a->data.pap->args[6]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6);
     }
@@ -181,14 +182,14 @@ kha_obj *call(kha_obj *a) {
       kha_obj *tmp_0, *tmp_1, *tmp_2, *tmp_3, *tmp_4, *tmp_5, *tmp_6, *tmp_7;
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
-      tmp_6 = ref(a->data.pap->args[6]);
-      tmp_7 = ref(a->data.pap->args[7]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
+      tmp_6 = (a->data.pap->args[6]);
+      tmp_7 = (a->data.pap->args[7]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6, tmp_7);
     }
@@ -198,15 +199,15 @@ kha_obj *call(kha_obj *a) {
 	*tmp_8;
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
-      tmp_6 = ref(a->data.pap->args[6]);
-      tmp_7 = ref(a->data.pap->args[7]);
-      tmp_8 = ref(a->data.pap->args[8]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
+      tmp_6 = (a->data.pap->args[6]);
+      tmp_7 = (a->data.pap->args[7]);
+      tmp_8 = (a->data.pap->args[8]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6, tmp_7,
 			tmp_8);
@@ -217,16 +218,16 @@ kha_obj *call(kha_obj *a) {
 	*tmp_8, *tmp_9;
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
-      tmp_6 = ref(a->data.pap->args[6]);
-      tmp_7 = ref(a->data.pap->args[7]);
-      tmp_8 = ref(a->data.pap->args[8]);
-      tmp_9 = ref(a->data.pap->args[9]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
+      tmp_6 = (a->data.pap->args[6]);
+      tmp_7 = (a->data.pap->args[7]);
+      tmp_8 = (a->data.pap->args[8]);
+      tmp_9 = (a->data.pap->args[9]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6, tmp_7,
 			tmp_8, tmp_9);
@@ -238,17 +239,17 @@ kha_obj *call(kha_obj *a) {
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
-      tmp_6 = ref(a->data.pap->args[6]);
-      tmp_7 = ref(a->data.pap->args[7]);
-      tmp_8 = ref(a->data.pap->args[8]);
-      tmp_9 = ref(a->data.pap->args[9]);
-      tmp_10 = ref(a->data.pap->args[10]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
+      tmp_6 = (a->data.pap->args[6]);
+      tmp_7 = (a->data.pap->args[7]);
+      tmp_8 = (a->data.pap->args[8]);
+      tmp_9 = (a->data.pap->args[9]);
+      tmp_10 = (a->data.pap->args[10]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6, tmp_7,
 			tmp_8, tmp_9, tmp_10);
@@ -260,18 +261,18 @@ kha_obj *call(kha_obj *a) {
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
-      tmp_6 = ref(a->data.pap->args[6]);
-      tmp_7 = ref(a->data.pap->args[7]);
-      tmp_8 = ref(a->data.pap->args[8]);
-      tmp_9 = ref(a->data.pap->args[9]);
-      tmp_10 = ref(a->data.pap->args[10]);
-      tmp_11 = ref(a->data.pap->args[11]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
+      tmp_6 = (a->data.pap->args[6]);
+      tmp_7 = (a->data.pap->args[7]);
+      tmp_8 = (a->data.pap->args[8]);
+      tmp_9 = (a->data.pap->args[9]);
+      tmp_10 = (a->data.pap->args[10]);
+      tmp_11 = (a->data.pap->args[11]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6, tmp_7,
 			tmp_8, tmp_9, tmp_10, tmp_11) ;
@@ -283,19 +284,19 @@ kha_obj *call(kha_obj *a) {
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
-      tmp_6 = ref(a->data.pap->args[6]);
-      tmp_7 = ref(a->data.pap->args[7]);
-      tmp_8 = ref(a->data.pap->args[8]);
-      tmp_9 = ref(a->data.pap->args[9]);
-      tmp_10 = ref(a->data.pap->args[10]);
-      tmp_11 = ref(a->data.pap->args[11]);
-      tmp_12 = ref(a->data.pap->args[12]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
+      tmp_6 = (a->data.pap->args[6]);
+      tmp_7 = (a->data.pap->args[7]);
+      tmp_8 = (a->data.pap->args[8]);
+      tmp_9 = (a->data.pap->args[9]);
+      tmp_10 = (a->data.pap->args[10]);
+      tmp_11 = (a->data.pap->args[11]);
+      tmp_12 = (a->data.pap->args[12]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6, tmp_7,
 			tmp_8, tmp_9, tmp_10, tmp_11, tmp_12);
@@ -307,20 +308,20 @@ kha_obj *call(kha_obj *a) {
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
-      tmp_6 = ref(a->data.pap->args[6]);
-      tmp_7 = ref(a->data.pap->args[7]);
-      tmp_8 = ref(a->data.pap->args[8]);
-      tmp_9 = ref(a->data.pap->args[9]);
-      tmp_10 = ref(a->data.pap->args[10]);
-      tmp_11 = ref(a->data.pap->args[11]);
-      tmp_12 = ref(a->data.pap->args[12]);
-      tmp_13 = ref(a->data.pap->args[13]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
+      tmp_6 = (a->data.pap->args[6]);
+      tmp_7 = (a->data.pap->args[7]);
+      tmp_8 = (a->data.pap->args[8]);
+      tmp_9 = (a->data.pap->args[9]);
+      tmp_10 = (a->data.pap->args[10]);
+      tmp_11 = (a->data.pap->args[11]);
+      tmp_12 = (a->data.pap->args[12]);
+      tmp_13 = (a->data.pap->args[13]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6, tmp_7,
 			tmp_8, tmp_9, tmp_10, tmp_11, tmp_12, tmp_13);
@@ -332,21 +333,21 @@ kha_obj *call(kha_obj *a) {
       kha_obj *(*f)(kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *,
 		    kha_obj *, kha_obj *, kha_obj *, kha_obj *, kha_obj *) = func;
-      tmp_0 = ref(a->data.pap->args[0]);
-      tmp_1 = ref(a->data.pap->args[1]);
-      tmp_2 = ref(a->data.pap->args[2]);
-      tmp_3 = ref(a->data.pap->args[3]);
-      tmp_4 = ref(a->data.pap->args[4]);
-      tmp_5 = ref(a->data.pap->args[5]);
-      tmp_6 = ref(a->data.pap->args[6]);
-      tmp_7 = ref(a->data.pap->args[7]);
-      tmp_8 = ref(a->data.pap->args[8]);
-      tmp_9 = ref(a->data.pap->args[9]);
-      tmp_10 = ref(a->data.pap->args[10]);
-      tmp_11 = ref(a->data.pap->args[11]);
-      tmp_12 = ref(a->data.pap->args[12]);
-      tmp_13 = ref(a->data.pap->args[13]);
-      tmp_14 = ref(a->data.pap->args[14]);
+      tmp_0 = (a->data.pap->args[0]);
+      tmp_1 = (a->data.pap->args[1]);
+      tmp_2 = (a->data.pap->args[2]);
+      tmp_3 = (a->data.pap->args[3]);
+      tmp_4 = (a->data.pap->args[4]);
+      tmp_5 = (a->data.pap->args[5]);
+      tmp_6 = (a->data.pap->args[6]);
+      tmp_7 = (a->data.pap->args[7]);
+      tmp_8 = (a->data.pap->args[8]);
+      tmp_9 = (a->data.pap->args[9]);
+      tmp_10 = (a->data.pap->args[10]);
+      tmp_11 = (a->data.pap->args[11]);
+      tmp_12 = (a->data.pap->args[12]);
+      tmp_13 = (a->data.pap->args[13]);
+      tmp_14 = (a->data.pap->args[14]);
       unref(a);
       return MUSTTAIL f(tmp_0, tmp_1, tmp_2, tmp_3, tmp_4, tmp_5, tmp_6, tmp_7,
 			tmp_8, tmp_9, tmp_10, tmp_11, tmp_12, tmp_13, tmp_14);

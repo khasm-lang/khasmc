@@ -50,19 +50,21 @@ kha_obj * make_pap(u64 argnum, void * p, kha_obj ** args) {
 }
 
 kha_obj * make_tuple(u64 num, ...) {
-
-  
-  
-  va_list ap;
-  va_start(ap, num);
-  kha_obj ** arr = malloc(sizeof(kha_obj*) * num);
-  for (int i = 0; i < num; i++) {
-    arr[i] = ref(va_arg(ap, kha_obj*));
+  kha_obj ** arr;
+  if (num == 0) {
+    arr = NULL;
   }
-  va_end(ap);
-  
+  else {
+    va_list ap;
+    va_start(ap, num);
+    arr = malloc(sizeof(kha_obj*) * num);
+    for (int i = 0; i < num; i++) {
+      arr[i] = ref(va_arg(ap, kha_obj*));
+    }
+    va_end(ap);
+  }
   kha_obj *k = new_kha_obj(TUPLE);
-  k->data.pap = malloc(sizeof(struct kha_obj_tuple));
+  k->data.tuple = malloc(sizeof(struct kha_obj_tuple));
   k->data.tuple->len = num;
   k->data.tuple->tups = arr;
   k->gc = 1;

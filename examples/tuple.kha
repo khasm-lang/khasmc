@@ -1,0 +1,3 @@
+let main x : () -> () =
+    let z = (1, 2) in
+    Stdlib.print_int (z.1)

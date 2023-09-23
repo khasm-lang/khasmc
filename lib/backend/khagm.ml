@@ -16,7 +16,7 @@ type special = TupAcc of int [@@deriving show { with_path = false }]
 type khagmexpr =
   | Fail of string
   | LetInVal of id * value
-  | LetInCall of id * id * value list  (** ret, func, vals *)
+  | LetInCall of id * id * id list  (** ret, func, args *)
   | IfElse of id * id * khagmexpr list * khagmexpr list  (** ret, cond, e1, e2*)
   | Special of id * value * special
   | SubExpr of id * khagmexpr list
@@ -29,7 +29,7 @@ type khagmexpr =
 type khagmtop =
   | Let of id * id list * khagmexpr list
   | Ctor of id * int  (** name * arity *)
-  | Extern of id * int * string
+  | Extern of id * int * string  (** id * arity * name *)
   | Noop
 [@@deriving show { with_path = false }]
 
