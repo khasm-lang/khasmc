@@ -5,6 +5,7 @@
 
 kha_obj *new_kha_obj(kha_obj_typ t);
 
+void *kha_alloc(size_t);
 kha_obj *ref(kha_obj *);
 void unref(kha_obj *);
 void k_free(kha_obj *);

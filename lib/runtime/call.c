@@ -1,17 +1,18 @@
+#include "gc.h"
 #include "call.h"
 
 extern u64 used;
 
 
 kha_obj * copy_pap(kha_obj *a) {
-  if (a->gc == 1) {
+  if (a->gc >> 8 == 1) {
     return a;
   }
   if (a->tag != PAP) {
     fprintf(stderr, "Can't copy_pap non-pap\n");
     exit(1);
   }
-  kha_obj ** args = malloc(sizeof(kha_obj*)
+  kha_obj ** args = kha_alloc(sizeof(kha_obj*)
 			   * (a->data.pap->argnum));
   memcpy(args, a->data.pap->args,
 	 sizeof(kha_obj *) * a->data.pap->argnum);
@@ -39,7 +40,7 @@ kha_obj * add_arg(kha_obj *a, kha_obj *b) {
     MUSTTAIL
     return call(a);
   } else if (a->tag == PTR) {
-    kha_obj **args = malloc(sizeof(kha_obj *));
+    kha_obj **args = kha_alloc(sizeof(kha_obj *));
     args[0] = ref(b);
     kha_obj *k = make_pap(1, a->data.ptr, args);
     unref(a);
@@ -68,7 +69,7 @@ kha_obj *reconcile(u64 arg, kha_obj *pap, kha_obj *ret) {
     return MUSTTAIL call(ret);
   }
   else if (ret->tag == PTR) {
-    kha_obj **args = malloc(sizeof(kha_obj *) * (pap->data.pap->argnum - arg));
+    kha_obj **args = kha_alloc(sizeof(kha_obj *) * (pap->data.pap->argnum - arg));
     
     for (int i = 0; i < (pap->data.pap->argnum - arg); i++) {
       args[i] = ref(pap->data.pap->args[i]);

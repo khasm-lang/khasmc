@@ -21,9 +21,9 @@ typedef enum kha_obj_typ {
 
 typedef struct kha_obj {
   union {
-    struct {
+    union {
+      u64 gc;
       kha_obj_typ tag;
-      u32 gc;
     };
     void *fatptr;
   };
