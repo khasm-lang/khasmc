@@ -23,7 +23,7 @@ typedef struct kha_obj {
   union {
     struct {
       kha_obj_typ tag;
-      u64 gc: 56;
+      u32 gc;
     };
     void *fatptr;
   };
@@ -33,7 +33,7 @@ typedef struct kha_obj {
     struct kha_obj_adt {
       u64 tag;
       struct kha_obj **data;
-    } *adt;
+    } adt;
     
     struct kha_obj_pap {
       void *(*func)(void*);
@@ -50,12 +50,12 @@ typedef struct kha_obj {
     struct kha_obj_tuple {
       u64 len;
       struct kha_obj ** tups;
-    } *tuple;
+    } tuple;
 
     struct kha_obj_str {
       char * data;
       i64 len;
-    } *str;
+    } str;
     
   }data;
 } kha_obj;
