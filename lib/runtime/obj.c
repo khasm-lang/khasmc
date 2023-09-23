@@ -32,9 +32,8 @@ kha_obj * make_float(f64 f) {
 
 kha_obj * make_string(char * f) {
   kha_obj * k = new_kha_obj(STR);
-  k->data.str = malloc(sizeof(struct kha_obj_str));
-  k->data.str->data = strdup(f);
-  k->data.str->len = strlen(f);
+  k->data.str.data = strdup(f);
+  k->data.str.len = strlen(f);
   k->gc = 1;
   return k;
 }
@@ -64,9 +63,8 @@ kha_obj * make_tuple(u64 num, ...) {
     va_end(ap);
   }
   kha_obj *k = new_kha_obj(TUPLE);
-  k->data.tuple = malloc(sizeof(struct kha_obj_tuple));
-  k->data.tuple->len = num;
-  k->data.tuple->tups = arr;
+  k->data.tuple.len = num;
+  k->data.tuple.tups = arr;
   k->gc = 1;
   return k;
 }

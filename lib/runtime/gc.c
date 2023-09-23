@@ -53,28 +53,25 @@ void k_free(kha_obj * a) {
     }
     case ADT: {
       for (int i = 0; i < a->data.pap->argnum; i++) {
-	unref(a->data.adt->data[i]);
+	unref(a->data.adt.data[i]);
       }
-      free(a->data.adt->data);
-      free(a->data.adt);
+      free(a->data.adt.data);
       a->tag = FREE;
       free(a);
       break;
     }
     case TUPLE: {
-      for (int i = 0; i < a->data.tuple->len; i++) {
-        unref(a->data.tuple->tups[i]);
+      for (int i = 0; i < a->data.tuple.len; i++) {
+        unref(a->data.tuple.tups[i]);
       }
-      if (a->data.tuple->tups)
-	free(a->data.tuple->tups);
-      free(a->data.tuple);
+      if (a->data.tuple.tups)
+	free(a->data.tuple.tups);
       a->tag = FREE;
       free(a);
       break;
     }
     case STR: {
-      free(a->data.str->data);
-      free(a->data.str);
+      free(a->data.str.data);
       a->tag = FREE;
       free(a);
       break;
