@@ -15,7 +15,8 @@ typedef enum kha_obj_typ {
   FLOAT,
   STR,
   TUPLE,
-  END
+  END,
+  FREE
 } packed kha_obj_typ;
 
 typedef struct kha_obj {

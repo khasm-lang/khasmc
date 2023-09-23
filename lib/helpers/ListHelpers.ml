@@ -92,3 +92,24 @@ let[@tail_mod_cons] rec map f x =
   | x :: xs ->
       let y = f x in
       y :: map f xs
+
+let rec take l n =
+  match (n, l) with
+  | 0, _ -> []
+  | n, x :: xs -> x :: take xs (n - 1)
+  | _, _ -> raise Not_found
+
+let maybe_take l n = try Some (take l n) with Not_found -> None
+
+let rec without_n l n =
+  match (n, l) with
+  | 0, l -> l
+  | n, x :: xs -> without_n xs (n - 1)
+  | _, _ -> raise Not_found
+
+let rec maybe_without_n l n = try Some (without_n l n) with Not_found -> None
+
+let rec increasing start num =
+  match num with 0 -> [] | n -> start :: increasing (start + 1) (n - 1)
+
+let rec in_x_not_y x y = List.filter (fun z -> not @@ List.mem z y) x

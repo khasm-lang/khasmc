@@ -10,6 +10,7 @@ int main(void) {
   fprintf(stderr, "RETURN VALUE NOT TUPLE - TYPE SYSTEM INVALID\n");
   }  
   unref(ret);
+  unref(empty);
   return 0;  
 }
 |}

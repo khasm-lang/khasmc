@@ -55,10 +55,10 @@ and mtb_expr_h exp =
       let id' = Kir.get_random_num () in
       match ids with
       | [ x; y ] ->
-          let ours = LetInCall (id', x, [ Val y ]) in
+          let ours = LetInCall (id', x, [ y ]) in
           (code @ [ ours ], id')
       | x :: xs ->
-          let ours = LetInCall (id', x, List.map (fun x -> Val x) xs) in
+          let ours = LetInCall (id', x, xs) in
           (code @ [ ours ], id')
       | _ -> impossible "zero args to function call in mtb")
   | Kir.Seq (_, e1, e2) ->

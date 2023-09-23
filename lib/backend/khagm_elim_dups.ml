@@ -21,13 +21,10 @@ let rec subsval list oldid newid =
             func,
             List.map
               (fun e ->
-                match e with
-                | Val v ->
-                    if v = oldid then
-                      Val newid
-                    else
-                      e
-                | _ -> e)
+                if e = oldid then
+                  newid
+                else
+                  e)
               args )
     | Special (ret, Val v, spec) ->
         if v = oldid then
@@ -43,6 +40,11 @@ let rec subsval list oldid newid =
         in
         IfElse (ret, cond, subsval e1 oldid newid, subsval e2 oldid newid)
     | SubExpr (i, l) -> SubExpr (i, subsval l oldid newid)
+    | Return i ->
+        if i = oldid then
+          Return newid
+        else
+          elm
     | _ -> elm
   in
   List.map go list

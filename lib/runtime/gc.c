@@ -31,59 +31,51 @@ inline void unref(kha_obj * a) {
   }
 }
 
-
-
 void k_free(kha_obj * a) {
-  true_free(a);
-}
-
-void thread_unref(kha_obj *a) {
-  if (!a) return;
-  a->gc -= 1;
-  if (a->gc <= 0) {
-    k_free(a);
-  }
-}
-
-void true_free(kha_obj * a) {
   if (!a) return;
   switch (a->tag) {
     case INT:
     case FLOAT:
     case ENUM:
     case PTR:
+      a->tag = FREE;
       free(a);
       break;
     case PAP: {
       for (int i = 0; i < a->data.pap->argnum; i++) {
-	thread_unref(a->data.pap->args[i]);
+	unref(a->data.pap->args[i]);
       }
       free(a->data.pap->args);
       free(a->data.pap);
+      a->tag = FREE;
       free(a);
       break;
     }
     case ADT: {
       for (int i = 0; i < a->data.pap->argnum; i++) {
-	thread_unref(a->data.adt->data[i]);
+	unref(a->data.adt->data[i]);
       }
       free(a->data.adt->data);
       free(a->data.adt);
+      a->tag = FREE;
       free(a);
       break;
     }
     case TUPLE: {
       for (int i = 0; i < a->data.tuple->len; i++) {
-        thread_unref(a->data.tuple->tups[i]);
+        unref(a->data.tuple->tups[i]);
       }
-      free(a->data.tuple->tups);
+      if (a->data.tuple->tups)
+	free(a->data.tuple->tups);
       free(a->data.tuple);
+      a->tag = FREE;
       free(a);
       break;
     }
     case STR: {
       free(a->data.str->data);
       free(a->data.str);
+      a->tag = FREE;
       free(a);
       break;
     }

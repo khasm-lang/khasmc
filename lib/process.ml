@@ -55,7 +55,10 @@ let compile names asts args =
   if args.dump_ast4 then (
     print_endline "KHAGM BEFORE OPTS:\n";
     print_endline (Khagm.show_khagm khagm));
-  let opt = khagm |> Khagm_elim_dups.elim_dups in
+  let opt =
+    khagm |> Khagm_elim_dups.elim_dups |> Remove_zeroarity.remove_zeroarity
+    |> Insert_refcounts.insert_refcounts
+  in
   if args.dump_ast4 then (
     print_endline "\n\n\nKHAGM AFTER OPTS:\n";
     print_endline (Khagm.show_khagm opt));
