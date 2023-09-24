@@ -376,10 +376,10 @@ and parse_type_pratt state =
 
 and parse_type state =
   match peek state 1 with
-  | FORALL ->
+  | LT_OP "<" ->
       toss state;
       let idents = nonempty (id_list state) (T_IDENT "example2") state in
-      expect state COMMA;
+      expect state (GT_OP ">");
       let rec help idents =
         match idents with
         | [] -> raise @@ Impossible "parse_type"
@@ -692,26 +692,23 @@ and parse_let state =
     | x :: xs -> (x, xs)
     | [] -> error state (pop state) [ T_IDENT "example" ]
   in
-  let ts =
-    match pop state with
-    | COL_OP ":" -> parse_type state
-    | x -> error state x [ COL_OP ":" ]
-  in
   let expr =
     match pop state with
     | EQ_OP "=" -> parse_expr state 0
     | x -> error state x [ EQ_OP "=" ]
   in
-  ((id, ts), (id, args, expr))
+  (id, args, expr)
 
 and parse_let_norm state =
+  let ts = parse_type state in
+  expect state LET;
   match peek state 1 with
   | REC ->
       toss state;
-      let (id, ts), (_id, args, expr) = parse_let state in
+      let id, args, expr = parse_let state in
       TopAssignRec ((id, ts), (id, args, expr))
   | _ ->
-      let (id, ts), (_id, args, expr) = parse_let state in
+      let id, args, expr = parse_let state in
       TopAssign ((id, ts), (id, args, expr))
 
 and parse_module state =
@@ -804,7 +801,7 @@ and parse_typedecl state =
 and parse_toplevel_list state =
   let first =
     match peek state 1 with
-    | LET ->
+    | SIG ->
         toss state;
         Some (parse_let_norm state)
     | MODULE ->
@@ -826,9 +823,7 @@ and parse_toplevel_list state =
         toss state;
         Some (parse_typedecl state)
     | EOF -> None
-    | x ->
-        print_token x;
-        None
+    | x -> None
   in
   match first with Some x -> x :: parse_toplevel_list state | None -> []
 
@@ -844,4 +839,5 @@ and program token lexbuf file =
     print_endline "EMPTY FILE";
     raise ParseError)
   else
-    Program tmp
+    expect state EOF;
+  Program tmp

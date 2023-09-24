@@ -141,8 +141,8 @@ rule token = parse
      | "inline" {incr_by lexbuf; INLINE}
      | "ignore" {incr_by lexbuf; IGNORE}
      | "forall" {incr_by lexbuf; FORALL}
-     | "extern" {incr_by lexbuf; EXTERN}
-     | "internal_extern" {incr_by lexbuf; INTEXTERN}
+     | "sig" {incr_by lexbuf; SIG}
+     | "extern" {incr_by lexbuf; INTEXTERN}
      | "bind" {incr_by lexbuf; BIND}
      | "and" {incr_by lexbuf; LAND}
      | "or"  {incr_by lexbuf; LOR}
@@ -156,7 +156,6 @@ rule token = parse
      | "∀" {incr_by lexbuf; FORALL}
      | "λ" {incr_by lexbuf; FUN}
      | "Λ" {incr_by lexbuf; TFUN}
-     | "sig" {incr_by lexbuf; SIG}
      | COMMENT {incr_by lexbuf;  token lexbuf }
      | WHITESPACE {incr_by lexbuf;  token lexbuf}
      | NEWLINE { next_line lexbuf; token lexbuf}

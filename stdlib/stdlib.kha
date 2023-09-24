@@ -1,18 +1,18 @@
-internal_extern 2 `int_add : ∀a, a -> a -> a  = iadd 
-internal_extern 2 `int_sub : ∀a, a -> a -> a  = isub 
-internal_extern 2 `int_mul: ∀a, a -> a -> a   = imul 
-internal_extern 2 `int_div : ∀a, a -> a -> a = idiv 
+extern 2 `int_add : <a> a -> a -> a  = iadd 
+extern 2 `int_sub : <a> a -> a -> a  = isub 
+extern 2 `int_mul: <a> a -> a -> a   = imul 
+extern 2 `int_div : <a> a -> a -> a = idiv 
 
-internal_extern 2 `float_add: ∀a, a -> a -> a  = fadd 
-internal_extern 2 `float_sub: ∀a, a -> a -> a  = fsub 
-internal_extern 2 `float_div : ∀a, a -> a -> a = fdiv 
-internal_extern 2 `float_mul : ∀a, a -> a -> a = fmul 
+extern 2 `float_add: <a> a -> a -> a  = fadd 
+extern 2 `float_sub: <a> a -> a -> a  = fsub 
+extern 2 `float_div : <a> a -> a -> a = fdiv 
+extern 2 `float_mul : <a> a -> a -> a = fmul 
 
-internal_extern 1 `print_int: int -> () = print_int 
-internal_extern 1 `print_str : string -> () = print_str
-internal_extern 1 `print_float : float -> () = print_float 
+extern 1 `print_int: int -> () = print_int 
+extern 1 `print_str : string -> () = print_str
+extern 1 `print_float : float -> () = print_float 
 
-internal_extern 2 `s_eq : ∀a, a -> a -> bool = s_eq
+extern 2 `s_eq : <a> a -> a -> bool = s_eq
 
 bind = = s_eq
 
@@ -26,26 +26,26 @@ bind -. = fsub
 bind *. = fmul
 bind /. = fdiv
 
+sig <a b> a -> (a -> b) -> b
 let pipe x0 f1
-    : ∀a b, a -> (a -> b) -> b
     = f1 x0
 
 bind |> = pipe
 
+sig <a b> (a -> b) -> a -> b 
 let apply f2 x3
-    : ∀a b, (a -> b) -> a -> b 
     = f2 x3
 
 bind <| = apply
 
+sig <a b c> (b -> c) -> (a -> b) -> a -> c
 let compose f4 g5 x6
-    : ∀a b c, (b -> c) -> (a -> b) -> a -> c
     = f4 (g5 x6)
 
 bind >> = compose
 
+sig <a b c> (a -> b) -> (b -> c) -> a -> c
 let rcompose f7 g8 x9
-    : ∀a b c, (a -> b) -> (b -> c) -> a -> c
     = g8 (f7 x9)
 
 bind << = rcompose

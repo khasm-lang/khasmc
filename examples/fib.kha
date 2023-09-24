@@ -1,11 +1,14 @@
 open Stdlib
-let rec fib n : int -> int =
+
+sig int -> int
+let rec fib n =
   if n = 0 then 
-    n
+    1
   else if n = 1 then
-    n
+    1
   else
     fib (n - 1) + fib (n - 2)
 
-let main x : () -> () =
-     print_int <| fib 35
+sig () -> ()
+let main x =
+     print_int <| fib 25
