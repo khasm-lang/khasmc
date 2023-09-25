@@ -835,9 +835,5 @@ and program token lexbuf file =
   in
   let state = new_state token lexbuf file in
   let tmp = parse_toplevel_list state in
-  if tmp = [] then (
-    print_endline "EMPTY FILE";
-    raise ParseError)
-  else
-    expect state EOF;
+  expect state EOF;
   Program tmp

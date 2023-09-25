@@ -1,11 +1,11 @@
-let example f x
-    : ∀a b, (a -> b) -> a -> b =
+sig <a b> (a -> b) -> a -> b
+let example f x =
     f x
 
-let main x : () -> ()  =
+sig () -> ()
+let main x =
     let temp = example Stdlib.print_int in
     temp 10;
     temp 5
 
 
-let test : ()  = ()
