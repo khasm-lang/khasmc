@@ -11,4 +11,4 @@ let rec fib n =
 
 sig () -> ()
 let main x =
-     print_int <| fib 25
+     print_int <| fib 5

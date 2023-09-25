@@ -5,7 +5,8 @@
 kha_obj * make_raw_ptr(void *p) {
   kha_obj * k = new_kha_obj(PTR);
   k->data.ptr = p;
-  k->gc = 1 << 8 | k->tag;
+  // init at zero refcount bc otherwise they don't get freed properly
+  k->gc = 0 << 8 | k->tag;
   return k;
 }
 

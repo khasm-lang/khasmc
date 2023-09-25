@@ -40,17 +40,12 @@ let is_extern ctx id = List.mem id ctx.externs
 let quot ctx tbl id =
   match Kir.get_bind_id tbl id with
   | None -> id_to_name id
-  | Some _ ->
-      (* it's a toplevel thing *)
-      if is_extern ctx id then
-        "make_raw_ptr(&" ^ mangle tbl id ^ ")"
-      else
-        "&" ^ mangle tbl id
+  | Some _ -> "make_raw_ptr(&" ^ mangle tbl id ^ ")"
 
 let quot_raw _ctx tbl id =
   match Kir.get_bind_id tbl id with
   | None -> id_to_name id
-  | Some _ -> "ref(make_raw_ptr(&" ^ mangle tbl id ^ "))"
+  | Some _ -> "(make_raw_ptr(&" ^ mangle tbl id ^ "))"
 
 let quot_dircall _ctx tbl id =
   match Kir.get_bind_id tbl id with
@@ -84,16 +79,13 @@ let rec gen_funccall ctx _ret tbl arties id func args =
   match
     (is_extern ctx id, Kir.get_bind_id tbl func, List.assoc_opt func arties)
   with
-  | false, Some _, Some arity when arity = List.length args ->
+  (*| false, Some _, Some arity when arity = List.length args ->
       let funcname = quot_dircall ctx tbl func in
-      quot ctx tbl id ^ " = " ^ funcname ^ "(" ^ comsep ctx tbl args ^ ");\n"
+      quot ctx tbl id ^ " = " ^ funcname ^ "(" ^ comsep ctx tbl args ^ ");\n" *)
   | _, _, _ ->
       let rec go call args =
         match args with
-        | [] -> quot ctx tbl id ^ " = " ^ quot ctx tbl call ^ ";\n"
-        | [ x ] ->
-            quot ctx tbl id ^ " = " ^ "add_arg(" ^ quot_raw ctx tbl call ^ ", "
-            ^ quot ctx tbl x ^ ");\n"
+        | [] -> quot ctx tbl id ^ " = ref(" ^ quot ctx tbl call ^ ");\n"
         | x :: xs ->
             let tmp = Kir.get_random_num () in
             let curr =
@@ -101,7 +93,7 @@ let rec gen_funccall ctx _ret tbl arties id func args =
               ^ ", " ^ quot ctx tbl x ^ ");\n"
             in
             let next = go tmp xs in
-            curr ^ next
+            curr ^ next ^ "\nunref(" ^ quot ctx tbl tmp ^ ");\n"
       in
       let tmp = go func args in
       tmp
@@ -127,13 +119,13 @@ and emit_body ctx ret tbl arties body =
           ^ ", " ^ quotval ctx tbl value ^ ");\n")
   | SubExpr (id, exprs) ->
       let sub = ListHelpers.map (emit_body ctx id tbl arties) exprs in
-      "{\n" ^ String.concat "\n" sub ^ "\n}\n"
+      "{\n" ^ String.concat " " sub ^ "\n}\n"
   | CheckCtor (id, value, ctor) -> todo "checkctor"
   | IfElse (id, cond, e1, e2) ->
       let e1' = ListHelpers.map (emit_body ctx id tbl arties) e1 in
       let e2' = ListHelpers.map (emit_body ctx id tbl arties) e2 in
-      "if(" ^ quot ctx tbl cond ^ "->data.i)" ^ "{\n" ^ String.concat "\n" e1'
-      ^ "}\n else {\n" ^ String.concat "\n" e2' ^ "}\n"
+      "if(" ^ quot ctx tbl cond ^ "->data.i)" ^ "{\n" ^ String.concat " " e1'
+      ^ "}\n else {\n" ^ String.concat " " e2' ^ "}\n"
 
 let genfunc tbl id args =
   let name = mangle tbl id in
