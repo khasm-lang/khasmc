@@ -21,11 +21,11 @@ typedef enum kha_obj_typ {
 
 typedef struct kha_obj {
   union {
+    u64 gc;
+    kha_obj_typ tag;
     union {
-      u64 gc;
-      kha_obj_typ tag;
+      u8 buf[8];
     };
-    void *fatptr;
   };
   union {
     u64 kha_enum;

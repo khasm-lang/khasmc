@@ -36,10 +36,10 @@ kha_obj * add_arg(kha_obj *f, kha_obj *b) {
     a->data.pap->args[a->data.pap->argnum - 1] = ref(b);
     return call(a);
   } else if (f->tag == PTR) {
-    ref(f);
     kha_obj **args = kha_alloc(sizeof(kha_obj *));
     args[0] = ref(b);
     kha_obj *k = make_pap(1, f->data.ptr, args);
+    unref(f);
     return call(k);
   } else {
     fprintf(stderr, "ERROR: Can't call non-ptr %d", f->tag);

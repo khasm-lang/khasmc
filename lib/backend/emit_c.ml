@@ -93,7 +93,8 @@ let rec gen_funccall ctx _ret tbl arties id func args =
               ^ ", " ^ quot ctx tbl x ^ ");\n"
             in
             let next = go tmp xs in
-            curr ^ next ^ "\nunref(" ^ quot ctx tbl tmp ^ ");\n"
+            curr ^ next ^ "\nunref(" ^ quot ctx tbl tmp
+            ^ "); // CODEGEN FUNCCALL\n"
       in
       let tmp = go func args in
       tmp
@@ -102,7 +103,7 @@ and emit_body ctx ret tbl arties body =
   match body with
   | Fail s -> {|fprintf("FAILURE: |} ^ s ^ {|\n");|} ^ " exit(1);\n"
   | Ref i -> "ref(" ^ quot ctx tbl i ^ ");\n"
-  | Unref i -> "unref(" ^ quot ctx tbl i ^ ");\n"
+  | Unref i -> "unref(" ^ quot ctx tbl i ^ "); /* manual gen */ \n"
   | Return i -> quot ctx tbl ret ^ " = " ^ quot ctx tbl i ^ ";\n"
   | LetInVal (id, value) ->
       quot ctx tbl id ^ " = " ^ quotval ctx tbl value ^ ";\n"

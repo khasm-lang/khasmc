@@ -1,12 +1,6 @@
 open Exp
 open Khagm
 
-let refs ctx ls =
-  ListHelpers.in_x_not_y ls ctx |> ListHelpers.map (fun x -> Ref x)
-
-let unrefs ctx ls =
-  ListHelpers.in_x_not_y ls ctx |> ListHelpers.map (fun x -> Unref x)
-
 let rec from_val v =
   match v with
   | Val i -> [ i ]
@@ -42,49 +36,43 @@ let rec occur_deep t =
   | Ref i -> [ i ]
   | Unref i -> [ i ]
 
-let rec get_curr_unrefs ctx curr rest =
-  let in_curr = occur_shallow curr in
-  let in_rest = List.concat_map occur_deep rest in
-  let diff = ListHelpers.in_x_not_y in_curr in_rest in
-  unrefs ctx diff
+let refs ctx l =
+  List.filter (fun x -> not @@ List.mem x ctx) l |> List.map (fun x -> Ref x)
 
-and insert_expr free_once_unused ctx body =
+let unrefs ctx l =
+  List.filter (fun x -> not @@ List.mem x ctx) l |> List.map (fun x -> Unref x)
+
+let rec most ctx curr rest =
+  let c = occur_shallow curr in
+  let m = List.concat_map occur_deep rest in
+  unrefs ctx (ListHelpers.in_x_not_y c m)
+
+and insert_expr ctx body =
   match body with
   | [] -> []
   | curr :: rest -> (
       match curr with
-      | Return i -> [ Return i ]
-      | IfElse (id, cond, e1, e2) ->
-          let in_curr = occur_shallow curr @ free_once_unused in
-          let in_rest = List.concat_map occur_deep rest in
-          let diff = ListHelpers.in_x_not_y in_curr in_rest in
-          let still_used = ListHelpers.in_x_not_y free_once_unused diff in
-          let uns = unrefs ctx diff in
-          let curr =
-            IfElse (id, cond, insert_expr [] ctx e1, insert_expr [] ctx e2)
-          in
-          (curr :: uns) @ insert_expr still_used ctx rest
-      | SubExpr (id, e) ->
-          let in_curr = occur_shallow curr @ free_once_unused in
-          let in_rest = List.concat_map occur_deep rest in
-          let diff = ListHelpers.in_x_not_y in_curr in_rest in
-          let still_used = ListHelpers.in_x_not_y free_once_unused diff in
-          let uns = unrefs ctx diff in
-          let curr = SubExpr (id, insert_expr [] ctx e) in
-          (curr :: uns) @ insert_expr still_used ctx rest
-      | _ ->
-          let in_curr = occur_shallow curr @ free_once_unused in
-          let in_rest = List.concat_map occur_deep rest in
-          let diff = ListHelpers.in_x_not_y in_curr in_rest in
-          let still_used = ListHelpers.in_x_not_y free_once_unused diff in
-          let uns = unrefs ctx diff in
-          (curr :: uns) @ insert_expr still_used ctx rest)
+      | Return i -> (
+          match rest with
+          | [] -> [ Return i ]
+          | _ -> impossible "return with stuff after it")
+      | IfElse (ret, cond, e1, e2) ->
+          let e1' = insert_expr ctx e1 in
+          let e2' = insert_expr ctx e2 in
+          let m = most ctx curr rest in
+          (IfElse (ret, cond, e1', e2') :: m) @ insert_expr ctx rest
+      | SubExpr (ret, e) ->
+          let e' = insert_expr ctx e in
+          let m = most ctx curr rest in
+          (SubExpr (ret, e') :: m) @ insert_expr ctx rest
+      | _ -> (curr :: most ctx curr rest) @ insert_expr ctx rest)
 
 let insert_top ctx code =
   List.map
     (fun elm ->
       match elm with
-      | Let (id, args, body) -> Let (id, args, insert_expr args ctx body)
+      | Let (id, args, body) ->
+          Let (id, args, insert_expr (args @ ctx) body @ unrefs ctx args)
       | _ -> elm)
     code
 
