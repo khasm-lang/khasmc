@@ -24,7 +24,6 @@ kha_obj * copy_pap(kha_obj *a) {
 
 kha_obj * add_arg(kha_obj *f, kha_obj *b) {
   if (f->tag == PAP) {
-
     // copy pap
 
     kha_obj * a = copy_pap(f);
@@ -39,7 +38,11 @@ kha_obj * add_arg(kha_obj *f, kha_obj *b) {
     kha_obj **args = kha_alloc(sizeof(kha_obj *));
     args[0] = ref(b);
     kha_obj *k = make_pap(1, f->data.ptr, args);
-    unref(f);
+    
+    if (f->gc >> 8 == 0) {
+      k_free(f);
+    }
+
     return call(k);
   } else {
     fprintf(stderr, "ERROR: Can't call non-ptr %d", f->tag);

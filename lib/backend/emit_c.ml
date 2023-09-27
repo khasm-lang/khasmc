@@ -44,8 +44,8 @@ let quot ctx tbl id =
 
 let quot_raw _ctx tbl id =
   match Kir.get_bind_id tbl id with
-  | None -> id_to_name id
-  | Some _ -> "(make_raw_ptr(&" ^ mangle tbl id ^ "))"
+  | None -> "(" ^ id_to_name id ^ ")"
+  | Some _ -> "make_raw_ptr(&" ^ mangle tbl id ^ ")"
 
 let quot_dircall _ctx tbl id =
   match Kir.get_bind_id tbl id with
