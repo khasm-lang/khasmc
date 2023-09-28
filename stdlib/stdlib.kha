@@ -1,18 +1,18 @@
-extern 2 `int_add : <a> a -> a -> a  = iadd 
-extern 2 `int_sub : <a> a -> a -> a  = isub 
-extern 2 `int_mul: <a> a -> a -> a   = imul 
-extern 2 `int_div : <a> a -> a -> a = idiv 
+extern 2 `khasm_int_add : <a> a -> a -> a  = iadd 
+extern 2 `khasm_int_sub : <a> a -> a -> a  = isub 
+extern 2 `khasm_int_mul: <a> a -> a -> a   = imul 
+extern 2 `khasm_int_div : <a> a -> a -> a = idiv 
 
-extern 2 `float_add: <a> a -> a -> a  = fadd 
-extern 2 `float_sub: <a> a -> a -> a  = fsub 
-extern 2 `float_div : <a> a -> a -> a = fdiv 
-extern 2 `float_mul : <a> a -> a -> a = fmul 
+extern 2 `khasm_float_add: <a> a -> a -> a  = fadd 
+extern 2 `khasm_float_sub: <a> a -> a -> a  = fsub 
+extern 2 `khasm_float_div : <a> a -> a -> a = fdiv 
+extern 2 `khasm_float_mul : <a> a -> a -> a = fmul 
 
-extern 1 `print_int: int -> () = print_int 
-extern 1 `print_str : string -> () = print_str
-extern 1 `print_float : float -> () = print_float 
+extern 1 `khasm_print_int: int -> () = print_int 
+extern 1 `khasm_print_str : string -> () = print_str
+extern 1 `khasm_print_float : float -> () = print_float 
 
-extern 2 `s_eq : <a> a -> a -> bool = s_eq
+extern 2 `khasm_s_eq : <a> a -> a -> bool = s_eq
 
 bind = = s_eq
 

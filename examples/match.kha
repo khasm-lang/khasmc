@@ -11,7 +11,14 @@ let rec map f x =
     | 'Nil => Nil
     | Cons q w => Cons (f q) (map f w)
     end
- 
+
+sig <w> (w -> ()) -> List w -> ()
+let rec iter f x =
+    match x with
+    | 'Nil => ()
+    | Cons a b => f a; iter f b
+    end
+
 sig int -> List int
 let rec make i =
     if i = 0 then
@@ -22,5 +29,4 @@ let rec make i =
 sig () -> ()
 let main q =
     let l = make 1000 in
-    let p = map print_int l in
-    ()
+    iter print_int l

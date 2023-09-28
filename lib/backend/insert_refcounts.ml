@@ -66,7 +66,7 @@ and insert_expr ctx body =
           let e1' = insert_expr ctx e1 in
           let e2' = insert_expr ctx e2 in
           let m = most ctx curr rest in
-          (IfElse (ret, cond, e1', e2') :: m) @ insert_expr ctx rest
+          (IfElse (ret, cond, m @ e1', m @ e2') :: []) @ insert_expr ctx rest
       | SubExpr (ret, e) ->
           let e' = insert_expr ctx e in
           let m = most ctx curr rest in

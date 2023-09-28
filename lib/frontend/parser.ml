@@ -747,17 +747,6 @@ and parse_extern state =
     | T_INT s -> int_of_string s
     | x -> error state x [ T_INT "1" ]
   in
-  let nm = get_ident state in
-  (match pop state with COL_OP ":" -> () | x -> error state x [ COL_OP ":" ]);
-  let ts = parse_type state in
-  Extern (nm, arity, ts)
-
-and parse_intextern state =
-  let arity =
-    match pop state with
-    | T_INT s -> int_of_string s
-    | x -> error state x [ T_INT "1" ]
-  in
   let nm =
     match pop state with
     | INTIDENT s -> s
@@ -818,12 +807,9 @@ and parse_toplevel_list state =
     | BIND ->
         toss state;
         Some (parse_bind state)
-    | EXTERN ->
-        toss state;
-        Some (parse_extern state)
     | INTEXTERN ->
         toss state;
-        Some (parse_intextern state)
+        Some (parse_extern state)
     | OPEN ->
         toss state;
         Some (parse_open state)

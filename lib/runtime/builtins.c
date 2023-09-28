@@ -5,11 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern u64 used;
-
-
-
-KHASM_ENTRY(kha_extern_96_s_95_eq, 2, kha_obj *b, kha_obj *c) {
+KHASM_ENTRY(khasm_s_eq, 2, kha_obj *b, kha_obj *c) {
   kha_obj * ret;
   if (((u64)b & 1) == 1) {
     if (((u64)c & 1) == 1) {
@@ -34,29 +30,29 @@ KHASM_ENTRY(kha_extern_96_s_95_eq, 2, kha_obj *b, kha_obj *c) {
   unref(c);
   return ret;
 }
-KHASM_ENTRY(kha_extern_96_int_95_add, 2, kha_obj *b, kha_obj *c) {
+KHASM_ENTRY(khasm_int_add, 2, kha_obj *b, kha_obj *c) {
   kha_obj * ret = make_int(((u64)b >> 1) + ((u64)c >> 1));
   return ret;
 }
 
 
-KHASM_ENTRY(kha_extern_96_int_95_sub, 2, kha_obj *b, kha_obj *c) {
+KHASM_ENTRY(khasm_int_sub, 2, kha_obj *b, kha_obj *c) {
   kha_obj * ret = make_int(((u64)b >> 1) - ((u64)c >> 1));
   return ret;
 }
 
-KHASM_ENTRY(kha_extern_96_int_95_mul, 2, kha_obj *b, kha_obj *c) {
+KHASM_ENTRY(khasm_int_mul, 2, kha_obj *b, kha_obj *c) {
   kha_obj * ret = make_int(((u64)b >> 1) * ((u64)c >> 1));
   return ret;
 }
 
-KHASM_ENTRY(kha_extern_96_int_95_div, 2, kha_obj *b, kha_obj *c) {
+KHASM_ENTRY(khasm_int_div, 2, kha_obj *b, kha_obj *c) {
   kha_obj * ret = make_int(((u64)b >> 1) / ((u64)c >> 1));
   return ret;
 }
 
 // FLOAT STUFF
-KHASM_ENTRY(kha_extern_96_float_95_add, 2, kha_obj *b, kha_obj *c) {
+KHASM_ENTRY(khasm_float_add, 2, kha_obj *b, kha_obj *c) {
   if (b->tag != c->tag || b->tag != FLOAT) {
     fprintf(stderr, "INVALID FADDITION\n");
     exit(1);
@@ -68,7 +64,7 @@ KHASM_ENTRY(kha_extern_96_float_95_add, 2, kha_obj *b, kha_obj *c) {
 }
 
 
-KHASM_ENTRY(kha_extern_96_float_95_sub, 2, kha_obj *b, kha_obj *c) {
+KHASM_ENTRY(khasm_float_sub, 2, kha_obj *b, kha_obj *c) {
   if (b->tag != c->tag || b->tag != FLOAT) {
     fprintf(stderr, "INVALID FSUBTRACTION\n");
     exit(1);
@@ -78,7 +74,7 @@ KHASM_ENTRY(kha_extern_96_float_95_sub, 2, kha_obj *b, kha_obj *c) {
   return ret;
 }
 
-KHASM_ENTRY(kha_extern_96_float_95_mul, 2, kha_obj *b, kha_obj *c) {
+KHASM_ENTRY(khasm_float_mul, 2, kha_obj *b, kha_obj *c) {
   if (b->tag != c->tag || b->tag != FLOAT) {
     fprintf(stderr, "INVALID FMULT\n");
     exit(1);
@@ -89,7 +85,7 @@ KHASM_ENTRY(kha_extern_96_float_95_mul, 2, kha_obj *b, kha_obj *c) {
   return ret;
 }
 
-KHASM_ENTRY(kha_extern_96_float_95_div, 2, kha_obj *b, kha_obj *c) {
+KHASM_ENTRY(khasm_float_div, 2, kha_obj *b, kha_obj *c) {
   if (b->tag != c->tag || b->tag != FLOAT) {
     fprintf(stderr, "INVALID FDIV\n");
     exit(1);
@@ -100,13 +96,13 @@ KHASM_ENTRY(kha_extern_96_float_95_div, 2, kha_obj *b, kha_obj *c) {
   return ret;
 }
 
-KHASM_ENTRY(kha_extern_96_print_95_int, 1, kha_obj *b) {
+KHASM_ENTRY(khasm_print_int, 1, kha_obj *b) {
   printf("%ld\n", (u64)b >> 1);
   unref(b);
   return make_tuple(0, NULL);
 }
 
-KHASM_ENTRY(kha_extern_96_print_95_str, 1, kha_obj *b) {
+KHASM_ENTRY(khasm_print_str, 1, kha_obj *b) {
   if (b->tag != STR) {
     fprintf(stderr, "INVALID PRINT STR\n");
   }

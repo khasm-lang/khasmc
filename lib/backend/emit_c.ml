@@ -27,7 +27,14 @@ let mangle tbl id =
   | Some (_, nm) -> (
       match nm with "main" -> "main_____Khasm" | _ -> utf8_map mangler nm)
 
-let mangle_extern name = "kha_extern" ^ utf8_map mangler name
+let mangle_extern name =
+  utf8_map
+    (fun x ->
+      if x = "`" then
+        ""
+      else
+        x)
+    name
 
 let id_to_name id =
   if id >= 0 then
