@@ -5,3 +5,4 @@ a.out*
 *perf*
 gmon*
 *.svg
+massif*

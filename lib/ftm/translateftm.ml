@@ -230,8 +230,13 @@ and split_patmatrix ?(again = false) tbl pat =
                   left'pat,
                   right'pat ) ))
   with Match_failure (a, b, c) ->
-    impossible @@ "Match failure in pattern matching compl split" ^ a ^ " "
-    ^ string_of_int b ^ " " ^ string_of_int c
+    impossible
+    @@ "Match failure in pattern matching compl split"
+    ^ a
+    ^ " "
+    ^ string_of_int b
+    ^ " "
+    ^ string_of_int c
 
 and subproblem ?(aroundagain = false) tbl patmatrix =
   let open Ast in

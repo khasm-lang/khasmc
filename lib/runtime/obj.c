@@ -18,10 +18,7 @@ kha_obj * make_ptr(kha_obj * p) {
 }
 
 kha_obj * make_int(i64 i) {
-  kha_obj * k = new_kha_obj(INT);
-  k->data.i = i;
-  k->gc = 1 << 8 | k->tag;
-  return k;
+  return (kha_obj*) ((i << 1) | 1);
 }
 
 kha_obj * make_float(f64 f) {
@@ -57,7 +54,8 @@ kha_obj * make_tuple(u64 num, ...) {
   else {
     va_list ap;
     va_start(ap, num);
-    arr = kha_alloc(sizeof(kha_obj*) * num);
+    arr = kha_alloc(sizeof(kha_obj*) * (num + 1));
+    arr[num] = 0;
     for (int i = 0; i < num; i++) {
       arr[i] = ref(va_arg(ap, kha_obj*));
     }

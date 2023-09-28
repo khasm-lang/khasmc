@@ -1,6 +1,8 @@
 open Exp
 open Khagm
 
+(** Remove duplicate values, like LetInVal(1, Val 2) *)
+
 let rec subsval list oldid newid =
   let rec go elm =
     match elm with
@@ -45,6 +47,11 @@ let rec subsval list oldid newid =
           Return newid
         else
           elm
+    | CheckCtor (ret, i, ctor) ->
+        if i = oldid then
+          CheckCtor (ret, newid, ctor)
+        else
+          elm
     | _ -> elm
   in
   List.map go list
@@ -56,6 +63,7 @@ let rec elim_expr e =
       match x with
       | Ref _ | Unref _ | Return _
       | LetInCall (_, _, _)
+      | LetInUnboxCall (_, _, _)
       | Special (_, _, _)
       | CheckCtor (_, _, _)
       | Fail _ ->

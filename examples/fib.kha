@@ -3,7 +3,7 @@ open Stdlib
 sig int -> int
 let rec fib n =
   if n = 0 then 
-    1
+    0
   else if n = 1 then
     1
   else
@@ -11,4 +11,4 @@ let rec fib n =
 
 sig () -> ()
 let main x =
-     print_int <| fib 20
+     print_int <| fib 30

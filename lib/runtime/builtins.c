@@ -11,61 +11,47 @@ extern u64 used;
 
 KHASM_ENTRY(kha_extern_96_s_95_eq, 2, kha_obj *b, kha_obj *c) {
   kha_obj * ret;
-  if (b->tag != c->tag) {
-    ret =  make_int(0);
-  }
-  else if (b->data.i != c->data.i) {
-    ret =  make_int(0);
+  if (((u64)b & 1) == 1) {
+    if (((u64)c & 1) == 1) {
+      ret = make_int(b == c);
+    }
+    else {
+      ret = make_int(0);
+    }
   }
   else {
-    ret = make_int(1);
+    if (b->tag != c->tag) {
+      ret =  make_int(0);
+    }
+    else if (b->data.i != c->data.i) {
+      ret =  make_int(0);
+    }
+    else {
+      ret = make_int(1);
+    }
   }
-    unref(b);unref(c);
-
+  unref(b);
+  unref(c);
   return ret;
 }
 KHASM_ENTRY(kha_extern_96_int_95_add, 2, kha_obj *b, kha_obj *c) {
-  if (b->tag != c->tag || b->tag != INT) {
-    fprintf(stderr, "INVALID ADDITION\n");
-    exit(1);
-  }
-  kha_obj * ret = make_int(b->data.i + c->data.i);
-  unref(b);unref(c);
-
+  kha_obj * ret = make_int(((u64)b >> 1) + ((u64)c >> 1));
   return ret;
 }
 
 
 KHASM_ENTRY(kha_extern_96_int_95_sub, 2, kha_obj *b, kha_obj *c) {
-  if (b->tag != c->tag || b->tag != INT) {
-    fprintf(stderr, "INVALID SUBTRACTION\n");
-    exit(1);
-  }
-  kha_obj * ret = make_int(b->data.i - c->data.i);
-  unref(b);unref(c);
-
+  kha_obj * ret = make_int(((u64)b >> 1) - ((u64)c >> 1));
   return ret;
 }
 
 KHASM_ENTRY(kha_extern_96_int_95_mul, 2, kha_obj *b, kha_obj *c) {
-  if (b->tag != c->tag || b->tag != INT) {
-    fprintf(stderr, "INVALID MULT\n");
-    exit(1);
-  }
-  kha_obj * ret = make_int(b->data.i * c->data.i);
-  unref(b);unref(c);
-
+  kha_obj * ret = make_int(((u64)b >> 1) * ((u64)c >> 1));
   return ret;
 }
 
 KHASM_ENTRY(kha_extern_96_int_95_div, 2, kha_obj *b, kha_obj *c) {
-  if (b->tag != c->tag || b->tag != INT) {
-    fprintf(stderr, "INVALID DIV\n");
-    exit(1);
-  }
-  kha_obj * ret = make_int((i64) b->data.i / c->data.i);
-  unref(b);unref(c);
-
+  kha_obj * ret = make_int(((u64)b >> 1) / ((u64)c >> 1));
   return ret;
 }
 
@@ -115,10 +101,7 @@ KHASM_ENTRY(kha_extern_96_float_95_div, 2, kha_obj *b, kha_obj *c) {
 }
 
 KHASM_ENTRY(kha_extern_96_print_95_int, 1, kha_obj *b) {
-  if (b->tag != INT) {
-    fprintf(stderr, "INVALID PRINT INT\n");
-  }
-  printf("%ld\n", b->data.i);
+  printf("%ld\n", (u64)b >> 1);
   unref(b);
   return make_tuple(0, NULL);
 }
@@ -133,13 +116,10 @@ KHASM_ENTRY(kha_extern_96_print_95_str, 1, kha_obj *b) {
 }
 
 KHASM_ENTRY(khasm_tuple_acc, 2, kha_obj*b, kha_obj*t) {
-  if (t->tag != TUPLE) {
+  if (t->tag != TUPLE && t->tag != ADT) {
     fprintf(stderr, "CAN'T TUPACC NONTUP\n");
   }
-  if (b->tag != INT) {
-    fprintf(stderr, "CAN'T TUPACC WITH NONINT\n");
-  }
-  kha_obj *tmp = t->data.tuple.tups[b->data.i];
+  kha_obj *tmp = t->data.tuple.tups[(u64)b >>1];
   unref(b);
   return ref(tmp);
 }

@@ -1,6 +1,8 @@
 open Exp
 open Khagm
 
+(** Add refcounts to generated code *)
+
 let rec from_val v =
   match v with
   | Val i -> [ i ]
@@ -12,6 +14,7 @@ let rec occur_shallow t =
   | Fail _ -> []
   | LetInVal (i, vs) -> i :: from_val vs
   | LetInCall (i, func, args) -> i :: func :: args
+  | LetInUnboxCall (i, func, args) -> i :: func :: args
   | Special (i, vs, _spec) -> i :: from_val vs
   | IfElse (i, cond, _e1, _e2) -> [ i; cond ]
   | SubExpr (i, _e) -> [ i ]
@@ -25,6 +28,7 @@ let rec occur_deep t =
   | Fail _ -> []
   | LetInVal (i, vs) -> i :: from_val vs
   | LetInCall (i, func, args) -> i :: func :: args
+  | LetInUnboxCall (i, func, args) -> i :: func :: args
   | Special (i, vs, _spec) -> i :: from_val vs
   | IfElse (i, cond, e1, e2) ->
       [ i; cond ]
@@ -55,7 +59,9 @@ and insert_expr ctx body =
       | Return i -> (
           match rest with
           | [] -> [ Return i ]
-          | _ -> impossible "return with stuff after it")
+          | _ ->
+              List.iter (fun x -> print_endline @@ show_khagmexpr x) rest;
+              impossible "return with stuff after it")
       | IfElse (ret, cond, e1, e2) ->
           let e1' = insert_expr ctx e1 in
           let e2' = insert_expr ctx e2 in

@@ -21,12 +21,19 @@ inline kha_obj * ref(kha_obj * a) {
     fprintf(stderr, "can't ref null\n");
     exit(1);
   }
+  if (((u64)a & 1) == 1) {
+    return a;
+  }
+  
   a->gc += 1 << 8;
   return a;
 }
 
 inline void unref(kha_obj * a) {
   if (!a) {
+    return;
+  }
+  if (((u64)a & 1) == 1) {
     return;
   }
   a->gc -= 1 << 8;
@@ -54,16 +61,20 @@ void k_free(kha_obj * a) {
       break;
     }
     case ADT: {
-      for (int i = 0; i < a->data.pap->argnum; i++) {
-	unref(a->data.adt.data[i]);
+      if (a->data.adt.data) {
+	for (int i = 0; a->data.adt.data[i] != 0; i++) {
+	  unref(a->data.adt.data[i]);
+	}
       }
       free(a->data.adt.data);
       free(a);
       break;
     }
     case TUPLE: {
-      for (int i = 0; i < a->data.tuple.len; i++) {
-        unref(a->data.tuple.tups[i]);
+      if (a->data.tuple.tups) {
+	for (int i = 0; i < a->data.tuple.len; i++) {
+	  unref(a->data.tuple.tups[i]);
+	}
       }
       if (a->data.tuple.tups)
 	free(a->data.tuple.tups);

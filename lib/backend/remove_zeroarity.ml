@@ -1,6 +1,8 @@
 open Exp
 open Khagm
 
+(** Turns calls to functions that immediatly return into direct *)
+
 let rec sub subs i = match List.assoc_opt i subs with None -> i | Some n -> n
 
 let rec remove_val subs v =
@@ -15,6 +17,8 @@ let rec remove_expr subs code =
   | LetInVal (i, v) -> LetInVal (i, remove_val subs v)
   | LetInCall (i, func, args) ->
       LetInCall (i, sub subs func, List.map (sub subs) args)
+  | LetInUnboxCall (i, func, args) ->
+      LetInUnboxCall (i, sub subs func, List.map (sub subs) args)
   | IfElse (i, cond, e1, e2) ->
       IfElse
         ( i,

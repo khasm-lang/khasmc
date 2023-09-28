@@ -17,6 +17,7 @@ type khagmexpr =
   | Fail of string
   | LetInVal of id * value
   | LetInCall of id * id * id list  (** ret, func, args *)
+  | LetInUnboxCall of id * id * id list  (** ret, func, args *)
   | IfElse of id * id * khagmexpr list * khagmexpr list  (** ret, cond, e1, e2*)
   | Special of id * value * special
   | SubExpr of id * khagmexpr list

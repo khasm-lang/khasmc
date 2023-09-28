@@ -115,19 +115,27 @@ let parse_error lines (offsets : Lexing.position) actual follow_set =
       match line.[String.length line - 1] with '\n' -> line | _ -> line ^ "\n"
     in
     let coff = repl " " (offsets.pos_bol - 1) ^ "^\n" in
-    print_endline @@ "Error in file " ^ offsets.pos_fname ^ " line "
+    print_endline
+    @@ "Error in file "
+    ^ offsets.pos_fname
+    ^ " line "
     ^ string_of_int offsets.pos_lnum;
     print_string line';
     print_string coff;
     print_endline @@ "Got " ^ show_token actual;
-    print_endline @@ "Expected ["
+    print_endline
+    @@ "Expected ["
     ^ delim ", " (List.map show_token follow_set)
     ^ "]"
   with Invalid_argument _ | Failure _ ->
-    print_endline @@ "Error in file " ^ offsets.pos_fname ^ " line "
+    print_endline
+    @@ "Error in file "
+    ^ offsets.pos_fname
+    ^ " line "
     ^ string_of_int offsets.pos_lnum;
     print_endline @@ "Got " ^ show_token actual;
-    print_endline @@ "Expected ["
+    print_endline
+    @@ "Expected ["
     ^ delim ", " (List.map show_token follow_set)
     ^ "]"
 

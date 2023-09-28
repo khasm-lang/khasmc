@@ -7,8 +7,9 @@ let rec normalise files =
   | [] -> []
   | x :: xs -> (
       try
-        (Filename.basename x |> Filename.chop_extension
-       |> Batteries.String.capitalize_ascii)
+        (Filename.basename x
+        |> Filename.chop_extension
+        |> Batteries.String.capitalize_ascii)
         :: normalise xs
       with _ -> Batteries.String.capitalize_ascii x :: normalise xs)
 
@@ -56,8 +57,12 @@ let compile names asts args =
     print_endline "KHAGM BEFORE OPTS:\n";
     print_endline (Khagm.show_khagm khagm));
   let opt =
-    khagm |> Khagm_elim_dups.elim_dups |> Remove_zeroarity.remove_zeroarity
+    khagm
+    |> Zeroarity_constrs.zeroarity_constrs
+    |> Khagm_elim_dups.elim_dups
+    |> Remove_zeroarity.remove_zeroarity
     |> Insert_refcounts.insert_refcounts
+    |> Unbox_calls.unbox_calls
   in
   if args.dump_ast4 then (
     print_endline "\n\n\nKHAGM AFTER OPTS:\n";

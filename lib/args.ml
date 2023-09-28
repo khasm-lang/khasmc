@@ -9,10 +9,11 @@ let table = ref false
 let ins : string list ref = ref []
 let outs : string ref = ref "a.out"
 let nocomp = ref false
+let opt = ref 0
 
 let usage =
   "khasmc [--dump-ast1] [--dump-ast2] [--dump-ast3] [--dump-ast4] [--debug] \
-   [--table] [--no-compile] <file1> [<file2>] ... -o output"
+   [--table] [--no-compile] [-O n] <file1> [<file2>] ... -o output"
 
 type cliargs = {
   dump_ast1 : bool;
@@ -24,6 +25,7 @@ type cliargs = {
   debug : bool;
   table : bool;
   nocompile : bool;
+  opt : int;
 }
 [@@deriving show { with_path = false }]
 

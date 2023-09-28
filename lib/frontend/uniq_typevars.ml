@@ -35,8 +35,10 @@ let rec get_uniq_in s env =
   | x :: _ ->
       raise
         (UniqErr
-           ("Same typevar \"" ^ fst x ^ "\" declared multiple"
-          ^ " times in one rank"))
+           ("Same typevar \""
+           ^ fst x
+           ^ "\" declared multiple"
+           ^ " times in one rank"))
 
 let rec mkbind s = (s, get_uniq ())
 

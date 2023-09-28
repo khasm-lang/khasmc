@@ -113,3 +113,12 @@ let rec increasing start num =
   match num with 0 -> [] | n -> start :: increasing (start + 1) (n - 1)
 
 let rec in_x_not_y x y = List.filter (fun z -> not @@ List.mem z y) x
+
+let rec for_n arity f =
+  let rec go n =
+    if n = arity then
+      []
+    else
+      f n :: go (n + 1)
+  in
+  go 0

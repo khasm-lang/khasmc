@@ -4,19 +4,23 @@ type List a =
      | Nil
      | Cons a (List a)
 
-let rec map f x : forall q w, (q -> w) -> List q -> List w =
+
+sig <q w> (q -> w) -> List q -> List w
+let rec map f x =
     match x with
     | 'Nil => Nil
     | Cons q w => Cons (f q) (map f w)
     end
-
-let rec make i : int -> List int =
+ 
+sig int -> List int
+let rec make i =
     if i = 0 then
        Nil
     else
        Cons i (make (i - 1))
-
-let main q : () -> () =
+       
+sig () -> ()
+let main q =
     let l = make 1000 in
     let p = map print_int l in
     ()

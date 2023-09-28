@@ -27,7 +27,8 @@ let speclist =
     ("--table", Arg.Set table, "Show type table");
     ("-o", Arg.Set_string outs, "Output file");
     ("--debug", Arg.Set debug, "Debug");
-    ("--no-output", Arg.Set nocomp, "Don't compile the program");
+    ("--no-compile", Arg.Set nocomp, "Don't compile the program");
+    ("-O", Arg.Set_int opt, "Optimisation level");
   ]
 
 let parse_args () =
@@ -42,6 +43,7 @@ let parse_args () =
     debug = !debug;
     table = !table;
     nocompile = !nocomp;
+    opt = !opt;
   }
 
 let round2 n = Float.round (n *. 100.) /. 100.
@@ -64,8 +66,11 @@ let main_proc () =
   in
   Debug.debug ("\nStatus: " ^ succ);
   print_endline
-    ("Used " ^ string_of_int !uniq ^ " typvars, " ^ string_of_int !muniq
-   ^ " metavars, "
+    ("Used "
+    ^ string_of_int !uniq
+    ^ " typvars, "
+    ^ string_of_int !muniq
+    ^ " metavars, "
     ^ string_of_int (getid () - 1)
     ^ " stage 1 nodes, "
     ^ string_of_int (Kir.get_random_num () - 1)

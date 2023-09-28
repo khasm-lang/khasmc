@@ -3,6 +3,8 @@ open Khagm
 open KhasmUTF
 open ListHelpers
 
+(** Emit the C equivalent of the program *)
+
 type info = {
   arties : (id * int) list;
   externs : id list;
@@ -49,7 +51,7 @@ let quot_raw _ctx tbl id =
 
 let quot_dircall _ctx tbl id =
   match Kir.get_bind_id tbl id with
-  | None -> id_to_name id
+  | None -> impossible "dircall cannot call kha_obj function"
   | Some _ -> mangle tbl id
 
 let rec quotval ctx tbl value =
@@ -68,7 +70,10 @@ let rec quotval ctx tbl value =
   | Tuple vl ->
       "make_tuple("
       ^ string_of_int (List.length vl)
-      ^ ","
+      ^ (if List.length vl = 0 then
+           ""
+         else
+           ", ")
       ^ String.concat ", " (List.map (quotval ctx tbl) vl)
       ^ ")"
 
@@ -89,11 +94,19 @@ let rec gen_funccall ctx _ret tbl arties id func args =
         | x :: xs ->
             let tmp = Kir.get_random_num () in
             let curr =
-              quot ctx tbl tmp ^ " = " ^ "add_arg(" ^ quot_raw ctx tbl call
-              ^ ", " ^ quot ctx tbl x ^ ");\n"
+              quot ctx tbl tmp
+              ^ " = "
+              ^ "add_arg("
+              ^ quot_raw ctx tbl call
+              ^ ", "
+              ^ quot ctx tbl x
+              ^ ");\n"
             in
             let next = go tmp xs in
-            curr ^ next ^ "\nunref(" ^ quot ctx tbl tmp
+            curr
+            ^ next
+            ^ "\nunref("
+            ^ quot ctx tbl tmp
             ^ "); // CODEGEN FUNCCALL\n"
       in
       let tmp = go func args in
@@ -101,7 +114,11 @@ let rec gen_funccall ctx _ret tbl arties id func args =
 
 and emit_body ctx ret tbl arties body =
   match body with
-  | Fail s -> {|fprintf("FAILURE: |} ^ s ^ {|\n");|} ^ " exit(1);\n"
+  | Fail s ->
+      {|fprintf(stderr, "FAILURE: |}
+      ^ s
+      ^ {| LINE: %d FILE: %s\n", __LINE__, __FILE__);|}
+      ^ " exit(1);\n"
   | Ref i -> "ref(" ^ quot ctx tbl i ^ ");\n"
   | Unref i -> "unref(" ^ quot ctx tbl i ^ "); /* manual gen */ \n"
   | Return i -> quot ctx tbl ret ^ " = " ^ quot ctx tbl i ^ ";\n"
@@ -112,21 +129,45 @@ and emit_body ctx ret tbl arties body =
         quot ctx tbl id ^ " = " ^ quot ctx tbl func ^ ";\n"
       else
         gen_funccall ctx ret tbl arties id func args
+  | LetInUnboxCall (id, func, args) ->
+      quot ctx tbl id
+      ^ " = "
+      ^ quot_dircall ctx tbl func
+      ^ "("
+      ^ String.concat ", "
+          (List.map (fun x -> "ref(" ^ quot ctx tbl x ^ ")") args)
+      ^ ");\n"
   | Special (id, value, spec) -> (
       match spec with
       | TupAcc i ->
-          quot ctx tbl id ^ " = " ^ "khasm_tuple_acc("
+          quot ctx tbl id
+          ^ " = "
+          ^ "khasm_tuple_acc("
           ^ quotval ctx tbl (Int (string_of_int i))
-          ^ ", " ^ quotval ctx tbl value ^ ");\n")
+          ^ ", "
+          ^ quotval ctx tbl value
+          ^ ");\n")
   | SubExpr (id, exprs) ->
       let sub = ListHelpers.map (emit_body ctx id tbl arties) exprs in
       "{\n" ^ String.concat " " sub ^ "\n}\n"
-  | CheckCtor (id, value, ctor) -> todo "checkctor"
+  | CheckCtor (id, value, ctor) ->
+      quot ctx tbl id
+      ^ " = make_int("
+      ^ quot ctx tbl value
+      ^ "->data.adt.tag == "
+      ^ string_of_int ctor
+      ^ ");\n"
   | IfElse (id, cond, e1, e2) ->
       let e1' = ListHelpers.map (emit_body ctx id tbl arties) e1 in
       let e2' = ListHelpers.map (emit_body ctx id tbl arties) e2 in
-      "if(" ^ quot ctx tbl cond ^ "->data.i)" ^ "{\n" ^ String.concat " " e1'
-      ^ "}\n else {\n" ^ String.concat " " e2' ^ "}\n"
+      "if((u64)"
+      ^ quot ctx tbl cond
+      ^ " >> 1)"
+      ^ "{\n"
+      ^ String.concat " " e1'
+      ^ "}\n else {\n"
+      ^ String.concat " " e2'
+      ^ "}\n"
 
 let genfunc tbl id args =
   let name = mangle tbl id in
@@ -136,9 +177,13 @@ let genfunc tbl id args =
   in
   let extern = "extern kha_obj * " ^ name ^ "(" ^ argscom ^ ");" in
   let entry =
-    "KHASM_ENTRY(" ^ name ^ ","
+    "KHASM_ENTRY("
+    ^ name
+    ^ ","
     ^ (string_of_int @@ List.length args)
-    ^ ", " ^ argscom ^ ")"
+    ^ ", "
+    ^ argscom
+    ^ ")"
   in
   fun body -> extern ^ "\n" ^ entry ^ "{\n" ^ body ^ "\n}"
 
@@ -150,6 +195,8 @@ let rec get_frees_h body =
       (i :: List.concat_map get_frees_h e1) @ List.concat_map get_frees_h e2
   | SubExpr (i, e) -> i :: List.concat_map get_frees_h e
   | Special (i, _, _) -> [ i ]
+  | LetInUnboxCall (i, _, _) -> [ i ]
+  | CheckCtor (i, _, _) -> [ i ]
   | _ -> []
 
 let get_frees ctx tbl body bef after =
@@ -157,7 +204,8 @@ let get_frees ctx tbl body bef after =
   ListHelpers.increasing bef (after - bef) @ x
   |> List.map (quot ctx tbl)
   |> List.map (fun x -> " *" ^ x)
-  |> String.concat ", " |> ( ^ ) "kha_obj "
+  |> String.concat ", "
+  |> ( ^ ) "kha_obj "
   |> fun x -> x ^ ";\n"
 
 let emit_top ctx tbl arties code =
@@ -172,8 +220,57 @@ let emit_top ctx tbl arties code =
       let after = Kir.get_random_num () in
       let frees = get_frees ctx tbl body ret after in
       decl @@ frees ^ body' ^ "\n return " ^ quot ctx tbl ret ^ ";\n"
-  | Ctor (id, arity) -> todo "ctor"
-  | Extern (id, arity, name) ->
+  | Ctor (id, arity) ->
+      let args = ListHelpers.for_n arity (fun _ -> Kir.get_random_num ()) in
+      let join c f = String.concat c (List.map f args) in
+      let init =
+        "KHASM_ENTRY("
+        ^ quot_dircall ctx tbl id
+        ^ ", "
+        ^ string_of_int arity
+        ^ ", "
+        ^ join ", " (fun x -> "kha_obj * " ^ quot ctx tbl x)
+        ^ ") "
+      in
+      let tmp = Kir.get_random_num () in
+      let qtmp = quot ctx tbl tmp in
+      let (Some (id, nm)) = Kir.get_bind_id tbl id in
+      let (Some (_, _, ctornum)) = Kir.get_constr tbl nm in
+      let body =
+        if arity = 0 then
+          "kha_obj * "
+          ^ qtmp
+          ^ "= make_tuple(0);\n"
+          ^ qtmp
+          ^ "->data.adt.tag = "
+          ^ string_of_int ctornum
+          ^ ";\n"
+          ^ qtmp
+          ^ "->tag = ADT;\n"
+          ^ "return "
+          ^ qtmp
+          ^ ";\n"
+        else
+          "kha_obj * "
+          ^ qtmp
+          ^ "= make_tuple("
+          ^ string_of_int arity
+          ^ ", "
+          ^ join "," (quot ctx tbl)
+          ^ ");\n"
+          ^ qtmp
+          ^ "->data.adt.tag = "
+          ^ string_of_int ctornum
+          ^ ";\n"
+          ^ qtmp
+          ^ "->tag = ADT;\n"
+          ^ join ";\n" (fun x -> "unref(" ^ quot ctx tbl x ^ ");")
+          ^ "return "
+          ^ qtmp
+          ^ ";\n"
+      in
+      init ^ "{\n" ^ body ^ "}\n"
+  | Extern (id, _arity, name) ->
       let real = mangle_extern name in
       let fake = mangle tbl id in
       "#define " ^ fake ^ " " ^ real ^ "\n"

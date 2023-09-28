@@ -14,7 +14,7 @@ let rec mtb_matchtree mt =
   | Kir.Switch (e, case, mt1, mt2) -> (
       match case with
       | Wildcard | BindTuple ->
-          let e' = mtb_expr e in
+          let e', _ = mtb_expr_h e in
           let code = mtb_matchtree mt1 in
           e' @ code
       | BindCtor i ->

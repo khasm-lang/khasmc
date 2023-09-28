@@ -1,6 +1,8 @@
 open Exp
 open Args
 
+(** Compile the C to native code *)
+
 let gen_main () =
   {|
 int main(void) {
@@ -23,13 +25,12 @@ let prelude () =
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <time.h>
 #include <stdatomic.h>
 #include <assert.h>
 |}
 
-let flags =
+let flags_slow =
   KhasmUTF.utf8_map
     (fun x ->
       if x = "\n" then
@@ -42,6 +43,18 @@ let flags =
         -Wno-incompatible-pointer-types
         -Wno-sign-compare
         -g 
+        |}
+
+let flags_fast =
+  KhasmUTF.utf8_map
+    (fun x ->
+      if x = "\n" then
+        ""
+      else
+        x)
+    {| -O3
+       -Wno-incompatible-pointer-types
+       -Wno-sign-compare
         |}
 
 let compile code (args : Args.cliargs) =
@@ -59,7 +72,12 @@ let compile code (args : Args.cliargs) =
       let oc = open_out filename in
       Printf.fprintf oc "%s\n" code;
       close_out oc;
-      let code' = Sys.command ("cc " ^ flags ^ filename ^ " -o " ^ args.out) in
+      let code' =
+        if args.opt = 0 then
+          Sys.command ("cc " ^ flags_slow ^ filename ^ " -o " ^ args.out)
+        else
+          Sys.command ("cc" ^ flags_fast ^ filename ^ " -o " ^ args.out)
+      in
       FileUtil.cp [ filename ] ("./" ^ args.out ^ ".c");
       (match code' with 0 -> () | _ -> raise @@ CompileError "CC failed");
       FileUtil.rm [ filename ];
