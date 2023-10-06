@@ -35,3 +35,13 @@ let rec utf8_map f s =
   | _ ->
       let s, r = split_unicode s in
       f s ^ utf8_map f r
+
+let rec utf8_mapi f s =
+  let rec go n f' s' =
+    match String.length s' with
+    | 0 -> s
+    | _ ->
+        let s', r' = split_unicode s' in
+        f' n s' ^ go (n + 1) f' r'
+  in
+  go 0 f s

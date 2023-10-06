@@ -89,12 +89,11 @@ type token =
   | EMPTY
   | ANY
   | UNDERSCORE
+  | BAD
 [@@deriving show { with_path = false }]
 
-exception ParseError
-
 open Ast
-open ListHelpers
+open Errors
 
 module Lexing = struct
   include Lexing
@@ -103,731 +102,271 @@ module Lexing = struct
   let pp_position _l _r = ()
 end
 
-let rec repl s i = match i with 0 -> "" | x -> s ^ repl s (x - 1)
+module BatVect = struct
+  include BatVect
 
-let rec delim s sl =
-  match sl with [] -> "" | [ x ] -> x | x :: xs -> x ^ s ^ delim s xs
+  let pp _l _r _f = ()
+end
 
-let parse_error lines (offsets : Lexing.position) actual follow_set =
-  try
-    let line = List.nth lines (offsets.pos_lnum - 1) in
-    let line' =
-      match line.[String.length line - 1] with '\n' -> line | _ -> line ^ "\n"
-    in
-    let coff = repl " " (offsets.pos_bol - 1) ^ "^\n" in
-    print_endline
-    @@ "Error in file "
-    ^ offsets.pos_fname
-    ^ " line "
-    ^ string_of_int offsets.pos_lnum;
-    print_string line';
-    print_string coff;
-    print_endline @@ "Got " ^ show_token actual;
-    print_endline
-    @@ "Expected ["
-    ^ delim ", " (List.map show_token follow_set)
-    ^ "]"
-  with Invalid_argument _ | Failure _ ->
-    print_endline
-    @@ "Error in file "
-    ^ offsets.pos_fname
-    ^ " line "
-    ^ string_of_int offsets.pos_lnum;
-    print_endline @@ "Got " ^ show_token actual;
-    print_endline
-    @@ "Expected ["
-    ^ delim ", " (List.map show_token follow_set)
-    ^ "]"
+type tok = {
+  token : token;
+  span : span;
+}
+[@@deriving show { with_path = false }]
 
-let print_token t = print_endline (show_token t)
+let maketok t span = { token = t; span }
 
-module ParserState = struct
-  let pp t =
-    let t' = t in
-    t'
-
-  type state = {
-    lex_func : Lexing.lexbuf -> token;
-    lex_buf : Lexing.lexbuf ref;
-    buffer : (token * Lexing.position) list ref;
-    file : string;
+module Tok = struct
+  type core = {
+    mutable tokens : tok BatVect.t;
+    mutable peek_num : int;
+    mutable index : int;
+    lexer : Lexing.lexbuf -> Lexing.position * token;
+    buf : Lexing.lexbuf;
+    file : string; [@printer fun fmt _t -> fprintf fmt "<src file>"]
   }
   [@@deriving show { with_path = false }]
 
-  let print_state s = print_endline (show_state !s)
+  let new_core lexfunc lexbuf file =
+    ref
+      {
+        tokens = BatVect.empty;
+        peek_num = 0;
+        index = 0;
+        lexer = lexfunc;
+        buf = lexbuf;
+        file;
+      }
 
-  let new_state lex_func lex_buf file =
-    ref { lex_func; lex_buf = ref lex_buf; buffer = ref []; file }
+  let get_token core =
+    let before, token = !core.lexer !core.buf in
+    let after = !core.buf.lex_curr_p in
+    maketok token (Errors.lexbuf_to_span !core.file before after)
 
-  let rec last k =
-    match k with [] -> failwith "empty" | [ x ] -> x | _ :: xs -> last xs
-
-  let error state actual follow_set =
-    let offset =
-      match !(!state.buffer) with
-      | [] -> !(!state.lex_buf).lex_curr_p
-      | x :: _ -> snd x
-    in
-    let split = String.split_on_char '\n' !state.file in
-    parse_error split offset actual follow_set;
-    raise @@ ParseError
-
-  let pop state =
-    match !(!state.buffer) with
-    | [] -> !state.lex_func !(!state.lex_buf)
-    | x :: xs ->
-        !state.buffer := xs;
-        pp @@ fst x
-
-  let toss state =
-    match !(!state.buffer) with
-    | [] -> ignore (!state.lex_func !(!state.lex_buf))
-    | _ :: xs ->
-        !state.buffer := xs;
-        ()
-
-  let peek state int =
-    let int = int - 1 in
-    for i = 0 to int do
-      let t = !state.lex_func !(!state.lex_buf) in
-      !state.buffer := !(!state.buffer) @ [ (t, !(!state.lex_buf).lex_curr_p) ]
+  let peek core =
+    let len = ref @@ BatVect.length !core.tokens in
+    while !core.peek_num + !core.index >= !len do
+      len := BatVect.length !core.tokens;
+      !core.tokens <- BatVect.append (get_token core) !core.tokens
     done;
-    try
-      let ret = fst (List.nth !(!state.buffer) int) in
-      pp ret
-    with Failure _ -> error state EOF [ ANY ]
+    !core.peek_num <- !core.peek_num + 1;
+    BatVect.get !core.tokens (!core.peek_num + !core.index - 1)
 
-  let expect state tok =
-    let t = pop state in
-    if t = tok then
-      ()
-    else
-      error state t [ tok ]
+  let pop core =
+    let len = ref @@ BatVect.length !core.tokens in
+    while !core.index >= !len do
+      len := BatVect.length !core.tokens;
+      !core.tokens <- BatVect.append (get_token core) !core.tokens
+    done;
+    !core.index <- !core.index + 1;
+    !core.peek_num <- 0;
+    BatVect.get !core.tokens (!core.index - 1)
+
+  let toss core = !core.index <- !core.index + 1
+  let reset_peek core = !core.peek_num <- 0
+  let current core = BatVect.get !core.tokens (!core.index - 1)
+
+  let mkspan core oldbuf =
+    let { token = _; span } = current core in
+    Errors.spandiff oldbuf span
 end
 
-open ParserState
+open Tok
 open Exp
 
-let rec id_list state =
-  match peek state 1 with
-  | T_IDENT s ->
-      toss state;
-      s :: id_list state
-  | _ -> []
+let error core span tok =
+  let ctx = Errors.from_file (ref !core.file) in
+  Errors.add ctx span (Printf.sprintf "Expected token %s" (show_token tok));
+  raise @@ SyntaxErr (Errors.to_string ctx)
 
-let nonempty l exp state =
-  match l with [] -> error state EMPTY [ exp ] | _ -> l
+let errorexpect core span got expected =
+  let ctx = Errors.from_file (ref !core.file) in
+  Errors.add ctx span
+    (Printf.sprintf "Got: %s, expected one of: %s" (show_token got)
+       (String.concat ", " (List.map show_token expected)));
+  raise @@ SyntaxErr (Errors.to_string ctx)
 
-let rec repeat_until f x =
-  match f x with None -> [] | Some t -> t :: repeat_until f x
+type tokwrapper = T of token * span
 
-exception ParseExprHelper of kexpr
+let untok x =
+  let { span; token } = x in
+  T (token, span)
 
-let rec nop () = ()
+let retok x =
+  let (T (a, b)) = x in
+  { span = b; token = a }
 
-and get_ident state =
-  match pop state with
-  | T_IDENT s -> s
-  | x -> error state x [ T_IDENT "example" ]
+let pop' core = untok @@ pop core
+let toss' core = toss core
+let peek' core = untok @@ peek core
 
-and get_ident_peek state =
-  match peek state 1 with T_IDENT s -> Some s | _ -> None
+let currentspan core =
+  let { span; token } = current core in
+  span
 
-and get_binop state =
-  match pop state with
-  | POW_OP s
-  | MUL_OP s
-  | DIV_OP s
-  | MOD_OP s
-  | ADD_OP s
-  | SUB_OP s
-  (* | COL_OP s *)
-  | CAR_OP s
-  | AT_OP s
-  | EQ_OP s
-  | LT_OP s
-  | GT_OP s
-  | AND_OP s
-  | DOL_OP s ->
-      s
-  | PIP_OP s when String.length s > 1 -> s
-  | x -> error state x [ BINARY_OP ]
+let expect core t =
+  match pop' core with
+  | T (t', _) when t' = t -> ()
+  | T (t, s) -> error core s t
 
-and get_binop_peek state =
-  match peek state 1 with
-  | POW_OP s
-  | MUL_OP s
-  | DIV_OP s
-  | MOD_OP s
-  | ADD_OP s
-  | SUB_OP s
-  (* | COL_OP s *)
-  | CAR_OP s
-  | AT_OP s
-  | EQ_OP s
-  | LT_OP s
-  | GT_OP s
-  | AND_OP s
-  | DOL_OP s ->
-      Some s
-  | PIP_OP s when String.length s > 1 -> Some s
-  | SEMICOLON -> Some ";"
-  | _ -> None
+let mergespans l =
+  let a, b = List.split l in
+  let b' = Errors.merge b in
+  (a, b')
 
-and get_ident_or_binop state =
-  match get_ident_peek state with
-  | Some s ->
-      toss state;
-      s
-  | None -> (
-      match peek state 1 with
-      | LPAREN ->
-          toss state;
-          let t = get_binop state in
-          expect state RPAREN;
-          t
-      | x -> error state x [ LPAREN; T_IDENT "example module" ])
+let rec dummy () = dummy ()
 
-and parse_type_tuple state =
-  let lhs = parse_type state in
-  match pop state with
-  | COMMA -> lhs :: parse_type_tuple state
-  | RPAREN -> lhs :: []
-  | x -> error state x [ COMMA; RPAREN ]
+and parse_ident core =
+  match pop' core with
+  | T (T_IDENT i, span) -> (i, span)
+  | T (_t, span) -> error core span (T_IDENT "Example")
 
-and parse_type_compound state =
-  match parse_type_tuple state with
-  | [] -> impossible "empty type"
-  | [ x ] -> x
-  | x -> TSTuple x
+and parse_peek_ident core =
+  match peek' core with
+  | T (T_IDENT i, span) -> Some (i, span)
+  | T (_t, _span) -> None
 
-and parse_single state =
-  match peek state 1 with
-  | T_IDENT t ->
-      toss state;
-      Some (TSBase t)
-  | LPAREN -> (
-      toss state;
-      match peek state 1 with
-      | RPAREN ->
-          toss state;
-          Some (TSTuple [])
-      | _ -> Some (parse_type_compound state))
-  | _ -> None
+and parse_peek_ident_list core =
+  match parse_peek_ident core with
+  | Some (i, s) -> (i, s) :: parse_peek_ident_list core
+  | None -> []
 
-and parse_type_helper state =
-  match peek state 1 with
-  | T_IDENT t -> (
-      toss state;
-      let list = repeat_until parse_single state in
-      match list with [] -> TSBase t | x -> TSApp (x, t))
-  | LPAREN -> (
-      toss state;
-      match peek state 1 with
-      | RPAREN ->
-          toss state;
-          TSTuple []
+and parse_tuple_helper core =
+  let t = parse_typesig core in
+  match peek' core with
+  | T (RPAREN, _rspan) ->
+      toss core;
+      [ t ]
+  | T (COMMA, _cspan) ->
+      toss core;
+      let rest = parse_tuple_helper core in
+      t :: rest
+  | T (x, s) -> errorexpect core s x [ RPAREN; COMMA ]
+
+and parse_typesig_elem ?(rec' = false) core =
+  match peek' core with
+  | T (LPAREN, _pspan) -> (
+      toss core;
+      match peek' core with
+      | T (RPAREN, _rspan) -> TSTuple []
       | _ -> (
-          match parse_type_tuple state with
-          | [] -> impossible "empty type"
-          | [ x ] -> x
-          | x -> TSTuple x))
-  | x -> error state x [ T_IDENT "example"; LPAREN ]
-
-and parse_type_helper_maybe_noapp state =
-  match peek state 1 with
-  | T_IDENT t ->
-      toss state;
-      Some (TSBase t)
-  | LPAREN -> (
-      toss state;
-      match peek state 1 with
-      | RPAREN ->
-          toss state;
-          Some (TSTuple [])
-      | _ ->
-          Some
-            (match parse_type_tuple state with
-            | [] -> impossible "empty type"
-            | [ x ] -> x
-            | x -> TSTuple x))
-  | _ -> None
-
-and parse_type_helper_maybe state =
-  match peek state 1 with
-  | T_IDENT t -> (
-      toss state;
-      let list = repeat_until parse_single state in
-      match list with [] -> Some (TSBase t) | x -> Some (TSApp (x, t)))
-  | LPAREN -> (
-      toss state;
-      match peek state 1 with
-      | RPAREN ->
-          toss state;
-          Some (TSTuple [])
-      | _ ->
-          Some
-            (match parse_type_tuple state with
-            | [] -> impossible "empty type"
-            | [ x ] -> x
-            | x -> TSTuple x))
-  | _ -> None
-
-and parse_type_pratt state =
-  let lhs = parse_type_helper state in
-  match peek state 1 with
-  | TS_TO ->
-      toss state;
-      let rhs = parse_type_pratt state in
-      TSMap (lhs, rhs)
-  | _ -> lhs
-
-and parse_type state =
-  match peek state 1 with
-  | LT_OP "<" ->
-      toss state;
-      let idents = nonempty (id_list state) (T_IDENT "example2") state in
-      expect state (GT_OP ">");
-      let rec help idents =
-        match idents with
-        | [] -> raise @@ Impossible "parse_type"
-        | [ x ] -> TSForall (x, parse_type state)
-        | x :: xs -> TSForall (x, help xs)
+          reset_peek core;
+          let t = parse_typesig core in
+          match peek' core with
+          | T (RPAREN, _rspan) ->
+              toss core;
+              t
+          | T (COMMA, _cspan) ->
+              toss core;
+              let rest = parse_tuple_helper core in
+              TSTuple (t :: rest)
+          | T (x, span) -> errorexpect core span x [ RPAREN; COMMA ]))
+  | T (T_IDENT nm, _span) ->
+      toss core;
+      let rec iter () =
+        match peek' core with
+        | T (LPAREN, _) | T (T_IDENT _, _) ->
+            let elm = parse_typesig_elem ~rec':true core in
+            elm :: iter ()
+        | _ -> []
       in
-      help idents
-  | _ ->
-      let ret = parse_type_pratt state in
-      ret
+      if rec' then
+        TSBase nm
+      else
+        TSApp (iter (), nm)
+  | T (x, s) -> errorexpect core s x [ LPAREN; T_IDENT "example" ]
 
-and last_tail l acc =
-  match l with
-  | [] -> raise @@ Impossible "last_tale empty"
-  | [ x ] -> (x, List.rev acc)
-  | x :: xs -> last_tail xs (x :: acc)
+and parse_typesig core : typesig =
+  let tmp = parse_typesig_elem core in
+  match peek' core with
+  | T (TS_TO, _s) ->
+      toss core;
+      let rest = parse_typesig core in
+      TSMap (tmp, rest)
+  | _ -> tmp
 
-and parse_match_pattern_tup state =
-  let rec go acc =
-    let tmp = parse_match_pattern state in
-    match pop state with
-    | RPAREN -> List.rev (tmp :: acc)
-    | COMMA -> go (tmp :: acc)
-    | x -> error state x [ RPAREN; COMMA ]
-  in
-  go []
-
-and parse_match_list state =
-  match peek state 1 with
-  | TICK ->
-      toss state;
-      let id = get_ident state in
-      MPApp (id, []) :: parse_match_list state
-  | T_IDENT t ->
-      toss state;
-      MPId t :: parse_match_list state
-  | UNDERSCORE ->
-      toss state;
-      MPWild :: parse_match_list state
-  | LPAREN -> (
-      toss state;
-      match peek state 1 with
-      | RPAREN ->
-          toss state;
-          []
-      | _ ->
-          let tmp = parse_match_pattern_tup state in
-          let tmp = match tmp with [ x ] -> x | _ -> MPTup tmp in
-          tmp :: parse_match_list state)
-  | _ -> []
-
-and parse_match_pattern state =
-  match pop state with
-  | TICK ->
-      let t = get_ident state in
-      MPApp (t, [])
-  | T_IDENT t -> (
-      match parse_match_list state with [] -> MPId t | xs -> MPApp (t, xs))
-  | UNDERSCORE -> MPWild
-  | LPAREN -> (
-      match peek state 1 with
-      | RPAREN ->
-          toss state;
-          MPTup []
-      | _ -> (
-          match parse_match_pattern_tup state with
-          | [] -> raise @@ Impossible "parse_match_pattern"
-          | [ x ] -> x
-          | x -> MPTup x))
-  | T_INT t -> MPInt t
-  | x -> error state x [ T_IDENT "MatchExample"; LPAREN; T_INT "0" ]
-
-and parse_adt_pattern state =
-  let id = get_ident state in
-  match peek state 1 with
-  | COL_OP ":" ->
-      (* GADT *)
-      toss state;
-      let rec helper state =
-        match parse_type_helper_maybe state with
-        | Some x -> (
-            match peek state 1 with
-            | TS_TO ->
-                toss state;
-                x :: helper state
-            | _ -> [ x ])
-        | None -> []
-      in
-      let all = helper state in
-      let final, args = last_tail all [] in
-      { head = id; args; typ = Ok final }
-  | _ ->
-      (* ADT *)
-      let all = repeat_until parse_type_helper_maybe_noapp state in
-      { head = id; args = all; typ = Error () }
-
-and infix_bind_pow tok =
-  let first = String.get tok 0 in
-  let mab =
-    if first = '*' then
-      try
-        if String.get tok 1 = '*' then
-          (16, 17)
-        else
-          (0, 0)
-      with _ -> (0, 0)
-    else
-      (0, 0)
-  in
-  if mab <> (0, 0) then
-    mab
-  else
-    match first with
-    | ';' -> (1, 0)
-    | '$' -> (2, 3)
-    | '=' | '>' | '<' -> (4, 5)
-    | '|' | '&' -> (6, 7)
-    | '@' | '^' -> (9, 8)
-    | ':' -> (11, 10)
-    | '+' | '-' -> (12, 13)
-    | '*' | '/' | '%' -> (14, 15)
-    (* | "**" -> (16, 17) *)
-    | _ -> raise @@ Impossible "invalid char index bind pow"
-
-and parse_tuple state =
-  let b = parse_expr state 0 in
-  match pop state with
-  | COMMA -> b :: parse_tuple state
-  | RPAREN -> b :: []
-  | x -> error state x [ COMMA; RPAREN ]
-
-and parse_funccall b state =
-  let b2 = parse_base state in
-  let f = FCall (mkinfo (), b, b2) in
-  parse_funccall_try f state
-
-and parse_funccall_try b state =
-  match peek state 1 with
-  | LPAREN | T_IDENT _ | T_INT _ | T_FLOAT _ | T_STRING _ | TRUE | FALSE ->
-      parse_funccall b state
-  | _ -> b
-
-and parse_base state =
-  match pop state with
-  | BANG_OP s | TILDE_OP s ->
-      FCall (mkinfo (), Base (mkinfo (), Ident (mkinfo (), s)), parse_base state)
-  | LPAREN -> (
-      match peek state 1 with
-      | RPAREN ->
-          toss state;
-          Base (mkinfo (), Tuple [])
-      | _ -> (
-          let e' = parse_expr state 0 in
-          match pop state with
-          | COMMA -> Base (mkinfo (), Tuple (e' :: parse_tuple state))
-          | RPAREN -> e'
-          | x -> error state x [ COMMA; RPAREN ]))
-  | T_IDENT s -> (
-      match (peek state 1, peek state 2) with
-      | DOT, T_INT _ -> Base (mkinfo (), Ident (mkinfo (), s))
-      | DOT, _ -> (
-          let rec helper state =
-            let id = get_ident_or_binop state in
-            match peek state 1 with
-            | DOT ->
-                toss state;
-                id :: helper state
-            | _ -> [ id ]
+and parse_peek_typecase_list rettyp core =
+  match peek' core with
+  | T (PIP_OP "|", pipspan) -> (
+      toss' core;
+      let nm = parse_ident core in
+      match peek' core with
+      | T (T_IDENT id, span) ->
+          let idlist, span = mergespans (parse_peek_ident_list core) in
+          let totalspan = Errors.spandiff pipspan span in
+          ( {
+              head = fst nm;
+              args = List.map (fun x -> TSBase x) idlist;
+              typ = Ok rettyp;
+            },
+            totalspan )
+          :: parse_peek_typecase_list rettyp core
+      | T (COL_OP ":", span) ->
+          toss' core;
+          let rec go () =
+            let tmp = parse_typesig_elem core in
+            match peek' core with
+            | T (TS_TO, s) ->
+                toss core;
+                tmp :: go ()
+            | _ -> []
           in
-          toss state;
-          let l = s :: helper state in
-          let rev = List.rev l in
-          match rev with
-          | x :: xs -> ModAccess (mkinfo (), List.rev xs, x)
-          | [] -> raise @@ Impossible "parse_base")
-      | _ -> Base (mkinfo (), Ident (mkinfo (), s)))
-  | T_INT s -> Base (mkinfo (), Int s)
-  | T_FLOAT s -> Base (mkinfo (), Float s)
-  | T_STRING s -> Base (mkinfo (), Str s)
-  | TRUE -> Base (mkinfo (), True)
-  | FALSE -> Base (mkinfo (), False)
-  | x ->
-      error state x
-        [
-          BANG_OP "!";
-          TILDE_OP "~";
-          LPAREN;
-          T_IDENT "example";
-          T_INT "10";
-          T_FLOAT "1.0";
-          TRUE;
-          FALSE;
-          IF;
-          LET;
-        ]
+          let rec all_but_last = function
+            | [] ->
+                errorexpect core
+                  (let { span; token } = current core in
+                   span)
+                  EMPTY [ TYPE ]
+            | [ x ] -> []
+            | x :: xs -> x :: all_but_last xs
+          in
+          let buf = go () in
+          let last = ListHelpers.last buf in
+          let allbut = all_but_last buf in
+          let span = spandiff pipspan (currentspan core) in
+          ({ head = fst nm; args = allbut; typ = Ok last }, span)
+          :: parse_peek_typecase_list rettyp core
+      | T (x, span) -> errorexpect core span x [ T_IDENT "a"; COL_OP ":" ])
+  | _ -> []
 
-and parse_compound state =
-  match peek state 1 with
-  | IF ->
-      toss state;
-      let cond = parse_expr state 0 in
-      expect state THEN;
-      let e1 = parse_expr state 0 in
-      expect state ELSE;
-      let e2 = parse_expr state 0 in
-      IfElse (mkinfo (), cond, e1, e2)
-  | LET -> (
-      toss state;
-      match pop state with
-      | T_IDENT var -> (
-          match pop state with
-          | EQ_OP "=" ->
-              let first = parse_expr state 0 in
-              expect state IN;
-              let second = parse_expr state 0 in
-              LetIn (mkinfo (), var, first, second)
-          | COL_OP ":" ->
-              let ts = parse_type state in
-              expect state (EQ_OP "=");
-              let first = parse_expr state 0 in
-              expect state IN;
-              let second = parse_expr state 0 in
-              AnnotLet (mkinfo (), var, ts, first, second)
-          | x -> error state x [ EQ_OP "="; COL_OP ":" ])
-      | REC ->
-          let var = get_ident state in
-          expect state (COL_OP ":");
-          let ts = parse_type state in
-          expect state (EQ_OP "=");
-          let first = parse_expr state 0 in
-          expect state IN;
-          let second = parse_expr state 0 in
-          LetRecIn (mkinfo (), ts, var, first, second)
-      | x -> error state x [ REC; EQ_OP "=" ])
-  | FUN ->
-      toss state;
-      let v = get_ident state in
-      (match pop state with
-      | COL_OP ":" -> ()
-      | x -> error state x [ COL_OP ":" ]);
-      let typ = parse_type state in
-      (match pop state with LAM_TO -> () | x -> error state x [ LAM_TO ]);
-      let expr = parse_expr state 0 in
-      Ast.AnnotLam (mkinfo (), v, typ, expr)
-  | TFUN ->
-      toss state;
-      let v = get_ident state in
-      (match pop state with LAM_TO -> () | x -> error state x [ COL_OP ":" ]);
-      let expr = parse_expr state 0 in
-      Ast.TypeLam (mkinfo (), v, expr)
-  | MATCH ->
-      toss state;
-      let pat = parse_expr state 0 in
-      expect state WITH;
-      let rec go acc =
-        match pop state with
-        | PIP_OP "|" ->
-            let p = parse_match_pattern state in
-            expect state LAM_TO;
-            let e = parse_expr state 0 in
-            go ((p, e) :: acc)
-        | END -> List.rev acc
-        | x -> error state x [ PIP_OP "|"; END ]
+and parse_type core =
+  expect core TYPE;
+  let id = parse_ident core in
+  let idlist, idlistspan = mergespans @@ parse_peek_ident_list core in
+  expect core (EQ_OP "=");
+  match peek' core with
+  | T (PIP_OP "|", s) ->
+      let pats =
+        parse_peek_typecase_list
+          (TSApp (List.map (fun x -> TSBase x) idlist, fst id))
+          core
       in
-      Match (mkinfo (), pat, go [])
-  | _ -> (
-      let b = parse_base state in
-      match peek state 1 with
-      | DOT -> (
-          toss state;
-          match pop state with
-          | T_INT s -> TupAccess (mkinfo (), b, int_of_string s)
-          | x -> error state x [ T_INT "1" ])
-      | _ -> parse_funccall_try b state)
-
-and parse_expr_h state res prec =
-  let op = get_binop_peek state in
-  match op with
-  | None -> res
-  | Some ";" ->
-      let pl, pr = infix_bind_pow ";" in
-      if pl >= prec then (
-        toss state;
-        let next_prec = pr in
-        parse_expr_h state (Join (mkinfo (), res, parse_expr state next_prec)) 0)
-      else
-        res
-  | Some s ->
-      let pl, pr = infix_bind_pow s in
-      if pl >= prec then (
-        toss state;
-        let next_prec = pr in
-        parse_expr_h state
-          (FCall
-             ( mkinfo (),
-               FCall (mkinfo (), Base (mkinfo (), Ident (mkinfo (), s)), res),
-               parse_expr state next_prec ))
-          0)
-      else
-        res
-
-and parse_expr state prec =
-  let lhs = parse_compound state in
-  parse_expr_h state lhs prec
-
-and parse_let state =
-  let names = id_list state in
-  let id, args =
-    match names with
-    | x :: xs -> (x, xs)
-    | [] -> error state (pop state) [ T_IDENT "example" ]
-  in
-  let expr =
-    match pop state with
-    | EQ_OP "=" -> parse_expr state 0
-    | x -> error state x [ EQ_OP "=" ]
-  in
-  (id, args, expr)
-
-and parse_let_norm state =
-  let ts = parse_type state in
-  expect state LET;
-  match peek state 1 with
-  | REC ->
-      toss state;
-      let id, args, expr = parse_let state in
-      TopAssignRec ((id, ts), (id, args, expr))
+      let pats', patlistspan' = mergespans pats in
+      let spans = info3 (snd id, idlistspan, patlistspan') in
+      Typedecl (spans, fst id, idlist, pats')
   | _ ->
-      let id, args, expr = parse_let state in
-      TopAssign ((id, ts), (id, args, expr))
+      let typ, typspan = parse_typesig core in
+      let spans = info3 (snd id, idlistspan, typspan) in
+      Typealias (spans, fst id, idlist, typ)
 
-and parse_module state =
-  let name =
-    match pop state with
-    | T_IDENT s -> s
-    | x -> error state x [ T_IDENT "example" ]
-  in
-  (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
-  (match peek state 1 with
-  | MODULE ->
-      toss state;
-      ()
-  | _ -> ());
-  let top = parse_toplevel_list state in
-  expect state END;
-  SimplModule (name, top)
+and parse_toplevel core =
+  match peek' core with
+  | T (TYPE, s) -> Some (parse_type core)
+  (*| T (SIG, s) -> Some (parse_let core)
+    | T (MODULE, s) -> Some (parse_module core)
+    | T (BIND, s) -> Some (parse_bind core)
+    | T (EXTERN, s) -> Some (parse_extern core)
+    | T (OPEN, s) -> Some (parse_open core)
+  *)
+  | _ -> None
 
-and parse_bind state =
-  let op = get_binop state in
-  (match pop state with EQ_OP "=" -> () | x -> error state x [ EQ_OP "=" ]);
-  let name = get_ident state in
-  Bind (op, [], name)
+let program_h lexfunc lexbuf file =
+  let core = Tok.new_core lexfunc lexbuf file in
+  Program []
 
-and parse_extern state =
-  let arity =
-    match pop state with
-    | T_INT s -> int_of_string s
-    | x -> error state x [ T_INT "1" ]
-  in
-  let nm =
-    match pop state with
-    | INTIDENT s -> s
-    | x -> error state x [ INTIDENT "`foo" ]
-  in
-  expect state (COL_OP ":");
-  let ts = parse_type state in
-  expect state (EQ_OP "=");
-  let id = get_ident state in
-  IntExtern (nm, id, arity, ts)
-
-and parse_open state =
-  let s = get_ident state in
-  Open s
-
-and parse_typedecl_pats nm args state =
-  let p = parse_adt_pattern state in
-  let fixed =
-    match p.typ with
-    | Ok _ -> p
-    | Error () ->
-        let rec go xs =
-          match xs with [] -> [] | x :: xs -> TSBase x :: go xs
-        in
-        { p with typ = Ok (TSApp (go args, nm)) }
-  in
-  match peek state 1 with
-  | PIP_OP "|" ->
-      toss state;
-      fixed :: parse_typedecl_pats nm args state
-  | _ -> [ fixed ]
-
-and parse_typedecl state =
-  match id_list state with
-  | [] -> error state (peek state 1) [ T_IDENT "Type_example" ]
-  | x :: xs -> (
-      match pop state with
-      | EQ_OP "=" -> (
-          match peek state 1 with
-          | PIP_OP "|" ->
-              toss state;
-              let pats = parse_typedecl_pats x xs state in
-              Typedecl (x, xs, pats)
-          | _ ->
-              let typ = parse_type state in
-              Typealias (x, xs, typ))
-      | x -> error state x [ EQ_OP "=" ])
-
-and parse_toplevel_list state =
-  let first =
-    match peek state 1 with
-    | SIG ->
-        toss state;
-        Some (parse_let_norm state)
-    | MODULE ->
-        toss state;
-        Some (parse_module state)
-    | BIND ->
-        toss state;
-        Some (parse_bind state)
-    | INTEXTERN ->
-        toss state;
-        Some (parse_extern state)
-    | OPEN ->
-        toss state;
-        Some (parse_open state)
-    | TYPE ->
-        toss state;
-        Some (parse_typedecl state)
-    | EOF -> None
-    | x -> None
-  in
-  match first with Some x -> x :: parse_toplevel_list state | None -> []
-
-and program token lexbuf file =
-  let token' buf =
-    let t' = token buf in
-    print_endline (show_token t');
-    t'
-  in
-  let state = new_state token lexbuf file in
-  let tmp = parse_toplevel_list state in
-  expect state EOF;
-  Program tmp
+let program lexfunc lexbuf file =
+  try program_h lexfunc lexbuf file
+  with SyntaxErr s ->
+    print_endline "Syntax Error:\n";
+    print_endline s;
+    exit 1

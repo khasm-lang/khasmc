@@ -26,7 +26,6 @@ let compile names asts args =
     (* parsing puts them in reverse order,
             so fix that *)
     |> List.rev
-    |> List.map Complexity.init_program
     |> List.map2 Modules.wrap_in (List.rev names)
     |> Elim_modules.elim
   in

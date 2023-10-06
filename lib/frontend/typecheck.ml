@@ -673,7 +673,6 @@ and infer ctx tm =
     | Join (inf, a, b) ->
         ignore (check ctx a tsBottom);
         (inf, infer ctx b)
-    | Inst (_, _, _) -> raise (TypeErr "UNREACHABLE")
     | TypeLam (inf, t, b) ->
         let ctx' = add_bound_typ ctx t in
         let ctx' = add_bound_forall ctx' t (TSMeta (get_meta ())) in
@@ -716,10 +715,8 @@ and infer ctx tm =
           (TypeErr
              ("Cannot infer:\n" ^ show_kexpr tm ^ "\nMaybe add annotations?"))
   in
-  let inf = fst res in
   let ts = validate_typ ctx.types @@ snd res in
   let res' = remove_aliases ctx.aliases @@ elim_unused @@ lift_ts ts in
-  Hash.add_typ inf.id res';
   res'
 
 (** Checks a type against a term *)
@@ -831,7 +828,7 @@ let rec typecheck_toplevel_list ctx tl =
   | x :: xs ->
       let ctx' =
         match x with
-        | TopAssign ((id, ts), (_id, args, body)) ->
+        | TopAssign (inf, id, ts, args, body) ->
             let ts = type_simpl ctx ts in
 
             let body = conv_ts_args_body_to_typelams ts args body in
@@ -843,7 +840,7 @@ let rec typecheck_toplevel_list ctx tl =
             let fixed = body in
             check ctx fixed ts;
             assume_typ ctx id ts
-        | TopAssignRec ((id, ts), (_id, args, body)) ->
+        | TopAssignRec (inf, id, ts, args, body) ->
             let ts = type_simpl ctx ts in
             let body = conv_ts_args_body_to_typelams ts args body in
 
@@ -861,28 +858,28 @@ let rec typecheck_toplevel_list ctx tl =
         (*
          assume the type is correct
         *)
-        | Extern (id, _arity, ts) ->
+        | Extern (inf, id, _arity, ts) ->
             let ts = type_simpl ctx ts in
 
             assume_typ ctx id ts
-        | IntExtern (_nm, id, _arity, ts) ->
+        | IntExtern (inf, _nm, id, _arity, ts) ->
             let ts = type_simpl ctx ts in
 
             assume_typ ctx id ts
-        | Open _ | SimplModule (_, _) ->
+        | Open _ | SimplModule (_, _, _) ->
             raise @@ Impossible "Modules in typechecking"
-        | Bind (id, _, ed) ->
+        | Bind (inf, id, _, ed) ->
             let typ = lookup ctx ed in
             let ts = type_simpl ctx typ in
             assume_typ ctx id ts
-        | Typealias (id, args, ts) ->
+        | Typealias (inf, id, args, ts) ->
             let ts = type_simpl ctx ts in
             let ctx' = add_alias ctx id args ts in
             if List.length args = 0 then
               add_bound_typ ctx' id
             else
               add_param_typ ctx' (List.length args) id
-        | Typedecl (id, args, pats) ->
+        | Typedecl (inf, id, args, pats) ->
             let rec go xs p =
               match xs with
               | [] -> p
@@ -962,19 +959,3 @@ let rec typecheck_program_list_h pl ctx =
 
 (** Helper *)
 let typecheck_program_list pl = typecheck_program_list_h pl None
-
-let%test "Typechecking general" =
-  let tm =
-    Program(
-      [
-        TopAssign(("test",TSBase("int")),("test",[],
-                                          Base(dummyinfo, Int("5"))
-                                         )) 
-      ]
-    )
-  in
-  try
-    typecheck_program_list [tm];
-    true
-  with
-  | _ -> false

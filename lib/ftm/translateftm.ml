@@ -325,7 +325,6 @@ and ftm_expr tbl expr =
       let e1 = ftm_expr tbl e1 in
       let e2 = ftm_expr tbl e2 in
       Kir.Seq (typ, e1, e2)
-  | Ast.Inst (_, _, _) -> raise @@ Impossible "INST"
   | Ast.TypeLam (_, _, e) -> ftm_expr tbl e
   | Ast.TupAccess (id, expr, i) ->
       let typ = Hash.get_typ id.id in
@@ -339,27 +338,27 @@ and ftm_expr tbl expr =
 
 let rec ftm_toplevel table top =
   match top with
-  | Ast.TopAssign ((id, ts), (_id, args, expr)) ->
+  | Ast.TopAssign (inf, id, ts, args, expr) ->
       let body = Typecheck.conv_ts_args_body_to_typelams ts args expr in
       let id', tbl' = Kir.add_to_tbl id table in
       (Kir.Let (ts, id', ftm_expr table body), tbl')
-  | Ast.TopAssignRec ((id, ts), (_id, args, expr)) ->
+  | Ast.TopAssignRec (inf, id, ts, args, expr) ->
       let body = Typecheck.conv_ts_args_body_to_typelams ts args expr in
       let id', tbl' = Kir.add_to_tbl id table in
       (Kir.LetRec (ts, id', ftm_expr tbl' body), tbl')
-  | Ast.Extern (id, arity, ts) ->
+  | Ast.Extern (inf, id, arity, ts) ->
       let id', tbl' = Kir.add_to_tbl id table in
       (Kir.Extern (ts, arity, id', id), tbl')
-  | Ast.Bind (id, _, nm) ->
+  | Ast.Bind (inf, id, _, nm) ->
       let id', tbl' = Kir.add_to_tbl id table in
       let v, _name = Kir.get_from_tbl nm tbl' in
       (Kir.Bind (id', v), tbl')
-  | Ast.IntExtern (id, id', arity, ts) ->
+  | Ast.IntExtern (inf, id, id', arity, ts) ->
       let _id1, tbl' = Kir.add_to_tbl id table in
       let id2, tbl'' = Kir.add_to_tbl id' tbl' in
       (Kir.Extern (ts, arity, id2, id), tbl'')
-  | Ast.Typealias (_, _, _) -> (Kir.Noop, table)
-  | Ast.Typedecl (_nm, _args, pats) ->
+  | Ast.Typealias (_, _, _, _) -> (Kir.Noop, table)
+  | Ast.Typedecl (inf, _nm, _args, pats) ->
       let count = ref (-1) in
       let table' =
         List.fold_left
@@ -370,7 +369,8 @@ let rec ftm_toplevel table top =
           table pats
       in
       (Kir.Noop, table')
-  | Ast.Open _ | Ast.SimplModule (_, _) -> raise @@ Impossible "Modules in ftm"
+  | Ast.Open _ | Ast.SimplModule (_, _, _) ->
+      raise @@ Impossible "Modules in ftm"
 
 let rec ftm table prog =
   match prog with

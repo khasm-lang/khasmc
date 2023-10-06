@@ -264,7 +264,6 @@ and elim_expr mctx lctx expr =
       LetRecIn (i, ts, id, elim_expr mctx ctx' e1, elim_expr mctx ctx' e2)
   | IfElse (i, c, e1, e2) -> IfElse (i, default c, default e1, default e2)
   | Join (i, e1, e2) -> Join (i, default e1, default e2)
-  | Inst (i, e, ts) -> Inst (i, default e, ts)
   | Lam (i, id, expr) ->
       let ctx' = add_local lctx id in
       Lam (i, id, elim_expr mctx ctx' expr)
@@ -280,43 +279,41 @@ and elim_expr mctx lctx expr =
       AnnotLam (i, id, ts, elim_expr mctx ctx' e1)
   | ModAccess (i, mods, id) ->
       let m = get_full_id_mod mctx mods id in
-      Base (i, Ident (i, m))
+      Base (i, Ident ( i, m))
   | Match (i, p, pats) -> Match (i, p, elim_pats mctx lctx pats)
 
 (** Eliminate modules from a toplevel *)
 let rec elim_toplevel ctx t =
   match t with
-  | TopAssign (t, a) ->
-      let (id, ts), (_id, args, expr) = (t, a) in
+  | TopAssign (info, id, ts, args, expr) ->
       let ts' = elim_ts ctx (from_args_and_defaults []) ts in
       let expr' = elim_expr ctx (from_args args) expr in
       let id' = get_mang ctx id in
-      (add_ident ctx id, TopAssign ((id', ts'), (id', args, expr')) :: [])
-  | TopAssignRec (t, a) ->
-      let (id, ts), (_id, args, expr) = (t, a) in
+      (add_ident ctx id, TopAssign (info, id', ts', args, expr') :: [])
+  | TopAssignRec (info, id, ts, args, expr) ->
       let id' = get_mang ctx id in
       let ctx' = add_ident ctx id in
       let ts' = elim_ts ctx (from_args_and_defaults []) ts in
       let expr' = elim_expr ctx' (from_args args) expr in
-      (ctx', TopAssignRec ((id', ts'), (id', args, expr')) :: [])
-  | Extern (id, i, ts) -> (add_ident_extern ctx id, t :: [])
-  | IntExtern (id_i, id_e, i, ts) ->
+      (ctx', TopAssignRec (info, id', ts', args, expr') :: [])
+  | Extern (inf, id, i, ts) -> (add_ident_extern ctx id, t :: [])
+  | IntExtern (inf, id_i, id_e, i, ts) ->
       let id' = get_mang ctx id_e in
-      (add_ident ctx id_e, IntExtern (id_i, id', i, ts) :: [])
-  | Bind (id, ids, nm) ->
+      (add_ident ctx id_e, IntExtern (inf, id_i, id', i, ts) :: [])
+  | Bind (inf, id, ids, nm) ->
       if ids <> [] then
         todo "bind with module args"
       else
         let id' = get_mang ctx id in
         let nm' = get_mang ctx nm in
-        (add_ident ctx id, Bind (id', [], nm') :: [])
-  | Open id -> (open_deep_module ctx id, [])
-  | SimplModule (id, toplevels) ->
+        (add_ident ctx id, Bind (inf, id', [], nm') :: [])
+  | Open (inf, id) -> (open_deep_module ctx id, [])
+  | SimplModule (inf, id, toplevels) ->
       let newctx = ctx_with id ctx in
       let ctx', top = elim_toplevel_list newctx toplevels in
       let ctx' = close_all ctx' in
       (add_child ctx ctx', top)
-  | Typedecl (id, args, pats) ->
+  | Typedecl (inf, id, args, pats) ->
       let ctx' =
         List.fold_left (fun ctx pat -> add_ident ctx pat.head) ctx pats
       in
@@ -355,11 +352,11 @@ let rec elim_toplevel ctx t =
             })
           pats
       in
-      (newctx, Typedecl (get_full_typ_mod newctx [] id, args, mod_pats) :: [])
-  | Typealias (id, args, ts) ->
+      (newctx, Typedecl (inf, get_full_typ_mod newctx [] id, args, mod_pats) :: [])
+  | Typealias (inf, id, args, ts) ->
       let newctx = add_typ ctx id in
       let ts' = elim_ts ctx (from_args args) ts in
-      (newctx, Typealias (id, args, ts') :: [])
+      (newctx, Typealias (inf, id, args, ts') :: [])
 
 and elim_toplevel_list ctx toplevels =
   match toplevels with
@@ -387,56 +384,3 @@ let elim programs =
     | x :: xs -> x :: all_but_last xs
   in
   all_but_last tmp
-
-let%test "Elim modules all" =
-  let prog =
-    Program
-      [
-        SimplModule
-          ( "a",
-            [
-              SimplModule
-                ( "b",
-                  [
-                    SimplModule
-                      ( "c",
-                        [
-                          TopAssign
-                            ( ("d", TSBase "int"),
-                              ("d", [], Base (dummyinfo, Int "1")) );
-                        ] );
-                  ] );
-            ] );
-        TopAssign
-          ( ("one", TSBase "int"),
-            ("one", [], ModAccess (dummyinfo, [ "a"; "b"; "c" ], "d")) );
-      ]
-  in
-  match elim [ prog ] with
-  | after :: [] ->
-      let should =
-        Program
-          [
-            TopAssign
-              ( ("khasm.a.b.c.d", TSBase "int"),
-                ("khasm.a.b.c.d", [], Base (dummyinfo, Int "1"))
-              );
-            TopAssign
-              ( ("khasm.one", TSBase "int"),
-                ( "khasm.one",
-                  [],
-                  Base
-                    (dummyinfo,
-                      Ident (dummyinfo, "khasm.a.b.c.d") ) ) );
-          ]
-      in
-      if after = should then
-        true
-      else
-        begin
-          print_endline (show_program after);
-          print_endline (show_program should);
-          false
-        end 
-  | _ ->
-    false

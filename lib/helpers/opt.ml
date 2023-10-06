@@ -7,5 +7,4 @@ let to_fixpoint maxi func value =
       to_fixpoint_h (acc + 1) value'
   in
   let acc, value' = to_fixpoint_h 0 value in
-  print_endline @@ "took: " ^ string_of_int acc ^ " iters for fixpoint";
   value'

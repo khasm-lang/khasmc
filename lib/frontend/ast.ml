@@ -35,11 +35,18 @@ let str_of_typesig x = pshow_typesig x
 
 type info = {
   id : int;
-  complex : int;
+  span : Errors.span;
 }
 [@@deriving show { with_path = false }]
 
-let dummyinfo = { id = 0; complex = 0 }
+type info2 = info * info [@@deriving show { with_path = false }]
+type info3 = info * info * info [@@deriving show { with_path = false }]
+type info4 = info * info * info * info [@@deriving show { with_path = false }]
+
+let dummyinfo = { id = 0; span = Errors.emptyspan }
+let dummyinfo2 = (dummyinfo, dummyinfo)
+let dummyinfo3 = (dummyinfo, dummyinfo, dummyinfo)
+let dummyinfo4 = (dummyinfo, dummyinfo, dummyinfo, dummyinfo)
 let idgen = ref 0
 
 let getid () =
@@ -47,7 +54,14 @@ let getid () =
   idgen := tmp + 1;
   tmp
 
-let mkinfo () = { id = getid (); complex = -1 }
+let mkinfo () = { id = getid (); span = Errors.emptyspan }
+let info s = { id = getid (); span = s }
+let info2 (a, b) = ({ id = getid (); span = a }, { id = getid (); span = b })
+
+let info3 (a, b, c) =
+  ( { id = getid (); span = a },
+    { id = getid (); span = b },
+    { id = getid (); span = c } )
 
 type kident = string [@@deriving show { with_path = false }]
 
@@ -76,7 +90,6 @@ and kexpr =
   | LetRecIn of info * typesig * kident * kexpr * kexpr
   | IfElse of info * kexpr * kexpr * kexpr
   | Join of info * kexpr * kexpr (* expr1; expr2; expr3, rightassoc*)
-  | Inst of info * kexpr * typesig
   | Lam of info * kident * kexpr
   | TypeLam of info * kident * kexpr
   | TupAccess of info * kexpr * int
@@ -86,26 +99,23 @@ and kexpr =
   | Match of info * kexpr * (matchpat * kexpr) list
 [@@deriving show { with_path = false }]
 
-and tdecl = kident * typesig [@@deriving show { with_path = false }]
-and kass = kident * kident list * kexpr [@@deriving show { with_path = false }]
-
 and adt_pattern = {
-  head : kident;
-  args : typesig list;
-  typ : (typesig, unit) result;
+  head : kident;  (** Constructor name *)
+  args : typesig list;  (** list of types to be input to ctor *)
+  typ : (typesig, unit) result;  (** Type ctor returns *)
 }
 [@@deriving show { with_path = false }]
 
 and toplevel =
-  | TopAssign of tdecl * kass
-  | TopAssignRec of tdecl * kass
-  | Extern of kident * int * typesig
-  | IntExtern of kident * kident * int * typesig
-  | SimplModule of kident * toplevel list
-  | Bind of kident * kident list * kident
-  | Open of kident
-  | Typedecl of kident * kident list * adt_pattern list
-  | Typealias of kident * kident list * typesig
+  | TopAssign of info4 * kident * typesig * kident list * kexpr
+  | TopAssignRec of info4 * kident * typesig * kident list * kexpr
+  | Extern of info3 * kident * int * typesig
+  | IntExtern of info4 * kident * kident * int * typesig
+  | SimplModule of info2 * kident * toplevel list
+  | Bind of info3 * kident * kident list * kident
+  | Open of info * kident
+  | Typedecl of info3 * kident * kident list * adt_pattern list
+  | Typealias of info3 * kident * kident list * typesig
 [@@deriving show { with_path = false }]
 
 and program = Program of toplevel list [@@deriving show { with_path = false }]
@@ -162,7 +172,6 @@ let rec esubs expr x y =
       else
         expr
   | ModAccess _ -> expr
-  | Inst _ -> expr
   | Match (i, p, ps) ->
       Match
         ( i,
@@ -174,22 +183,3 @@ let rec esubs expr x y =
               else
                 (p, e))
             ps )
-
-(*self explanatory*)
-let getinfo expr =
-  match expr with
-  | Base (inf, _)
-  | FCall (inf, _, _)
-  | LetIn (inf, _, _, _)
-  | IfElse (inf, _, _, _)
-  | Join (inf, _, _)
-  | Inst (inf, _, _)
-  | Lam (inf, _, _)
-  | TypeLam (inf, _, _)
-  | TupAccess (inf, _, _)
-  | AnnotLet (inf, _, _, _, _)
-  | AnnotLam (inf, _, _, _)
-  | ModAccess (inf, _, _)
-  | Match (inf, _, _)
-  | LetRecIn (inf, _, _, _, _) ->
-      inf

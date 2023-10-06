@@ -1,5 +1,4 @@
 {
-
   open Lexing
   open Parser
   exception SyntaxError of string
@@ -14,19 +13,22 @@
         pos with pos_bol = 0;
         pos_lnum = pos.pos_lnum + 1
     }
-  let incr_by lexbuf =
+  let incr_by lexbuf token =
     let len = String.length (Lexing.lexeme lexbuf) in
     let pos = lexbuf.lex_curr_p in
     lexbuf.lex_curr_p <-
     {
 	pos with pos_bol = pos.pos_bol + len
-    }
-  let incr_by_i i lexbuf =
+    };
+    {pos with pos_bol = pos.pos_bol + 1}, token
+    
+  let incr_by_i i lexbuf token =
     let pos = lexbuf.lex_curr_p in
     lexbuf.lex_curr_p <-
     {
 	pos with pos_bol = pos.pos_bol + i
-    }
+    };
+    pos, token
 }
 
 let U1 = [ '\000' - '\127' ]
@@ -87,90 +89,90 @@ let COMMENT = "(*" any "*)"
 
 
 rule token = parse
-     | "(" {incr_by lexbuf; LPAREN}
-     | ")" {incr_by lexbuf; RPAREN}
-     | "{" {incr_by lexbuf; LBRACE}
-     | "}" {incr_by lexbuf; RBRACE}
-     | "[" {incr_by lexbuf; LBRACK}
-     | "]" {incr_by lexbuf; RBRACK}
-     | "true" {incr_by lexbuf; TRUE}
-     | "false" {incr_by lexbuf; FALSE}
-     | "\\" {incr_by lexbuf; BSLASH}
-     | "?" {incr_by lexbuf; QMARK}
-     | "#" {incr_by lexbuf; HASH}
-     | "," {incr_by lexbuf; COMMA}
-     | ";" {incr_by lexbuf; SEMICOLON}
-     | "_" {incr_by lexbuf; UNDERSCORE}
-     | "->" {incr_by lexbuf; TS_TO}
-     | "=>" {incr_by lexbuf; LAM_TO}
-	| bang_op {incr_by lexbuf; BANG_OP (Lexing.lexeme lexbuf)}
-	| tilde_op {incr_by lexbuf; TILDE_OP (Lexing.lexeme lexbuf)}
-	| pow_op {incr_by lexbuf; POW_OP (Lexing.lexeme lexbuf)}
-	| mul_op {incr_by lexbuf; MUL_OP (Lexing.lexeme lexbuf)}
-	| div_op {incr_by lexbuf; DIV_OP (Lexing.lexeme lexbuf)}
-	| mod_op {incr_by lexbuf; MOD_OP (Lexing.lexeme lexbuf)}
-	| add_op {incr_by lexbuf; ADD_OP (Lexing.lexeme lexbuf)}
-	| sub_op {incr_by lexbuf; SUB_OP (Lexing.lexeme lexbuf)}
-	| col_op {incr_by lexbuf; COL_OP (Lexing.lexeme lexbuf)}
-	| car_op {incr_by lexbuf; CAR_OP (Lexing.lexeme lexbuf)}
-	| at_op  {incr_by lexbuf; AT_OP  (Lexing.lexeme lexbuf)}
-	| eq_op  {incr_by lexbuf; EQ_OP  (Lexing.lexeme lexbuf)}
-	| lt_op  {incr_by lexbuf; LT_OP  (Lexing.lexeme lexbuf)}
-	| gt_op  {incr_by lexbuf; GT_OP  (Lexing.lexeme lexbuf)}
-	| pip_op {incr_by lexbuf; PIP_OP (Lexing.lexeme lexbuf)}
-	| and_op {incr_by lexbuf; AND_OP (Lexing.lexeme lexbuf)}
-	| dol_op {incr_by lexbuf; DOL_OP (Lexing.lexeme lexbuf)}
-	| tick {incr_by lexbuf; TICK}	
-     | "if"	{incr_by lexbuf; IF}
-     | "of"	{incr_by lexbuf; OF}
-     | "then"   {incr_by lexbuf; THEN}
-     | "else"   {incr_by lexbuf; ELSE}
-     | "while" 	{incr_by lexbuf; WHILE}
-     | "for" 	{incr_by lexbuf; FOR}
-     | "let"    {incr_by lexbuf; LET}
-     | "rec" 	{incr_by lexbuf; REC}
-     | "in"     {incr_by lexbuf; IN}
-     | "end"    {incr_by lexbuf; END}
-     | "true"   {incr_by lexbuf; TRUE}
-     | "false"  {incr_by lexbuf; FALSE}
-     | "fun"    {incr_by lexbuf; FUN}
-     | "lam"    {incr_by lexbuf; FUN}
-     | "tfun"   {incr_by lexbuf; TFUN}
-     | "tlam"   {incr_by lexbuf; TFUN}
-     | "nomangle" {incr_by lexbuf; NOMANGLE}
-     | "inline" {incr_by lexbuf; INLINE}
-     | "ignore" {incr_by lexbuf; IGNORE}
-     | "forall" {incr_by lexbuf; FORALL}
-     | "sig" {incr_by lexbuf; SIG}
-     | "extern" {incr_by lexbuf; INTEXTERN}
-     | "bind" {incr_by lexbuf; BIND}
-     | "and" {incr_by lexbuf; LAND}
-     | "or"  {incr_by lexbuf; LOR}
-     | "module" {incr_by lexbuf; MODULE}
-     | "struct" {incr_by lexbuf; STRUCT}
-     | "functor" {incr_by lexbuf; FUNCTOR}
-     | "match" {incr_by lexbuf; MATCH}
-     | "with" {incr_by lexbuf; WITH}
-     | "type" {incr_by lexbuf; TYPE}
-     | "open" {incr_by lexbuf; OPEN}
-     | "∀" {incr_by lexbuf; FORALL}
-     | "λ" {incr_by lexbuf; FUN}
-     | "Λ" {incr_by lexbuf; TFUN}
-     | COMMENT {incr_by lexbuf;  token lexbuf }
-     | WHITESPACE {incr_by lexbuf;  token lexbuf}
-     | NEWLINE { next_line lexbuf; token lexbuf}
-     | INT {incr_by lexbuf;  T_INT (Lexing.lexeme lexbuf) }
-     | FLOAT {incr_by lexbuf;  T_FLOAT (Lexing.lexeme lexbuf)}
+     | "(" {incr_by lexbuf LPAREN}
+     | ")" {incr_by lexbuf RPAREN}
+     | "{" {incr_by lexbuf LBRACE}
+     | "}" {incr_by lexbuf RBRACE}
+     | "[" {incr_by lexbuf LBRACK}
+     | "]" {incr_by lexbuf RBRACK}
+     | "true" {incr_by lexbuf TRUE}
+     | "false" {incr_by lexbuf FALSE}
+     | "\\" {incr_by lexbuf BSLASH}
+     | "?" {incr_by lexbuf QMARK}
+     | "#" {incr_by lexbuf HASH}
+     | "," {incr_by lexbuf COMMA}
+     | ";" {incr_by lexbuf SEMICOLON}
+     | "_" {incr_by lexbuf UNDERSCORE}
+     | "->" {incr_by lexbuf TS_TO}
+     | "=>" {incr_by lexbuf LAM_TO}
+	| bang_op {incr_by lexbuf @@ BANG_OP (Lexing.lexeme lexbuf)}
+	| tilde_op {incr_by lexbuf @@ TILDE_OP (Lexing.lexeme lexbuf)}
+	| pow_op {incr_by lexbuf @@ POW_OP (Lexing.lexeme lexbuf)}
+	| mul_op {incr_by lexbuf@@ MUL_OP (Lexing.lexeme lexbuf)}
+	| div_op {incr_by lexbuf@@ DIV_OP (Lexing.lexeme lexbuf)}
+	| mod_op {incr_by lexbuf@@ MOD_OP (Lexing.lexeme lexbuf)}
+	| add_op {incr_by lexbuf@@ ADD_OP (Lexing.lexeme lexbuf)}
+	| sub_op {incr_by lexbuf@@ SUB_OP (Lexing.lexeme lexbuf)}
+	| col_op {incr_by lexbuf@@ COL_OP (Lexing.lexeme lexbuf)}
+	| car_op {incr_by lexbuf@@ CAR_OP (Lexing.lexeme lexbuf)}
+	| at_op  {incr_by lexbuf@@ AT_OP  (Lexing.lexeme lexbuf)}
+	| eq_op  {incr_by lexbuf@@ EQ_OP  (Lexing.lexeme lexbuf)}
+	| lt_op  {incr_by lexbuf@@ LT_OP  (Lexing.lexeme lexbuf)}
+	| gt_op  {incr_by lexbuf@@ GT_OP  (Lexing.lexeme lexbuf)}
+	| pip_op {incr_by lexbuf@@ PIP_OP (Lexing.lexeme lexbuf)}
+	| and_op {incr_by lexbuf@@ AND_OP (Lexing.lexeme lexbuf)}
+	| dol_op {incr_by lexbuf@@ DOL_OP (Lexing.lexeme lexbuf)}
+	| tick {incr_by lexbuf TICK}	
+     | "if"	{incr_by lexbuf IF}
+     | "of"	{incr_by lexbuf OF}
+     | "then"   {incr_by lexbuf THEN}
+     | "else"   {incr_by lexbuf ELSE}
+     | "while" 	{incr_by lexbuf WHILE}
+     | "for" 	{incr_by lexbuf FOR}
+     | "let"    {incr_by lexbuf LET}
+     | "rec" 	{incr_by lexbuf REC}
+     | "in"     {incr_by lexbuf IN}
+     | "end"    {incr_by lexbuf END}
+     | "true"   {incr_by lexbuf TRUE}
+     | "false"  {incr_by lexbuf FALSE}
+     | "fun"    {incr_by lexbuf FUN}
+     | "lam"    {incr_by lexbuf FUN}
+     | "tfun"   {incr_by lexbuf TFUN}
+     | "tlam"   {incr_by lexbuf TFUN}
+     | "nomangle" {incr_by lexbuf NOMANGLE}
+     | "inline" {incr_by lexbuf INLINE}
+     | "ignore" {incr_by lexbuf IGNORE}
+     | "forall" {incr_by lexbuf FORALL}
+     | "sig" {incr_by lexbuf SIG}
+     | "extern" {incr_by lexbuf INTEXTERN}
+     | "bind" {incr_by lexbuf BIND}
+     | "and" {incr_by lexbuf LAND}
+     | "or"  {incr_by lexbuf LOR}
+     | "module" {incr_by lexbuf MODULE}
+     | "struct" {incr_by lexbuf STRUCT}
+     | "functor" {incr_by lexbuf FUNCTOR}
+     | "match" {incr_by lexbuf MATCH}
+     | "with" {incr_by lexbuf WITH}
+     | "type" {incr_by lexbuf TYPE}
+     | "open" {incr_by lexbuf OPEN}
+     | "∀" {incr_by lexbuf FORALL}
+     | "λ" {incr_by lexbuf FUN}
+     | "Λ" {incr_by lexbuf TFUN}
+     | COMMENT {ignore @@ incr_by lexbuf BAD; token lexbuf }
+     | WHITESPACE {ignore @@ incr_by lexbuf BAD;  token lexbuf}
+     | NEWLINE {ignore @@ incr_by lexbuf BAD; next_line lexbuf;  token lexbuf}
+     | INT {incr_by lexbuf @@  T_INT (Lexing.lexeme lexbuf) }
+     | FLOAT {incr_by lexbuf @@  T_FLOAT (Lexing.lexeme lexbuf)}
      | '"' {
-     let buffer = Buffer.create 20 in
-     let s = stringl buffer lexbuf in
-     incr_by_i (String.length s + 2) lexbuf; 
-     T_STRING(s)
+       let buffer = Buffer.create 20 in
+       let s = stringl buffer lexbuf in
+       incr_by_i (String.length s + 2) lexbuf
+       @@ T_STRING(s)
      }
-     | INTIDENT {incr_by lexbuf; INTIDENT (Lexing.lexeme lexbuf)}
-     | IDENT {incr_by lexbuf; T_IDENT (Lexing.lexeme lexbuf)}
-     | "." {incr_by lexbuf; DOT}
-     | eof {EOF}
+     | INTIDENT {incr_by lexbuf @@ INTIDENT (Lexing.lexeme lexbuf)}
+     | IDENT {incr_by lexbuf @@ T_IDENT (Lexing.lexeme lexbuf)}
+     | "." {incr_by lexbuf @@ DOT}
+     | eof {lexbuf.lex_curr_p, EOF}
      | _ {raise (SyntaxError ("Lexer - Illegal Character: " ^ Lexing.lexeme lexbuf))}
 
 and stringl buffer = parse
