@@ -63,6 +63,12 @@ let info3 (a, b, c) =
     { id = getid (); span = b },
     { id = getid (); span = c } )
 
+let info4 (a, b, c, d) =
+  ( { id = getid (); span = a },
+    { id = getid (); span = b },
+    { id = getid (); span = c },
+    { id = getid (); span = d } )
+
 type kident = string [@@deriving show { with_path = false }]
 
 type kbase =
@@ -183,3 +189,20 @@ let rec esubs expr x y =
               else
                 (p, e))
             ps )
+
+let get_span (expr : kexpr) =
+  match expr with
+  | Base (t, _)
+  | FCall (t, _, _)
+  | LetIn (t, _, _, _)
+  | LetRecIn (t, _, _, _, _)
+  | IfElse (t, _, _, _)
+  | Join (t, _, _)
+  | Lam (t, _, _)
+  | TypeLam (t, _, _)
+  | TupAccess (t, _, _)
+  | AnnotLet (t, _, _, _, _)
+  | AnnotLam (t, _, _, _)
+  | ModAccess (t, _, _)
+  | Match (t, _, _) ->
+      t.span

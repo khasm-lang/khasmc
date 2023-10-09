@@ -52,6 +52,14 @@ let merge spanlist =
     let b = ListHelpers.last spanlist in
     spandiff a b
 
+let endtoend old new' =
+  {
+    filename = old.filename;
+    file = old.file;
+    startloc = old.endloc;
+    endloc = new'.endloc;
+  }
+
 type display =
   | Default
   | SurroundN of int
