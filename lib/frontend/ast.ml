@@ -35,7 +35,7 @@ let str_of_typesig x = pshow_typesig x
 
 type info = {
   id : int;
-  span : Errors.span;
+  span : Errors.span; [@printer fun fmt span -> fprintf fmt "<span>"]
 }
 [@@deriving show { with_path = false }]
 

@@ -1,2 +1,2 @@
 sig a -> b -> c -> d
-let foo a b c = 1 + 2
+let foo a b c = 1 ; 2 + 3

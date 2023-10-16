@@ -372,6 +372,70 @@ and parse_type core =
       in
       Typealias (spans, fst id, idlist, typ)
 
+and binop_precedence s =
+  match KhasmUTF.split_unicode s with
+  | s, _ -> (
+      match String.get s 0 with
+      | ';' -> 0
+      | '$' -> 1
+      | '=' | '>' | '<' -> 2
+      | '|' | '&' -> 3
+      | '@' | '^' -> 4
+      | ':' -> 5
+      | '+' | '-' -> 6
+      | '*' | '/' | '%' -> 7
+      | _ -> raise @@ Impossible "invalid char index bind pow")
+
+and is_leftassoc s =
+  match KhasmUTF.split_unicode s with
+  | s, _ -> (
+      match String.get s 0 with
+      | ';' -> true
+      | '@' | '^' -> true
+      | ':' -> true
+      | _ -> false)
+
+and get_binop_peek core =
+  match peek' core with
+  | T (POW_OP s, _)
+  | T (MUL_OP s, _)
+  | T (DIV_OP s, _)
+  | T (MOD_OP s, _)
+  | T (ADD_OP s, _)
+  | T (SUB_OP s, _)
+  | T (CAR_OP s, _)
+  | T (AT_OP s, _)
+  | T (EQ_OP s, _)
+  | T (LT_OP s, _)
+  | T (GT_OP s, _)
+  | T (AND_OP s, _)
+  | T (DOL_OP s, _) ->
+      Some s
+  | T (PIP_OP s, _) when String.length s > 1 -> Some s
+  | T (SEMICOLON, _) -> Some ";"
+  | _ -> None
+
+and parse_expr_base_list =
+  [ T_IDENT "ident"; T_INT "5"; T_FLOAT "5.3"; T_STRING "l"; LPAREN ]
+
+and parse_expr_base core =
+  match peek' core with
+  | T (T_IDENT id, s) ->
+      (* TODO : handle module access and function calls *)
+      toss core;
+      Some (Base (info s, Ident (info s, id)))
+  | T (T_INT id, s) ->
+      toss core;
+      Some (Base (info s, Int id))
+  | _ -> None
+
+and parse_expr_compound core =
+  match peek' core with
+  (* todo: if/then/else, let, lambda, match, etc *)
+  | _ ->
+      reset_peek core;
+      parse_expr_base core
+
 (*
 let rec parse_bin_exp min_prec = parse_bin_exp' (parse_unary_expr()) min_prec
 and parse_bin_exp' res min_prec =
@@ -383,23 +447,57 @@ and parse_bin_exp' res min_prec =
     else res
 *)
 
-and parse_expr' core prec = match peek' core with _ -> todo "parseexpr"
-and parse_expr core = parse_expr' core 0
+and parse_expr' core lhs prec =
+  match get_binop_peek core with
+  | Some ";" ->
+      let p = binop_precedence ";" in
+      if p >= prec then (
+        toss core;
+        let min = p + 1 in
+        let inner = parse_expr core min in
+        parse_expr' core (Join (dummyinfo, lhs, inner)) prec)
+      else (
+        reset_peek core;
+        lhs)
+  | Some op ->
+      let p = binop_precedence op in
+      if p >= prec then (
+        toss core;
+        let min =
+          if is_leftassoc op then
+            1 + p
+          else
+            p
+        in
+        let inner =
+          FCall (dummyinfo, Base (dummyinfo, Ident (dummyinfo, op)), lhs)
+        in
+        let inner2 = parse_expr core min in
+        parse_expr' core (FCall (dummyinfo, inner, inner2)) prec)
+      else (
+        reset_peek core;
+        lhs)
+  | None -> lhs
+
+and parse_expr core prec =
+  let e1 = parse_expr_compound core in
+  match e1 with
+  | Some x -> parse_expr' core x prec
+  | None -> errorexpect core (currentspan core) BAD parse_expr_base_list
 
 and parse_let core =
   expect core SIG;
   let ts = parse_typesig core in
-  print_endline (show_core !core);
-  print_endline (show_tok @@ current core);
   match peek' core with
   | T (LET, lspan) ->
       toss core;
       let nm, nmspan = parse_ident core in
       let args, span = mergespans @@ parse_peek_ident_list core in
       expect core (EQ_OP "=");
-      let body = parse_expr core in
+      let body = parse_expr core 0 in
       let inf = info4 (nmspan, emptyspan, span, get_span body) in
       TopAssign (inf, nm, ts, args, body)
+  | T (a, b) -> errorexpect core b a [ LET ]
 
 and parse_toplevel core =
   match peek' core with
