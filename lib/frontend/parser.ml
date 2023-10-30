@@ -90,6 +90,7 @@ type token =
   | ANY
   | UNDERSCORE
   | BAD
+  | INVALID_EXPR
 [@@deriving show { with_path = false }]
 
 open Ast
@@ -230,7 +231,9 @@ and parse_peek_ident core =
   | T (T_IDENT i, span) ->
       toss core;
       Some (i, span)
-  | T (_t, _span) -> None
+  | T (_t, _span) ->
+      reset_peek core;
+      None
 
 and parse_peek_ident_list core =
   match parse_peek_ident core with
@@ -264,7 +267,9 @@ and parse_typesig_elem ?(rec' = false) core =
   | T (LPAREN, _pspan) -> (
       toss core;
       match peek' core with
-      | T (RPAREN, _rspan) -> TSTuple []
+      | T (RPAREN, _rspan) ->
+          toss core;
+          TSTuple []
       | _ -> (
           reset_peek core;
           let t = parse_typesig core in
@@ -290,7 +295,7 @@ and parse_typesig_elem ?(rec' = false) core =
           TSApp (l, nm)
   | T (x, s) -> errorexpect core s x [ LPAREN; T_IDENT "example" ]
 
-and parse_typesig core : typesig =
+and parse_typesig_h core =
   let tmp = parse_typesig_elem core in
   match peek' core with
   | T (TS_TO, _s) ->
@@ -300,6 +305,21 @@ and parse_typesig core : typesig =
   | _ ->
       reset_peek core;
       tmp
+
+and parse_typesig core : typesig =
+  match peek' core with
+  | T (LT_OP "<", _s) ->
+      toss' core;
+      let ids = List.map fst @@ parse_peek_ident_list core in
+      expect core (GT_OP ">");
+      let ts = parse_typesig_h core in
+      let rec go is =
+        match is with [] -> ts | x :: xs -> TSForall (x, go xs)
+      in
+      go ids
+  | _ ->
+      reset_peek core;
+      parse_typesig_h core
 
 and parse_peek_typecase_list rettyp core =
   match peek' core with
@@ -415,27 +435,192 @@ and get_binop_peek core =
   | T (SEMICOLON, _) -> Some ";"
   | _ -> None
 
+and parse_match_branch core =
+  expect core (PIP_OP "|");
+  let some x = Some x in
+  let rec parse_pat around core =
+    match peek' core with
+    | T (T_IDENT s, _) ->
+        toss' core;
+        let rec h () =
+          match parse_pat true core with Some n -> n :: h () | None -> []
+        in
+        if not around then
+          let h = h () in
+          some @@ MPApp (s, h)
+        else
+          some @@ MPId s
+    | T (TICK, _) ->
+        toss' core;
+        let i, s = parse_ident core in
+        some @@ MPId i
+    | T (LPAREN, _) ->
+        toss' core;
+        let rec h () =
+          match parse_pat false core with
+          | Some n ->
+              expect core COMMA;
+              n :: h ()
+          | None ->
+              expect core RPAREN;
+              []
+        in
+        let h = h () in
+        some @@ MPTup h
+    | _ ->
+        reset_peek core;
+        None
+  in
+  match parse_pat false core with
+  | None -> error core (currentspan core) (T_IDENT "id")
+  | Some pat ->
+      expect core LAM_TO;
+      let e = parse_expr core 0 in
+      (pat, e)
+
 and parse_expr_base_list =
   [ T_IDENT "ident"; T_INT "5"; T_FLOAT "5.3"; T_STRING "l"; LPAREN ]
 
-and parse_expr_base core =
+and parse_expr_base_h core =
   match peek' core with
   | T (T_IDENT id, s) ->
-      (* TODO : handle module access and function calls *)
       toss core;
       Some (Base (info s, Ident (info s, id)))
   | T (T_INT id, s) ->
       toss core;
       Some (Base (info s, Int id))
-  | _ -> None
-
-and parse_expr_compound core =
-  match peek' core with
-  (* todo: if/then/else, let, lambda, match, etc *)
+  | T (T_FLOAT id, s) ->
+      toss core;
+      Some (Base (info s, Float id))
+  | T (T_STRING id, s) ->
+      toss core;
+      Some (Base (info s, Str id))
+  | T (TRUE, s) ->
+      toss core;
+      Some (Base (info s, True))
+  | T (FALSE, s) ->
+      toss core;
+      Some (Base (info s, False))
+  | T (LPAREN, s) -> (
+      toss core;
+      match peek' core with
+      | T (RPAREN, s) ->
+          toss core;
+          Some (Base (info s, Tuple []))
+      | _ -> (
+          reset_peek core;
+          let e = parse_expr core 0 in
+          let rec go acc =
+            match peek' core with
+            | T (COMMA, s) ->
+                toss' core;
+                let e = parse_expr core 0 in
+                go (e :: acc)
+            | T (RPAREN, s) ->
+                toss core;
+                List.rev acc
+            | T (x, s) -> errorexpect core s x [ COMMA; RPAREN ]
+          in
+          match go [] with
+          | [] -> Some e
+          | x :: xs -> Some (Base (info s, Tuple (e :: x :: xs)))))
   | _ ->
       reset_peek core;
-      parse_expr_base core
+      None
 
+and parse_expr_base core =
+  match parse_expr_base_h core with
+  | None -> None
+  | Some ret -> (
+      let rec go acc =
+        match parse_expr_base_h core with
+        | Some n -> go (n :: acc)
+        | None -> acc
+      in
+      match go [] with
+      | [] -> Some ret
+      | x ->
+          let rec helper xs =
+            match xs with
+            | [] -> raise @@ Impossible "empty function call"
+            | [ x ] -> FCall (get_info x, ret, x)
+            | x :: xs -> FCall (get_info x, helper xs, x)
+          in
+          Some (helper x))
+
+and parse_expr_compound core =
+  let some x = Some x in
+  let ret =
+    match peek' core with
+    | T (IF, s) ->
+        toss' core;
+        let c = parse_expr core 0 in
+        expect core THEN;
+        let e1 = parse_expr core 0 in
+        expect core ELSE;
+        let e2 = parse_expr core 0 in
+        some @@ IfElse (info (Errors.spandiff s (currentspan core)), c, e1, e2)
+    | T (LET, s) -> (
+        toss' core;
+        let id, _s = parse_ident core in
+        match pop' core with
+        | T (COL_OP ":", s) ->
+            let ts = parse_typesig core in
+            expect core (EQ_OP "=");
+            let e1 = parse_expr core 0 in
+            expect core IN;
+            let e2 = parse_expr core 0 in
+            some
+            @@ AnnotLet
+                 (info (Errors.spandiff s (currentspan core)), id, ts, e1, e2)
+        | T (EQ_OP "=", s) ->
+            let e1 = parse_expr core 0 in
+            expect core IN;
+            let e2 = parse_expr core 0 in
+            some
+            @@ LetIn (info (Errors.spandiff s (currentspan core)), id, e1, e2)
+        | T (x, s) -> errorexpect core s x [ COL_OP ":"; EQ_OP "=" ])
+    | T (FUN, s) -> (
+        toss' core;
+        let id, _s = parse_ident core in
+        match pop' core with
+        | T (COL_OP ":", _) ->
+            let ts = parse_typesig core in
+            expect core LAM_TO;
+            let e = parse_expr core 0 in
+            some @@ AnnotLam (info s, id, ts, e)
+        | T (LAM_TO, _) ->
+            let e = parse_expr core 0 in
+            some @@ Lam (info s, id, e)
+        | T (x, s) -> errorexpect core s x [ COL_OP ":"; EQ_OP "=" ])
+    | T (TFUN, s) ->
+        toss' core;
+        let id, _s = parse_ident core in
+        expect core LAM_TO;
+        let e = parse_expr core 0 in
+        some @@ TypeLam (info s, id, e)
+    | T (MATCH, s) ->
+        toss' core;
+        let e = parse_expr core 0 in
+        expect core WITH;
+        let rec helper () =
+          match peek' core with
+          | T (PIP_OP "|", _) ->
+              let p = parse_match_branch core in
+              p :: helper ()
+          | T (END, _) ->
+              toss' core;
+              []
+          | T (a, e) -> errorexpect core e a [ PIP_OP "|"; END ]
+        in
+        let h = helper () in
+        some
+        @@ Match (info (Errors.spandiff (get_span e) (currentspan core)), e, h)
+    | _ ->
+        reset_peek core;
+        parse_expr_base core
+  in
+  ret
 (*
 let rec parse_bin_exp min_prec = parse_bin_exp' (parse_unary_expr()) min_prec
 and parse_bin_exp' res min_prec =
@@ -477,46 +662,121 @@ and parse_expr' core lhs prec =
       else (
         reset_peek core;
         lhs)
-  | None -> lhs
+  | None ->
+      reset_peek core;
+      lhs
 
 and parse_expr core prec =
   let e1 = parse_expr_compound core in
   match e1 with
-  | Some x -> parse_expr' core x prec
-  | None -> errorexpect core (currentspan core) BAD parse_expr_base_list
+  | Some x -> (
+      let r = parse_expr' core x prec in
+      match peek' core with
+      | T (DOT, s) ->
+          (* TODO: chained tuple access *)
+          toss' core;
+          let i =
+            match pop' core with
+            | T (T_INT s, _s) -> int_of_string s
+            | T (x, s) -> error core s (T_INT "0")
+          in
+          TupAccess (info s, r, i)
+      | _ ->
+          reset_peek core;
+          r)
+  | None ->
+      errorexpect core (currentspan core) INVALID_EXPR parse_expr_base_list
 
 and parse_let core =
   expect core SIG;
   let ts = parse_typesig core in
   match peek' core with
-  | T (LET, lspan) ->
+  | T (LET, lspan) -> (
       toss core;
-      let nm, nmspan = parse_ident core in
-      let args, span = mergespans @@ parse_peek_ident_list core in
-      expect core (EQ_OP "=");
-      let body = parse_expr core 0 in
-      let inf = info4 (nmspan, emptyspan, span, get_span body) in
-      TopAssign (inf, nm, ts, args, body)
+      match peek' core with
+      | T (REC, lspan) ->
+          toss' core;
+          let nm, nmspan = parse_ident core in
+          let args, span = mergespans @@ parse_peek_ident_list core in
+          expect core (EQ_OP "=");
+          let body = parse_expr core 0 in
+          let inf = info4 (nmspan, emptyspan, span, get_span body) in
+          TopAssignRec (inf, nm, ts, args, body)
+      | _ ->
+          reset_peek core;
+          let nm, nmspan = parse_ident core in
+          let args, span = mergespans @@ parse_peek_ident_list core in
+          expect core (EQ_OP "=");
+          let body = parse_expr core 0 in
+          let inf = info4 (nmspan, emptyspan, span, get_span body) in
+          TopAssign (inf, nm, ts, args, body))
   | T (a, b) -> errorexpect core b a [ LET ]
+
+and parse_module core =
+  expect core MODULE;
+  let id, is = parse_ident core in
+  expect core (EQ_OP "=");
+  let body = parse_toplevel_list core in
+  expect core END;
+  SimplModule (info2 (is, Errors.spandiff is (currentspan core)), id, body)
+
+and parse_open core =
+  expect core OPEN;
+  let id, is = parse_ident core in
+  Open (info is, id)
+
+and parse_bind core =
+  let i =
+    match pop' core with T (BIND, i) -> i | T (a, b) -> error core b a BIND
+  in
+  match get_binop_peek core with
+  | None -> error core (currentspan core) BAD
+  | Some x ->
+      toss core;
+      expect core (EQ_OP "=");
+      let id, is = parse_ident core in
+      (* TODO: Handle modules (or maybe not?) *)
+      Bind (info3 (i, is, Errors.spandiff i is), x, [], id)
+
+and parse_extern core =
+  expect core EXTERN;
+  let i, is =
+    match pop' core with T (T_INT i, s) -> (i, s) | T (a, b) -> error core b a
+  in
+  let i' = int_of_string i in
+  let id, ids = parse_ident core in
+  expect core (COL_OP ":");
+  let ts = parse_typesig core in
+  expect core (EQ_OP "=");
+  let bindto, bindtos = parse_ident core in
+  IntExtern
+    (info4 (is, ids, bindtos, Errors.spandiff is bindtos), id, bindto, i', ts)
 
 and parse_toplevel core =
   match peek' core with
   | T (TYPE, s) -> Some (parse_type core)
   | T (SIG, s) -> Some (parse_let core)
-  (* | T (MODULE, s) -> Some (parse_module core)
-     | T (BIND, s) -> Some (parse_bind core)
-     | T (EXTERN, s) -> Some (parse_extern core)
-     | T (OPEN, s) -> Some (parse_open core)
-  *)
-  | _ -> None
+  | T (MODULE, s) -> Some (parse_module core)
+  | T (OPEN, s) -> Some (parse_open core)
+  | T (BIND, s) -> Some (parse_bind core)
+  | T (EXTERN, s) -> Some (parse_extern core)
+  | _ ->
+      reset_peek core;
+      None
+
+and parse_toplevel_list core =
+  match parse_toplevel core with
+  | Some x -> x :: parse_toplevel_list core
+  | None -> []
 
 let program_h lexfunc lexbuf file =
   let core = Tok.new_core lexfunc lexbuf file in
-  let rec go () =
-    match parse_toplevel core with Some t -> t :: go () | None -> []
-  in
-  let p = Program (go ()) in
-  print_endline (show_program p);
-  p
+  let p = Program (parse_toplevel_list core) in
+  if p = Program [] then (
+    let ctx = Errors.from_file (ref !core.file) in
+    Errors.add ctx Errors.emptyspan "Expected Nonempty file";
+    raise @@ SyntaxErr (Errors.to_string ctx))
+  else
+    p
 
 let program lexfunc lexbuf file = program_h lexfunc lexbuf file

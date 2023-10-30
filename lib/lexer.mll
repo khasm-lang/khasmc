@@ -144,7 +144,7 @@ rule token = parse
      | "ignore" {incr_by lexbuf IGNORE}
      | "forall" {incr_by lexbuf FORALL}
      | "sig" {incr_by lexbuf SIG}
-     | "extern" {incr_by lexbuf INTEXTERN}
+     | "extern" {incr_by lexbuf EXTERN}
      | "bind" {incr_by lexbuf BIND}
      | "and" {incr_by lexbuf LAND}
      | "or"  {incr_by lexbuf LOR}

@@ -60,7 +60,7 @@ let compile names asts args =
     |> Zeroarity_constrs.zeroarity_constrs
     |> Khagm_elim_dups.elim_dups
     |> Remove_zeroarity.remove_zeroarity
-    |> Insert_refcounts.insert_refcounts
+    (*|> Insert_refcounts.insert_refcounts *)
     |> Unbox_calls.unbox_calls
   in
   if args.dump_ast4 then (

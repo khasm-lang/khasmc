@@ -1,4 +1,5 @@
 open Exp
+open Count
 
 open Kir
 (** Performs lambda lifting, putting all lambdas on the toplevel *)
@@ -77,7 +78,7 @@ and llift_expr ctx dolift expr =
         let ctx' = add_bound ctx v ts in
         let added1, e' = llift_expr ctx' true e in
         let added2, get = gen_lams ctx.frees (Lam (ts, v, e')) in
-        let random = get_random_num () in
+        let random = unique () in
         let final = Let (ts, random, get) in
         let asval = Val (ts, random) in
         let call = gen_fcall ctx.frees asval in
@@ -95,6 +96,7 @@ and llift_expr ctx dolift expr =
       let a, b = llift_expr ctx true e in
       let rest, tree' = llift_swchtree ctx true tree in
       (a @ rest, SwitchConstr (t, b, tree'))
+  | Fail x -> ([], Fail x)
 
 let rec llift_top top =
   match top with

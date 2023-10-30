@@ -1,10 +1,11 @@
 open Exp
+open Count
 
 open Khagm
 (** Converts the middleend format to the backend format *)
 
 let new_let val' =
-  let id = Kir.get_random_num () in
+  let id = unique () in
   ([ LetInVal (id, val') ], id)
 
 let rec mtb_matchtree mt =
@@ -18,8 +19,8 @@ let rec mtb_matchtree mt =
           let code = mtb_matchtree mt1 in
           e' @ code
       | BindCtor i ->
-          let ret = Kir.get_random_num () in
-          let tmp = Kir.get_random_num () in
+          let ret = unique () in
+          let tmp = unique () in
           let expr, exprid = mtb_expr_h e in
           let cond = CheckCtor (tmp, exprid, i) in
           let case1code = mtb_matchtree mt1 in
@@ -52,7 +53,7 @@ and mtb_expr_h exp =
       let codeandids = List.map mtb_expr_h args in
       let code = List.concat @@ List.map fst codeandids in
       let ids = List.map snd codeandids in
-      let id' = Kir.get_random_num () in
+      let id' = unique () in
       match ids with
       | [ x; y ] ->
           let ours = LetInCall (id', x, [ y ]) in
@@ -69,12 +70,12 @@ and mtb_expr_h exp =
       let condcode, condid = mtb_expr_h c in
       let e1code = mtb_expr e1 in
       let e2code = mtb_expr e2 in
-      let id = Kir.get_random_num () in
+      let id = unique () in
       let ifelse = IfElse (id, condid, e1code, e2code) in
       (condcode @ [ ifelse ], id)
   | Kir.TupAcc (_, e, i) ->
       let code, e' = mtb_expr_h e in
-      let id = Kir.get_random_num () in
+      let id = unique () in
       (code @ [ Special (id, Val e', TupAcc i) ], id)
   | Kir.Let (_, id, exp1, exp2) ->
       let code1, expr1 = mtb_expr_h exp1 in
@@ -84,7 +85,7 @@ and mtb_expr_h exp =
   | Kir.SwitchConstr (_, e, mt) ->
       let code, _id = mtb_expr_h e in
       let mtcode = mtb_matchtree mt in
-      let ret = Kir.get_random_num () in
+      let ret = unique () in
       let sub = SubExpr (ret, mtcode) in
       (code @ [ sub ], ret)
   | Kir.Fail s -> ([ Fail s ], -1)

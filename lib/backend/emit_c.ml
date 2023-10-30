@@ -3,6 +3,7 @@ open Khagm
 open KhasmUTF
 open ListHelpers
 
+open Count
 (** Emit the C equivalent of the program *)
 
 type info = {
@@ -21,9 +22,11 @@ let mangler id =
   else
     "_" ^ string_of_int asint ^ "_"
 
+let quot_lam id = utf8_map mangler ("khasm_lam_" ^ string_of_int id)
+
 let mangle tbl id =
   match Kir.get_bind_id tbl id with
-  | None -> impossible "ident not found"
+  | None -> quot_lam id
   | Some (_, nm) -> (
       match nm with "main" -> "main_____Khasm" | _ -> utf8_map mangler nm)
 
@@ -58,7 +61,7 @@ let quot_raw _ctx tbl id =
 
 let quot_dircall _ctx tbl id =
   match Kir.get_bind_id tbl id with
-  | None -> impossible "dircall cannot call kha_obj function"
+  | None -> quot_lam id
   | Some _ -> mangle tbl id
 
 let rec quotval ctx tbl value =
@@ -97,9 +100,9 @@ let rec gen_funccall ctx _ret tbl arties id func args =
   | _, _, _ ->
       let rec go call args =
         match args with
-        | [] -> quot ctx tbl id ^ " = ref(" ^ quot ctx tbl call ^ ");\n"
+        | [] -> quot ctx tbl id ^ " = (" ^ quot ctx tbl call ^ ");\n"
         | x :: xs ->
-            let tmp = Kir.get_random_num () in
+            let tmp = unique () in
             let curr =
               quot ctx tbl tmp
               ^ " = "
@@ -110,11 +113,7 @@ let rec gen_funccall ctx _ret tbl arties id func args =
               ^ ");\n"
             in
             let next = go tmp xs in
-            curr
-            ^ next
-            ^ "\nunref("
-            ^ quot ctx tbl tmp
-            ^ "); // CODEGEN FUNCCALL\n"
+            curr ^ next ^ quot ctx tbl tmp ^ ";"
       in
       let tmp = go func args in
       tmp
@@ -126,8 +125,6 @@ and emit_body ctx ret tbl arties body =
       ^ s
       ^ {| LINE: %d FILE: %s\n", __LINE__, __FILE__);|}
       ^ " exit(1);\n"
-  | Ref i -> "ref(" ^ quot ctx tbl i ^ ");\n"
-  | Unref i -> "unref(" ^ quot ctx tbl i ^ "); /* manual gen */ \n"
   | Return i -> quot ctx tbl ret ^ " = " ^ quot ctx tbl i ^ ";\n"
   | LetInVal (id, value) ->
       quot ctx tbl id ^ " = " ^ quotval ctx tbl value ^ ";\n"
@@ -141,8 +138,7 @@ and emit_body ctx ret tbl arties body =
       ^ " = "
       ^ quot_dircall ctx tbl func
       ^ "("
-      ^ String.concat ", "
-          (List.map (fun x -> "ref(" ^ quot ctx tbl x ^ ")") args)
+      ^ String.concat ", " (List.map (fun x -> "(" ^ quot ctx tbl x ^ ")") args)
       ^ ");\n"
   | Special (id, value, spec) -> (
       match spec with
@@ -218,17 +214,17 @@ let get_frees ctx tbl body bef after =
 let emit_top ctx tbl arties code =
   match code with
   | Let (id, args, body) ->
-      let ret = Kir.get_random_num () in
+      let ret = unique () in
       let decl = genfunc tbl id args in
       let body' =
         String.concat "\n"
         @@ ListHelpers.map (emit_body ctx ret tbl arties) body
       in
-      let after = Kir.get_random_num () in
+      let after = unique () in
       let frees = get_frees ctx tbl body ret after in
       decl @@ frees ^ body' ^ "\n return " ^ quot ctx tbl ret ^ ";\n"
   | Ctor (id, arity) ->
-      let args = ListHelpers.for_n arity (fun _ -> Kir.get_random_num ()) in
+      let args = ListHelpers.for_n arity (fun _ -> unique ()) in
       let join c f = String.concat c (List.map f args) in
       let init =
         "KHASM_ENTRY("
@@ -239,7 +235,7 @@ let emit_top ctx tbl arties code =
         ^ join ", " (fun x -> "kha_obj * " ^ quot ctx tbl x)
         ^ ") "
       in
-      let tmp = Kir.get_random_num () in
+      let tmp = unique () in
       let qtmp = quot ctx tbl tmp in
       let (Some (id, nm)) = Kir.get_bind_id tbl id in
       let (Some (_, _, ctornum)) = Kir.get_constr tbl nm in
@@ -271,7 +267,6 @@ let emit_top ctx tbl arties code =
           ^ ";\n"
           ^ qtmp
           ^ "->tag = ADT;\n"
-          ^ join ";\n" (fun x -> "unref(" ^ quot ctx tbl x ^ ");")
           ^ "return "
           ^ qtmp
           ^ ";\n"

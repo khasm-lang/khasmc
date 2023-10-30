@@ -20,8 +20,6 @@ let rec occur_shallow t =
   | SubExpr (i, _e) -> [ i ]
   | CheckCtor (ret, i, _index) -> [ ret; i ]
   | Return i -> [ i ]
-  | Ref i -> [ i ]
-  | Unref i -> [ i ]
 
 let rec occur_deep t =
   match t with
@@ -37,14 +35,14 @@ let rec occur_deep t =
   | SubExpr (i, e) -> [ i ] @ List.concat_map occur_deep e
   | CheckCtor (ret, i, _index) -> [ ret; i ]
   | Return i -> [ i ]
-  | Ref i -> [ i ]
-  | Unref i -> [ i ]
 
 let refs ctx l =
-  List.filter (fun x -> not @@ List.mem x ctx) l |> List.map (fun x -> Ref x)
+  List.filter (fun x -> not @@ List.mem x ctx) l
+  |> List.map (fun x -> Fail "refcounts")
 
 let unrefs ctx l =
-  List.filter (fun x -> not @@ List.mem x ctx) l |> List.map (fun x -> Unref x)
+  List.filter (fun x -> not @@ List.mem x ctx) l
+  |> List.map (fun x -> Fail "refcounts")
 
 let rec most ctx curr rest =
   let c = occur_shallow curr in

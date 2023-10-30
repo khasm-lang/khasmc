@@ -1,4 +1,5 @@
 open Exp
+open Count
 
 (** The middleend IR *)
 
@@ -29,25 +30,18 @@ let is_constr tbl nm =
 let empty_transtable () =
   { binds = [ (-1, ""); (-2, "khasm_tuple_acc") ]; constrs = [] }
 
-let rint = ref 1
-
-let get_random_num () =
-  let tmp = !rint in
-  rint := !rint + 1;
-  tmp
-
 let add_to_tbl str tbl =
   let random =
     if str = "main" then
       0
     else
-      get_random_num ()
+      unique ()
   in
   let tbl' = add_bind tbl str random in
   (random, tbl')
 
 let new_var tbl =
-  let s = string_of_int @@ get_random_num () in
+  let s = string_of_int @@ unique () in
   add_to_tbl s tbl
 
 let get_from_tbl str tbl =

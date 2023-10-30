@@ -206,3 +206,20 @@ let get_span (expr : kexpr) =
   | ModAccess (t, _, _)
   | Match (t, _, _) ->
       t.span
+
+let get_info (expr : kexpr) =
+  match expr with
+  | Base (t, _)
+  | FCall (t, _, _)
+  | LetIn (t, _, _, _)
+  | LetRecIn (t, _, _, _, _)
+  | IfElse (t, _, _, _)
+  | Join (t, _, _)
+  | Lam (t, _, _)
+  | TypeLam (t, _, _)
+  | TupAccess (t, _, _)
+  | AnnotLet (t, _, _, _, _)
+  | AnnotLam (t, _, _, _)
+  | ModAccess (t, _, _)
+  | Match (t, _, _) ->
+      t

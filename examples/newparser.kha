@@ -1,2 +1,8 @@
-sig a -> b -> c -> d
-let foo a b c = 1 ; 2 + 3
+open Stdlib
+
+sig <a> a -> a
+let id y = (fun x : a => x) y
+
+sig () -> ()
+let main x =
+    print_int (id 5)

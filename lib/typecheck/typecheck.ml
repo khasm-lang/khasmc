@@ -735,7 +735,7 @@ and check ctx tm tp =
         ignore (check (assume_typ ctx id a) bd b);
         Some inf
     | TypeLam (inf, a, b), TSForall (fv, bd) ->
-        let typ' = subs bd fv (TSBase a) in
+      let typ' = subs bd fv (TSBase a) in
         let ctx' = add_bound_typ ctx a in
         let ctx' = add_bound_forall ctx' fv (TSMeta (get_meta ())) in
         ignore (check ctx' b typ');
@@ -843,7 +843,6 @@ let rec typecheck_toplevel_list ctx tl =
         | TopAssignRec (inf, id, ts, args, body) ->
             let ts = type_simpl ctx ts in
             let body = conv_ts_args_body_to_typelams ts args body in
-
             if id = "main" then
               ignore
               @@ unify (empty_unify_ctx ()) ts (TSMap (TSTuple [], TSTuple []));

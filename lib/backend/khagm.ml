@@ -23,8 +23,6 @@ type khagmexpr =
   | SubExpr of id * khagmexpr list
   | CheckCtor of id * id * int
   | Return of id
-  | Ref of id
-  | Unref of id
 [@@deriving show { with_path = false }]
 
 type khagmtop =

@@ -61,7 +61,7 @@ let rec elim_expr e =
   | [] -> []
   | x :: xs -> (
       match x with
-      | Ref _ | Unref _ | Return _
+      | Return _
       | LetInCall (_, _, _)
       | LetInUnboxCall (_, _, _)
       | Special (_, _, _)

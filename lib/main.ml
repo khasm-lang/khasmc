@@ -15,8 +15,13 @@ let parseToAst filename =
   let file = read_file filename in
   let lexbuf = Lexing.from_string file in
   Lexing.set_filename lexbuf filename;
-  let result = Parser.program Lexer.token lexbuf file in
-  result
+  try
+    let result = Parser.program Lexer.token lexbuf file in
+    result
+  with SyntaxErr id ->
+    print_endline "Syntax Error:";
+    print_endline id;
+    exit 1
 
 let speclist =
   [
@@ -73,7 +78,7 @@ let main_proc () =
     ^ " metavars, "
     ^ string_of_int (getid () - 1)
     ^ " stage 1 nodes, "
-    ^ string_of_int (Kir.get_random_num () - 1)
+    ^ string_of_int (Count.unique_curr ())
     ^ " stage 2 nodes.");
   print_endline
     ("Took: "

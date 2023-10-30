@@ -29,8 +29,6 @@ let rec remove_expr subs code =
   | SubExpr (i, e) -> SubExpr (i, List.map (remove_expr subs) e)
   | CheckCtor (i, arr, int) -> code
   | Return i -> Return (sub subs i)
-  | Unref i -> Unref (sub subs i)
-  | Ref i -> Ref (sub subs i)
 
 let rec remove_top subs code =
   match code with

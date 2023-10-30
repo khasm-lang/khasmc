@@ -9,7 +9,7 @@ sig <q w> (q -> w) -> List q -> List w
 let rec map f x =
     match x with
     | 'Nil => Nil
-    | Cons q w => Cons (f q) (map f w)
+    | Cons a b => Cons (f a) (map f b)
     end
 
 sig <w> (w -> ()) -> List w -> ()
