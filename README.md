@@ -53,7 +53,7 @@ let add_three (l: List int): List int =
 
 ```
 Want laziness for list operations? We can do that too!
-```
+```ocaml
 import List
 import Stream
 
