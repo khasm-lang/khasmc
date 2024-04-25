@@ -6,6 +6,8 @@ The compiler for the khasm programming language.
 
 Due to some ongoing conditions, the development of khasm is currently on pause. I'll be back at some point soon, hopefully!
 
+Unfortunatly, due to some divergence and code rot in this repo, the "new" khasm will most likely require a full rewrite of the compiler, which may take a while.
+
 ## NOTE:
 
 Khasm and khasmc are still in pre-β development.
