@@ -1,9 +1,0 @@
-(include_subdirs unqualified)
-
-(library
- (name khasmc_test)
- (libraries khasmc fmt batteries ppx_deriving fileutils)
- (inline_tests
-  (flags (-verbose)))
- (preprocess
-  (pps ppx_deriving.show ppx_deriving.make ppx_deriving.eq ppx_inline_test)))

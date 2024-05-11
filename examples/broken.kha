@@ -1,5 +1,0 @@
-module s = struct
-       let foo x : () -> () = Stdlib.print_int 10
-end
-open s
-let main x : () -> () = foo (); s.foo()

@@ -1,3 +1,0 @@
-
-let foo f i : (int -> int -> int -> int -> int) -> int -> int =
-    f i i i i

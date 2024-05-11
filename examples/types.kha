@@ -1,6 +1,0 @@
-type Foo b =
-     | Goof b b
-
-let part_goofy : int -> Foo int = Goof 10 
-
-let main x : () -> () = Stdlib.print_str "hi"

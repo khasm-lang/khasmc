@@ -1,8 +1,0 @@
-open Stdlib
-
-sig <a> a -> a
-let id y = (fun x : a => x) y
-
-sig () -> ()
-let main x =
-    print_int (id 5)

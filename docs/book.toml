@@ -1,9 +1,0 @@
-[book]
-authors = ["jake-87"]
-language = "en"
-multilingual = false
-src = "src"
-title = "Khasm documentation"
-
-[output.html]
-mathjax-support = "true"

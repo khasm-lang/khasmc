@@ -1,7 +1,0 @@
-open Stdlib
-module test = struct
-       open Stdlib
-end
-
-
-let main x : () -> () = print_int (1 + 1)
