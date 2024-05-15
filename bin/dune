@@ -1,0 +1,11 @@
+(executable
+ (public_name khasmc)
+ (name khasmc)
+ (libraries khasmc fmt batteries ppx_deriving)
+ (modes byte exe)
+ (preprocess
+  (pps ppx_deriving.show))
+ (flags
+  (:standard -warn-error -A -g -annot))
+ (ocamlopt_flags
+  (-g -annot)))

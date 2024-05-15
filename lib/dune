@@ -1,0 +1,12 @@
+(include_subdirs qualified)
+
+(library
+ (public_name khasmc)
+ (name khasmc)
+ (libraries angstrom fmt batteries ppx_deriving)
+ (preprocess
+  (pps ppx_deriving.show))
+ (flags
+  (:standard -warn-error -A))
+ (ocamlopt_flags
+  (:standard -O3)))
