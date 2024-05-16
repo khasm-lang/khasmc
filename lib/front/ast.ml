@@ -19,10 +19,12 @@ type kind =
 [@@deriving show { with_path = false }]
 
 type path =
+  (* used to represent a path that doesn't lead anywhere *)
+  | End
   (* x *)
   | Base of string
   (* Foo. *)
-  | InModule of string * path
+  | InMod of string * path
 [@@deriving show { with_path = false }]
 
 type pat =
@@ -39,6 +41,8 @@ type ty =
   | TyInt
   | TyBool
   | TyChar
+  (* 'a *)
+  | Free of string
   (* MyInt *)
   | Custom of path
   (* (Int, Int) *)
@@ -89,11 +93,19 @@ type tm =
   | Poison of id * exn
 [@@deriving show { with_path = false }]
 
-type definition =
-  string * string list * constraint' list * (path * ty) list * ty * tm
+type definition = {
+  name : string;
+  free_vars : string list;
+  constraints : constraint' list;
+  args : (string * ty) list;
+  ret : ty;
+  body : tm;
+}
 [@@deriving show { with_path = false }]
 
 type trait = {
+  name : string;
+  args : (string * kind) list;
   (* any associated types *)
   assoc_types : (string * kind) list;
   (* any constraints on said & on inputs *)
@@ -104,17 +116,27 @@ type trait = {
 [@@deriving show { with_path = false }]
 
 type impl = {
+  name : string;
+  args : ty list;
   assoc_types : (string * ty) list;
   impls : definition list;
 }
 [@@deriving show { with_path = false }]
 
-type module' =
+type statement =
   (* name, freevars, constraints, args, return type, term *)
-  | Definition of definition
+  | Definition of id * definition
   (* name, args, body *)
-  | Type of string * string list * tyexpr
-  (* name, args, constraints, body *)
-  | Trait of string * (string * kind) list * constraint' list * trait
-  | Impl of string * string list * impl
+  | Type of id * string * string list * tyexpr
+  | Trait of id * trait
+  | Impl of id * impl
+[@@deriving show { with_path = false }]
+
+type file = {
+  name : string;
+  phys_path : string;
+  toplevel : statement list;
+  imports : path list;
+  opens : path list;
+}
 [@@deriving show { with_path = false }]
