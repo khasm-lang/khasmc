@@ -2,6 +2,12 @@
 
 The compiler for the khasm programming language.
 
+## On pause
+
+Due to some ongoing conditions, the development of khasm is currently on pause. I'll be back at some point soon, hopefully!
+
+Unfortunatly, due to some divergence between compiler and vision, and code rot in this repo, the "new" khasm will most likely require a full rewrite of the compiler, which may take a while.
+
 ## NOTE:
 
 Khasm and khasmc are still in pre-β development.
@@ -10,43 +16,63 @@ Consider the below, for the moment, a wishlist for what this language will hopef
 
 ## What is khasm?
 
-Khasm is an experimental programming language based on the System-F type system, with the goal of being rather polymorphic, and rather fast.
+Khasm is a functional programming language that aims to be simple, but expressive. Minimalism is *not* the name of the game - making code that's easy to understand is.
 
-### The System-F type system
+### Simple and effective type system
 
-The System-F type system is a higher level type system that allows the expression of functions like this:
+Khasm's type system is based off the likes of Haskell and OCaml, removing global inference. While this may seem odd, the end goal of this is to improve user experience by offering better errors and allowing programmers a more finely grained control over the code they write.
 
-```ocaml
-let apply_to_tuple f a b = (f a, f b)
-where
-typeof(a) <> typeof(b)
-```
-Here, the type of `apply_to_tuple` would be `∀a b, (∀c, c -> c) -> a -> b -> (a, b)`, which cannot be expressed in the default type systems of OCaml or Haskell, due to the nested forall. However, the tradeoff is that you cannot have proper type inference.
-
-## An example program:
+## A few example programs:
 
 Here's a hello world program in khasm:
 
 ```ocaml
-open Stdlib
-let main () : () -> () =
-    print_str "Hello, World!"
+import Stdlib
+let main (): unit =
+    Stdlib.print "Hello, World!"
+```
+
+The classic recursive fibonacci:
+```ocaml
+let fib (n: int): int =
+    if n <= 1 then
+        1
+    else fib n + fib (n - 1)
+{- No let rec needed! -}
+```
+
+List operations:
+```ocaml
+import List
+
+let add_three (l: List int): List int =
+    l
+    |> List.map (\x -> x + 3)
+
+{- 
+    Piping is the most natural way of expressing many problems - and it's always optimized away.
+-}
 
 ```
-Khasm, unlike OCaml, does not have toplevel execution, so the `main` function is the entry point. It must always have type `() -> ()`.
+Want laziness for list operations? We can do that too!
+```ocaml
+import List
+import Stream
+
+let streaming_add_two (l: List int): Stream int =
+    l
+    |> Stream.from
+    |> Stream.map (\x -> x + 2)
+```
 
 ## Goals:
-
-- Builtin proofing of typeclasses to allow for a seamlessly correct experience
-- A large standard library, to allow for easy usage
-- Linear types for resources
-- Uniqueness types for concurrent/multithreaded programming
-- The full power of the ML module and System-F type systems
-
-## TODOs
-
-For a comprehensive list, see TODO.md.
-
-# Notes:
-
-- Khasm isn't even in β yet - it's probably closer to being in γ or something :P. Please do not use Khasm for any major project or programs.
+- Simple, but expressive, with a core featureset encompassing no more than:
+  - Algebraic Data Types (rust's `enum`)
+  - Easy to use records
+  - Pattern matching
+  - Polymorphic errors (akin to OCaml's polymorphic varients)
+  - Simplified traits/typeclasses ()
+  - Easy-to-use controlled local and global mutation
+  - No inductive lists by default!
+- Optimizations encompassing all the common functional usecases
+- A comprehensive (mostly) non-opinionated standard library
