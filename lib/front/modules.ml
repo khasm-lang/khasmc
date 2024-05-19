@@ -82,15 +82,48 @@ let ensure_includes_correct ctx path =
       | _ -> ok path)
 
 let find_definition (ctx : ctx) (path : path) : (path, 'a) result =
-  let open Monad.R in
   let ctx = handle_opens ctx in
   find_naive_definition ctx path |=> ensure_includes_correct ctx
 
-let handle_definition (ctx : ctx)
-    { name; free_vars; constraints; args; ret; body } : definition =
-  raise (Failure "bad")
+let rec handle_ty (ctx : ctx) (ty : ty) : (ty, 'a) result =
+  match ty with
+  | TyString | TyInt | TyBool | TyChar | Free _ -> Ok ty
+  | Custom p ->
+      let+ path = find_definition ctx p in
+      Custom path
+  | Tuple t ->
+      let+ tys = collect @@ List.map (handle_ty ctx) t in
+      Tuple tys
+  | Arrow (a, b) ->
+      let* a = handle_ty ctx a in
+      let+ b = handle_ty ctx b in
+      Arrow (a, b)
+  | TApp (p, tys) ->
+      let* p = find_definition ctx p in
+      let+ tys = collect @@ List.map (handle_ty ctx) tys in
+      TApp (p, tys)
 
-let handle_file (ctx : ctx) (file : file) : file =
+let handle_constraints (ctx : ctx) (tm : constraint') :
+    (constraint', 'a) result =
+  let nm, tys = tm in
+  let* nm = find_definition ctx nm in
+  let+ tys = collect @@ List.map (handle_ty ctx) tys in
+  (nm, tys)
+
+let handle_definition (ctx : ctx)
+    { name; free_vars; constraints; args; ret; body } :
+    (definition, 'a) result =
+  let* cons =
+    collect @@ List.map (handle_constraints ctx) constraints
+  in
+  let arg1, arg2 = List.split args in
+  let* tys = collect @@ List.map (handle_ty ctx) arg2 in
+  let args = List.combine arg1 tys in
+  let* ret = handle_ty ctx ret in
+  let+ body = handle_tm ctx body in
+  { name; free_vars; constraints = cons; args; ret; body }
+
+let handle_file (ctx : ctx) (file : file) : (file, 'a) result =
   let collect_names =
     List.map
       (function
@@ -104,16 +137,23 @@ let handle_file (ctx : ctx) (file : file) : file =
   let ctx =
     { ctx with definitions = collect_names @ ctx.definitions }
   in
-  let defs =
-    List.map
-      (function
-        | Definition (id, dfn) ->
-            Definition (id, handle_definition ctx dfn)
-        | Type (id, name, args, expr) ->
-            Type (id, name, args, handle_tyexpr ctx expr)
-        | Trait (id, trait) -> Trait (id, handle_trait ctx trait)
-        | Impl (id, impl) -> Impl (id, handle_impl ctx impl))
-      file.toplevel
+  let+ defs =
+    collect
+    @@ List.map
+         (function
+           | Definition (id, dfn) ->
+               let+ def = handle_definition ctx dfn in
+               Definition (id, def)
+           | Type (id, name, args, expr) ->
+               let+ t = handle_tyexpr ctx expr in
+               Type (id, name, args, t)
+           | Trait (id, trait) ->
+               let+ t = handle_trait ctx trait in
+               Trait (id, t)
+           | Impl (id, impl) ->
+               let+ t = handle_impl ctx impl in
+               Impl (id, t))
+         file.toplevel
   in
   { file with toplevel = defs }
 

@@ -50,7 +50,7 @@ type ty =
   (* a -> b *)
   | Arrow of ty * ty
   (* List Int *)
-  | App of path * ty list
+  | TApp of path * ty list
 [@@deriving show { with_path = false }]
 
 type tyexpr =
