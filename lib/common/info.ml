@@ -4,7 +4,8 @@ type data = ..
 (* unique ids *)
 type id = Id of int [@@deriving show { with_path = false }]
 
-let p_INFO_TABLE : (id, (info * data) list) Hashtbl.t = Hashtbl.create 100
+let p_INFO_TABLE : (id, (info * data) list) Hashtbl.t =
+  Hashtbl.create 100
 
 let get_property (id : id) (prop : info) : data option =
   let open Monad.O in

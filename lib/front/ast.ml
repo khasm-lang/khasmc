@@ -60,7 +60,8 @@ type tyexpr =
   | TRecord of (string * ty) list
 [@@deriving show { with_path = false }]
 
-type constraint' = path * ty list [@@deriving show { with_path = false }]
+type constraint' = path * ty list
+[@@deriving show { with_path = false }]
 
 let pp_exn fmt exn = Format.fprintf fmt "%s" (Printexc.to_string exn)
 

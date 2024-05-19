@@ -33,11 +33,14 @@ let rec similar_up_to path1 path2 =
   | InMod (a, q), InMod (b, w) when a = b -> similar_up_to q w
   | _ -> None
 
-let rec find_naive_definition (ctx : ctx) (path : path) : (path, 'a) result =
+let rec find_naive_definition
+    (ctx : ctx) (path : path) : (path, 'a) result =
   match path with
   | End -> err (`Invalid_Argument "Got End where full path was expected")
   | Base n -> (
-      match full_matches ctx.definitions (InMod (ctx.current, Base n)) with
+      match
+        full_matches
+          ctx.definitions (InMod (ctx.current, Base n)) with
       | [] -> err (`No_Such_Variable path)
       | [ x ] -> ok x
       | _ -> err (`Overlapping_Variable path))
@@ -55,7 +58,8 @@ let handle_opens (ctx : ctx) : ctx =
         | None -> (s, long))
   in
   let new_defs =
-    List.fold_left (fun acc nm -> remove_one nm acc) ctx.definitions ctx.open'
+    List.fold_left
+      (fun acc nm -> remove_one nm acc) ctx.definitions ctx.open'
   in
   { ctx with definitions = new_defs; open' = [] }
 
@@ -68,7 +72,8 @@ let ensure_includes_correct ctx path =
       |> List.filter (fun x -> match x with Some _ -> true | None -> false)
       |> function
       | [] ->
-          err (`Bad_Include ("No such path wrt includes: " ^ show_path path))
+        err
+          (`Bad_Include ("No such path wrt includes: " ^ show_path path))
       | _ -> ok path)
 
 let find_definition (ctx : ctx) (path : path) : (path, 'a) result =
@@ -76,15 +81,42 @@ let find_definition (ctx : ctx) (path : path) : (path, 'a) result =
   let ctx = handle_opens ctx in
   find_naive_definition ctx path |=> ensure_includes_correct ctx
 
-let handle_file ctx file =
-  let collect_names = raise (Failure "womp womp") in
-  collect_names
+let handle_definition (ctx: ctx)
+    {name; free_vars; constraints; args; ret; body}: definition =
+  
 
+let handle_file (ctx: ctx) (file: file): file =
+  let collect_names =
+    List.map (function
+        | Definition (_, dfn) -> InMod(file.name, Base dfn.name)
+        | Type (_, nm, _, _) -> InMod(file.name, Base nm)
+        | Trait (_, dfn) -> InMod(file.name, Base dfn.name)
+        | Impl (_, impl) -> InMod(file.name, Base impl.name)
+      ) file.toplevel
+    |> List.map (fun x -> (x, x))
+  in
+  let ctx = {ctx with definitions = collect_names @ ctx.definitions} in
+  let defs = List.map (function
+      | Definition (id, dfn) ->
+        Definition(id, handle_definition ctx dfn)
+      | Type (id, name, args, expr) ->
+        Type(id, name, args, handle_tyexpr ctx expr)
+      | Trait (id, trait) ->
+        Trait(id, handle_trait ctx trait)
+      | Impl (id, impl) ->
+        Impl (id, handle_impl ctx impl)
+    ) file.toplevel
+  in
+  { file with
+    toplevel = defs
+  }
+  
 let handle_files files =
   (* currently handles them in given order
      TODO: implement some sort of proper solver or something
   *)
-  let ctx = { definitions = []; included = []; open' = []; current = "" } in
+  let ctx =
+    { definitions = []; included = []; open' = []; current = "" } in
   let rec go files ctx =
     match files with
     | [] -> []
