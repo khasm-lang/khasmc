@@ -1,2 +1,1 @@
-let main () = print_endline "hi"
-let () = main ()
+let () = Khasmc__Main.main ()

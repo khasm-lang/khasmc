@@ -7,6 +7,6 @@
  (preprocess
   (pps ppx_deriving.show))
  (flags
-  (:standard -warn-error -A))
+  (-warn-error -A -g -annot))
  (ocamlopt_flags
-  (:standard -O3)))
+  (-g -annot)))

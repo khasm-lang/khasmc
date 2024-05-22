@@ -77,7 +77,7 @@ type tm =
   (* match f with pts...
      pat list to accomodate or patterns
   *)
-  | Match of id * tm * (pat list * tm)
+  | Match of id * tm * (pat * tm) list
   (* fun x : t -> tm *)
   | Lam of id * pat * ty option * tm
   (* if x then y else z *)
@@ -95,7 +95,7 @@ type tm =
 [@@deriving show { with_path = false }]
 
 type definition = {
-  name : string;
+  name : path;
   free_vars : string list;
   constraints : constraint' list;
   args : (string * ty) list;
@@ -105,19 +105,19 @@ type definition = {
 [@@deriving show { with_path = false }]
 
 type trait = {
-  name : string;
+  name : path;
   args : (string * kind) list;
   (* any associated types *)
   assoc_types : (string * kind) list;
   (* any constraints on said & on inputs *)
   constraints : constraint' list;
   (* member functions *)
-  functions : string * string list * constraint' list * ty;
+  functions : (string * string list * constraint' list * ty) list;
 }
 [@@deriving show { with_path = false }]
 
 type impl = {
-  name : string;
+  name : path;
   args : ty list;
   assoc_types : (string * ty) list;
   impls : definition list;
@@ -128,7 +128,7 @@ type statement =
   (* name, freevars, constraints, args, return type, term *)
   | Definition of id * definition
   (* name, args, body *)
-  | Type of id * string * string list * tyexpr
+  | Type of id * path * string list * tyexpr
   | Trait of id * trait
   | Impl of id * impl
 [@@deriving show { with_path = false }]
@@ -141,3 +141,16 @@ type file = {
   opens : path list;
 }
 [@@deriving show { with_path = false }]
+
+let format_error (id : Common.Info.id) (err : string) =
+  let span = Common.Info.get_property id Srcloc in
+  match span with
+  | None -> "Error: " ^ err ^ "\n <no line information> "
+  | Some (Srcloc' s) ->
+      "Error: "
+      ^ err
+      ^ " at: "
+      ^ Format.sprintf "(%d:%d, %d:%d)\n" (fst s.col) (snd s.col)
+          (fst s.row) (snd s.row)
+      ^ BatText.to_string s.slice
+  | _ -> failwith "bad property lookup"
