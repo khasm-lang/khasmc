@@ -12,6 +12,13 @@ type ctx = {
 }
 [@@deriving show { with_path = false }]
 
+let debug f p =
+  print_string "\n------ DEBUG ------\n";
+  print_string (f p);
+  print_string "\n------  END  ------\n"
+
+let add_file (ctx : ctx) (p : path) : path = InMod (ctx.current, p)
+
 (* returns only the full matches as their longest path *)
 let full_matches (paths : (path * path) list) (path : path) :
     path list =
@@ -37,8 +44,7 @@ let rec similar_up_to path1 path2 =
 let rec find_naive_definition (ctx : ctx) (path : path) :
     (path, 'a) result =
   match path with
-  | End ->
-      err (`Invalid_Argument "Got End where full path was expected")
+  | End -> failwith "Expected proper path, not empty"
   | Base n -> (
       match
         full_matches ctx.definitions (InMod (ctx.current, Base n))
@@ -46,11 +52,21 @@ let rec find_naive_definition (ctx : ctx) (path : path) :
       | [] -> err (`No_Such_Variable path)
       | [ x ] -> ok x
       | _ -> err (`Overlapping_Variable path))
-  | InMod (_mod, _tm) -> (
-      match full_matches ctx.definitions path with
-      | [] -> err (`No_Such_Variable path)
-      | [ x ] -> ok x
-      | _ -> err (`Overlapping_Variable path))
+  | InMod (m, _tm) -> (
+      match
+        match full_matches ctx.definitions path with
+        | [] -> err (`No_Such_Variable path)
+        | [ x ] -> ok x
+        | _ -> err (`Overlapping_Variable path)
+      with
+      | Ok s -> Ok s
+      | Error e -> (
+          match
+            full_matches ctx.definitions (InMod (ctx.current, path))
+          with
+          | [] -> err (`No_Such_Variable path)
+          | [ x ] -> ok x
+          | _ -> err (`Overlapping_Variable path)))
 
 let handle_opens (ctx : ctx) : ctx =
   let remove_one path =
@@ -68,22 +84,29 @@ let handle_opens (ctx : ctx) : ctx =
 
 let ensure_includes_correct ctx path =
   match path with
-  | End -> err (`Invalid_Argument "expected actual path, not end")
+  | End -> failwith "Expected proper path, not empty"
   | Base _ -> ok path
   | _ -> (
-      List.map (fun x -> similar_up_to x path) ctx.included
+      List.map
+        (fun x -> similar_up_to x path)
+        (InMod (ctx.current, End) :: ctx.included)
       |> List.filter (fun x ->
              match x with Some _ -> true | None -> false)
       |> function
       | [] ->
           err
             (`Bad_Include
-              ("No such path wrt includes: " ^ show_path path))
+              (" No such path wrt includes: " ^ show_path path))
       | _ -> ok path)
 
 let find_definition (ctx : ctx) (path : path) : (path, 'a) result =
   let ctx = handle_opens ctx in
-  find_naive_definition ctx path |=> ensure_includes_correct ctx
+  let* pth = find_naive_definition ctx path in
+  ensure_includes_correct ctx pth
+
+let find_definition_string (ctx : ctx) (s : string) :
+    (path, 'a) result =
+  find_definition ctx (Base s)
 
 let rec handle_ty (ctx : ctx) (ty : ty) : (ty, 'a) result =
   match ty with
@@ -95,19 +118,100 @@ let rec handle_ty (ctx : ctx) (ty : ty) : (ty, 'a) result =
       let+ tys = collect @@ List.map (handle_ty ctx) t in
       Tuple tys
   | Arrow (a, b) ->
-      let* a = handle_ty ctx a in
-      let+ b = handle_ty ctx b in
+      let+ a = handle_ty ctx a and+ b = handle_ty ctx b in
       Arrow (a, b)
   | TApp (p, tys) ->
-      let* p = find_definition ctx p in
-      let+ tys = collect @@ List.map (handle_ty ctx) tys in
+      let+ p = find_definition ctx p
+      and+ tys = collect @@ List.map (handle_ty ctx) tys in
       TApp (p, tys)
+
+let rec get_bound (pat : pat) : string list =
+  match pat with
+  | Bind s -> [ s ]
+  | PTuple s -> List.map get_bound s |> List.flatten
+  | Constr (_, p) -> List.map get_bound p |> List.flatten
+
+let rec handle_pat (ctx : ctx) (pat : pat) : (pat, 'a) result =
+  match pat with
+  | Bind _ -> ok pat
+  | PTuple s ->
+      let+ s = collect @@ List.map (handle_pat ctx) s in
+      PTuple s
+  | Constr (s, p) ->
+      let+ s = find_definition ctx s
+      and+ p = collect @@ List.map (handle_pat ctx) p in
+      Constr (s, p)
+
+let rec handle_tm (bound : string list) (ctx : ctx) (tm : tm) :
+    (tm, 'a) result =
+  match tm with
+  | Var (id, tm) ->
+      if List.mem tm bound then
+        ok @@ Bound (id, Base tm)
+      else
+        let+ name = withid id @@ find_definition_string ctx tm in
+        Bound (id, name)
+  | Bound (id, nm) ->
+      let+ name = withid id @@ find_definition ctx nm in
+      Bound (id, name)
+  | App (id, a, b) ->
+      let+ a = handle_tm bound ctx a
+      and+ b = collect @@ List.map (handle_tm bound ctx) b in
+      App (id, a, b)
+  | Let (id, pat, a, b) ->
+      let bound' = get_bound pat in
+      let+ a = handle_tm bound ctx a
+      and+ b = handle_tm (bound' @ bound) ctx b
+      and+ pat = handle_pat ctx pat in
+      Let (id, pat, a, b)
+  | Match (id, tm, mtch) ->
+      let+ tm = handle_tm bound ctx tm
+      and+ matches =
+        collect
+        @@ List.map
+             (fun (a, b) ->
+               let frees = get_bound a in
+               let+ pat = handle_pat ctx a
+               and+ body = handle_tm (frees @ bound) ctx b in
+               (pat, body))
+             mtch
+      in
+      Match (id, tm, matches)
+  | Lam (id, pat, mbty, bd) ->
+      let frees = get_bound pat in
+      let+ pat = handle_pat ctx pat
+      and+ ty = option_app (handle_ty ctx) mbty
+      and+ bd = handle_tm (frees @ bound) ctx bd in
+      Lam (id, pat, ty, bd)
+  | ITE (id, a, b, c) ->
+      let+ a = handle_tm bound ctx a
+      and+ b = handle_tm bound ctx b
+      and+ c = handle_tm bound ctx c in
+      ITE (id, a, b, c)
+  | Annot (id, tm, ty) ->
+      let+ tm = handle_tm bound ctx tm and+ ty = handle_ty ctx ty in
+      Annot (id, tm, ty)
+  | Record (id, nm, fields) ->
+      let+ nm = find_definition ctx nm
+      and+ fields =
+        collect
+        @@ List.map
+             (fun (nm, tm) ->
+               let+ tm = handle_tm bound ctx tm in
+               (nm, tm))
+             fields
+      in
+      Record (id, nm, fields)
+  | Project (id, path, field) ->
+      let+ path = find_definition ctx path in
+      Project (id, path, field)
+  | Poison (id, exn) -> ok @@ Poison (id, exn)
 
 let handle_constraints (ctx : ctx) (tm : constraint') :
     (constraint', 'a) result =
   let nm, tys = tm in
-  let* nm = find_definition ctx nm in
-  let+ tys = collect @@ List.map (handle_ty ctx) tys in
+  let+ nm = find_definition ctx nm
+  and+ tys = collect @@ List.map (handle_ty ctx) tys in
   (nm, tys)
 
 let handle_definition (ctx : ctx)
@@ -117,21 +221,103 @@ let handle_definition (ctx : ctx)
     collect @@ List.map (handle_constraints ctx) constraints
   in
   let arg1, arg2 = List.split args in
-  let* tys = collect @@ List.map (handle_ty ctx) arg2 in
+  let+ tys = collect @@ List.map (handle_ty ctx) arg2
+  and+ ret = handle_ty ctx ret
+  and+ body = handle_tm arg1 ctx body in
   let args = List.combine arg1 tys in
-  let* ret = handle_ty ctx ret in
-  let+ body = handle_tm ctx body in
-  { name; free_vars; constraints = cons; args; ret; body }
+  {
+    name = add_file ctx name;
+    free_vars;
+    constraints = cons;
+    args;
+    ret;
+    body;
+  }
 
-let handle_file (ctx : ctx) (file : file) : (file, 'a) result =
+let rec handle_tyexpr (ctx : ctx) (tyexpr : tyexpr) :
+    (tyexpr, 'a) result =
+  match tyexpr with
+  | TVariant t ->
+      let+ t =
+        collect
+        @@ List.map
+             (fun (nm, tys) ->
+               let+ tys = collect @@ List.map (handle_ty ctx) tys in
+               (nm, tys))
+             t
+      in
+      TVariant t
+  | TRecord t ->
+      let+ t =
+        collect
+        @@ List.map
+             (fun (nm, ty) ->
+               let+ ty = handle_ty ctx ty in
+               (nm, ty))
+             t
+      in
+      TRecord t
+
+let rec handle_trait (ctx : ctx) (trait : trait) : (trait, 'a) result
+    =
+  let+ constraints =
+    collect @@ List.map (handle_constraints ctx) trait.constraints
+  and+ functions =
+    collect
+    @@ List.map
+         (fun (nm, args, cons, ty) ->
+           let+ cons =
+             collect @@ List.map (handle_constraints ctx) cons
+           and+ ty = handle_ty ctx ty in
+           (nm, args, cons, ty))
+         trait.functions
+  in
+  {
+    trait with
+    name = add_file ctx trait.name;
+    constraints;
+    functions;
+  }
+
+let rec handle_impl (ctx : ctx) (impl : impl) : (impl, 'a) result =
+  let+ args = collect @@ List.map (handle_ty ctx) impl.args
+  and+ assoc_types =
+    collect
+    @@ List.map
+         (fun (a, b) ->
+           let+ b = handle_ty ctx b in
+           (a, b))
+         impl.assoc_types
+  and+ impls =
+    collect @@ List.map (handle_definition ctx) impl.impls
+  in
+  { name = add_file ctx impl.name; args; assoc_types; impls }
+
+let rec base_name b =
+  match b with
+  | Base n -> n
+  | InMod (_, n) -> base_name n
+  | End -> failwith "shouldn't be end"
+
+let get_constr_paths file nm def =
+  match def with
+  | TVariant xs ->
+      List.map fst xs
+      |> List.map (fun x ->
+             InMod (file.name, InMod (base_name nm, Base x)))
+  | TRecord _ -> InMod (file.name, Base (base_name nm)) :: []
+
+let handle_file (ctx : ctx) (file : file) : (file * ctx, 'a) result =
   let collect_names =
     List.map
       (function
-        | Definition (_, dfn) -> InMod (file.name, Base dfn.name)
-        | Type (_, nm, _, _) -> InMod (file.name, Base nm)
-        | Trait (_, dfn) -> InMod (file.name, Base dfn.name)
-        | Impl (_, impl) -> InMod (file.name, Base impl.name))
+        | Definition (_, dfn) -> InMod (file.name, dfn.name) :: []
+        | Type (_, nm, _, def) ->
+            InMod (file.name, nm) :: get_constr_paths file nm def
+        | Trait (_, dfn) -> InMod (file.name, dfn.name) :: []
+        | Impl (_, impl) -> InMod (file.name, impl.name) :: [])
       file.toplevel
+    |> List.flatten
     |> List.map (fun x -> (x, x))
   in
   let ctx =
@@ -146,7 +332,7 @@ let handle_file (ctx : ctx) (file : file) : (file, 'a) result =
                Definition (id, def)
            | Type (id, name, args, expr) ->
                let+ t = handle_tyexpr ctx expr in
-               Type (id, name, args, t)
+               Type (id, add_file ctx name, args, t)
            | Trait (id, trait) ->
                let+ t = handle_trait ctx trait in
                Trait (id, t)
@@ -155,7 +341,7 @@ let handle_file (ctx : ctx) (file : file) : (file, 'a) result =
                Impl (id, t))
          file.toplevel
   in
-  { file with toplevel = defs }
+  ({ file with toplevel = defs }, ctx)
 
 let handle_files files =
   (* currently handles them in given order
@@ -166,9 +352,29 @@ let handle_files files =
   in
   let rec go files ctx =
     match files with
-    | [] -> []
-    | x :: xs ->
-        let r, ctx = handle_file { ctx with current = x.name } x in
-        r :: go xs ctx
+    | [] -> ok []
+    | x :: xs -> (
+        match handle_file { ctx with current = x.name } x with
+        | Ok (r, ctx) ->
+            let+ rest = go xs ctx in
+            r :: rest
+        | Error e -> Error e)
   in
-  go files ctx
+  match go files ctx with
+  | Ok s -> s
+  | Error e ->
+      let rec errfmt (e : 'a) : (id * string) list =
+        match e with
+        | `Bad_Include s -> (noid, "Bad include: " ^ s) :: []
+        | `Id (i, e) ->
+            let t = List.flatten @@ List.map errfmt e in
+            List.map (fun x -> (i, snd x)) t
+        | `No_Such_Variable s ->
+            (noid, "No such variable: " ^ show_path s) :: []
+        | `Overlapping_Variable s ->
+            (noid, "Overlapping variable: " ^ show_path s) :: []
+      in
+      let tmp = List.flatten @@ List.map errfmt e in
+      let formatted = List.map (fun (a, b) -> format_error a b) tmp in
+      let total = String.concat "\n\n" formatted in
+      compiler_error Frontend' total

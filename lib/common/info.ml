@@ -4,6 +4,8 @@ type data = ..
 (* unique ids *)
 type id = Id of int [@@deriving show { with_path = false }]
 
+let noid = Id (-1)
+
 let p_INFO_TABLE : (id, (info * data) list) Hashtbl.t =
   Hashtbl.create 100
 
