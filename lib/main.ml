@@ -11,12 +11,18 @@ let example_files =
       toplevel =
         [
           Type
-            (noid, Base "Ty", [], TVariant [ ("Constr", [ TyInt ]) ]);
+            ( noid,
+              {
+                name = Base "Ty";
+                args = [];
+                expr = TVariant [ ("Constr", [ TyInt ]) ];
+                kind = Star;
+              } );
           Definition
             ( noid,
               {
                 name = Base "id";
-                free_vars = [ "a" ];
+                free_vars = [ ("a", Star) ];
                 constraints = [];
                 args = [ ("x", Free "a") ];
                 ret = Free "a";

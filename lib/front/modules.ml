@@ -110,7 +110,7 @@ let find_definition_string (ctx : ctx) (s : string) :
 
 let rec handle_ty (ctx : ctx) (ty : ty) : (ty, 'a) result =
   match ty with
-  | TyString | TyInt | TyBool | TyChar | Free _ -> Ok ty
+  | TyString | TyInt | TyBool | TyChar | Free _ | TyMeta _ -> Ok ty
   | Custom p ->
       let+ path = find_definition ctx p in
       Custom path
@@ -124,6 +124,9 @@ let rec handle_ty (ctx : ctx) (ty : ty) : (ty, 'a) result =
       let+ p = find_definition ctx p
       and+ tys = collect @@ List.map (handle_ty ctx) tys in
       TApp (p, tys)
+  | TForall (s, p) ->
+      let+ t = handle_ty ctx p in
+      TForall (s, t)
 
 let rec get_bound (pat : pat) : string list =
   match pat with
@@ -257,20 +260,16 @@ let rec handle_tyexpr (ctx : ctx) (tyexpr : tyexpr) :
              t
       in
       TRecord t
+  | TAlias t ->
+      let+ t = handle_ty ctx t in
+      TAlias t
 
 let rec handle_trait (ctx : ctx) (trait : trait) : (trait, 'a) result
     =
   let+ constraints =
     collect @@ List.map (handle_constraints ctx) trait.constraints
   and+ functions =
-    collect
-    @@ List.map
-         (fun (nm, args, cons, ty) ->
-           let+ cons =
-             collect @@ List.map (handle_constraints ctx) cons
-           and+ ty = handle_ty ctx ty in
-           (nm, args, cons, ty))
-         trait.functions
+    collect @@ List.map (handle_definition ctx) trait.functions
   in
   {
     trait with
@@ -306,14 +305,16 @@ let get_constr_paths file nm def =
       |> List.map (fun x ->
              InMod (file.name, InMod (base_name nm, Base x)))
   | TRecord _ -> InMod (file.name, Base (base_name nm)) :: []
+  | TAlias t -> []
 
 let handle_file (ctx : ctx) (file : file) : (file * ctx, 'a) result =
   let collect_names =
     List.map
       (function
         | Definition (_, dfn) -> InMod (file.name, dfn.name) :: []
-        | Type (_, nm, _, def) ->
-            InMod (file.name, nm) :: get_constr_paths file nm def
+        | Type (_, def) ->
+            InMod (file.name, def.name)
+            :: get_constr_paths file def.name def.expr
         | Trait (_, dfn) -> InMod (file.name, dfn.name) :: []
         | Impl (_, impl) -> InMod (file.name, impl.name) :: [])
       file.toplevel
@@ -330,9 +331,12 @@ let handle_file (ctx : ctx) (file : file) : (file * ctx, 'a) result =
            | Definition (id, dfn) ->
                let+ def = handle_definition ctx dfn in
                Definition (id, def)
-           | Type (id, name, args, expr) ->
-               let+ t = handle_tyexpr ctx expr in
-               Type (id, add_file ctx name, args, t)
+           | Type (id, def) ->
+               let+ t = handle_tyexpr ctx def.expr in
+               Type
+                 ( id,
+                   { def with name = add_file ctx def.name; expr = t }
+                 )
            | Trait (id, trait) ->
                let+ t = handle_trait ctx trait in
                Trait (id, t)
