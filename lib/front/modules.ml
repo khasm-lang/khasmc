@@ -118,7 +118,8 @@ let rec handle_ty (ctx : ctx) (ty : ty) : (ty, 'a) result =
       let+ tys = collect @@ List.map (handle_ty ctx) t in
       Tuple tys
   | Arrow (a, b) ->
-      let+ a = handle_ty ctx a and+ b = handle_ty ctx b in
+      let+ a = handle_ty ctx a
+      and+ b = handle_ty ctx b in
       Arrow (a, b)
   | TApp (p, tys) ->
       let+ p = find_definition ctx p
@@ -192,7 +193,8 @@ let rec handle_tm (bound : string list) (ctx : ctx) (tm : tm) :
       and+ c = handle_tm bound ctx c in
       ITE (id, a, b, c)
   | Annot (id, tm, ty) ->
-      let+ tm = handle_tm bound ctx tm and+ ty = handle_ty ctx ty in
+      let+ tm = handle_tm bound ctx tm
+      and+ ty = handle_ty ctx ty in
       Annot (id, tm, ty)
   | Record (id, nm, fields) ->
       let+ nm = find_definition ctx nm
