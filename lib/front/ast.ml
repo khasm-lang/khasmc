@@ -119,6 +119,8 @@ and pp_list fmt fmt x =
 (* also carries free vars *)
 type ty' = freevar list * ty [@@deriving show { with_path = false }]
 
+let no_frees (ty : ty) : ty' = ([], ty)
+
 type tyexpr =
   (* variant name, list of types *)
   | TVariant of (string * ty list) list
