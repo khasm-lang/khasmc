@@ -16,13 +16,12 @@ let example_files =
                 name = Base "Ty";
                 args = [];
                 expr = TVariant [ ("Constr", [ TyInt ]) ];
-                kind = Star;
               } );
           Definition
             ( noid,
               {
                 name = Base "id";
-                free_vars = [ ("a", Star) ];
+                free_vars = [ "a" ];
                 constraints = [];
                 args = [ ("x", Free "a") ];
                 ret = Free "a";

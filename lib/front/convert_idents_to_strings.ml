@@ -80,15 +80,11 @@ let convert' (s : statement) : statement =
             ret = collapse_ty ret;
             body = collapse_tm body;
           } )
-  | Type (id, { name; args; expr; kind }) ->
+  | Type (id, { name; args; expr }) ->
       Type
         ( id,
-          {
-            name = collapse name;
-            args;
-            expr = collapse_tyexpr expr;
-            kind;
-          } )
+          { name = collapse name; args; expr = collapse_tyexpr expr }
+        )
   | Trait (i, { name; args; assoc_types; constraints; functions }) ->
       Trait
         ( i,
