@@ -43,17 +43,3 @@ let unify (a : ty) (b : ty) : (ty, 'a) result =
   match unify' a b with
   | s -> ok s
   | exception BadUnify (q, w) -> err @@ `Bad_Unify ((a, q), (b, w))
-
-exception BadKindUnify of kind * kind
-
-let rec unify_kind' (k1 : kind) (k2 : kind) : bool =
-  match (k1, k2) with
-  | Star, Star -> true
-  | KArrow (q, w), KArrow (a, b) -> unify_kind' q a && unify_kind' w b
-  | _ -> false
-
-let unify_kind k1 k2 : (kind, 'a) result =
-  match unify_kind' k1 k2 with
-  | _ -> ok k1
-  | exception BadKindUnify (a, b) ->
-      err @@ `Bad_Kind_Unify ((k1, a), (k2, b))

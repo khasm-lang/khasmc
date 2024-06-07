@@ -11,19 +11,6 @@ type id = Common.Info.id [@@deriving show { with_path = false }]
 type Common.Info.info += Srcloc
 type Common.Info.data += Srcloc' of srcloc
 
-type kind =
-  (* type *)
-  | Star
-  (* type -> type *)
-  | KArrow of kind * kind
-
-let rec pp_kind fmt ty =
-  match ty with
-  | Star -> Format.fprintf fmt "𝕋"
-  | KArrow (KArrow (a, b), c) ->
-      Format.fprintf fmt "(%a) → %a" pp_kind (KArrow (a, b)) pp_kind c
-  | KArrow (a, b) -> Format.fprintf fmt "%a → %a" pp_kind a pp_kind b
-
 type path =
   (* used to represent a path that doesn't lead anywhere *)
   | End
@@ -38,6 +25,8 @@ let rec to_str (p : path) : string =
   | Base n -> n
   | End -> "<END>"
   | InMod (s, pth) -> s ^ "." ^ to_str pth
+
+let path_append (p : path) (s : string) : string = to_str p ^ "." ^ s
 
 type pat =
   (* x -> ... *)
@@ -71,7 +60,7 @@ and meta =
   | Unsolved
   | Solved of ty
 
-and freevar = string * kind [@@deriving show { with_path = false }]
+and freevar = string [@@deriving show { with_path = false }]
 
 let rec force (t : ty) : ty =
   match t with
@@ -102,11 +91,8 @@ and pp_ty (fmt : Format.formatter) (ty : ty) : unit =
   | TApp (p, l) ->
       Format.fprintf fmt "%a (%a)" pp_path p (pp_list fmt) l
   | TForall (s, t) ->
-      Format.fprintf fmt "forall %a. %a"
-        (fun fmt t ->
-          List.iter
-            (fun (s, t) -> Format.fprintf fmt "(%s : %a)" s pp_kind t)
-            t)
+      Format.fprintf fmt "forall%a. %a"
+        (fun fmt t -> List.iter (Format.fprintf fmt " %s") t)
         s pp_ty t
 
 and pp_list fmt fmt x =
@@ -198,7 +184,6 @@ type typ = {
   name : path;
   args : freevar list;
   expr : tyexpr;
-  kind : kind;
 }
 [@@deriving show { with_path = false }]
 
@@ -235,3 +220,18 @@ let format_error (id : Common.Info.id) (err : string) =
 
 let[@tail_mod_cons] rec mk_ty (tyl : ty list) (r : ty) : ty =
   match tyl with [] -> r | x :: xs -> Arrow (x, mk_ty xs r)
+
+let get_tm_id (t : tm) : id =
+  match t with
+  | Var (i, _)
+  | Bound (i, _)
+  | App (i, _, _)
+  | Let (i, _, _, _)
+  | Match (i, _, _)
+  | Lam (i, _, _, _)
+  | ITE (i, _, _, _)
+  | Annot (i, _, _)
+  | Record (i, _, _)
+  | Project (i, _, _)
+  | Poison (i, _) ->
+      i

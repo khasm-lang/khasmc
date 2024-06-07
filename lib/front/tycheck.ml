@@ -46,18 +46,37 @@ let match' x cont =
 
 type ctx = {
   bound : (string * id * ty') list;
+  (* constr name, associated type name, type *)
+  constrs : (string * string * ty') list;
   types : typ list;
-  frees : (string * kind) list;
+  frees : freevar list;
   locals : (string * id * ty') list;
 }
 [@@deriving show { with_path = false }]
 
-let empty () = { bound = []; types = []; frees = []; locals = [] }
+let empty () =
+  { bound = []; types = []; frees = []; locals = []; constrs = [] }
 
 let add_def ctx nm id ty =
   { ctx with bound = (nm, id, ty) :: ctx.bound }
 
-let add_typ ctx t = { ctx with types = t :: ctx.types }
+let add_typ ctx t =
+  {
+    ctx with
+    types = t :: ctx.types;
+    constrs =
+      (match t.expr with
+      | TAlias _ -> []
+      | TRecord _ -> []
+      | TVariant l ->
+          List.map
+            (fun (name, args) ->
+              let final = Custom t.name in
+              let ty = mk_ty args final in
+              (path_append t.name name, to_str t.name, (t.args, ty)))
+            l)
+      @ ctx.constrs;
+  }
 
 let add_local ctx nm id ty =
   { ctx with locals = (nm, id, ty) :: ctx.locals }
@@ -71,40 +90,27 @@ let add_args ctx id args =
       List.map (fun (a, b) -> (a, id, ([], b))) args @ ctx.locals;
   }
 
-(*
-   can also return a free variable, hence the either 
-*)
-
-let find_kind_by_nm' (ctx : ctx) (p : path) :
-    ((typ, string * kind) either, 'a) result =
-  match List.filter (fun x -> fst x = to_str p) ctx.frees with
-  | [ x ] -> ok @@ Either.right x
-  | x :: xs -> err @@ `Impossible "duplicate free var"
-  | _ -> (
-      match List.filter (fun (x : typ) -> x.name = p) ctx.types with
-      | [ x ] -> ok @@ Either.left x
-      | _ -> err @@ `Impossible "find_type_by_nm")
-
-let find_kind_by_nm (ctx : ctx) (p : path) : (kind, 'a) result =
-  let open Either in
-  let+ def = find_kind_by_nm' ctx p in
-  match def with Left l -> l.kind | Right r -> snd r
-
-let find_ty (ctx : ctx) (id : id) (p : string) : (ty, 'a) result =
+let find_ty (ctx : ctx) (p : string) : (ty, 'a) result =
   match List.filter (fun (nm, _, _) -> nm = p) ctx.locals with
   | [ (_, _, ty) ] -> ok (snd ty)
-  | [] -> err @@ `Impossible ("var not found " ^ p)
-  | x :: xs -> err @@ `Impossible ("duplicate var " ^ p)
+  | _ -> (
+      match List.filter (fun (nm, _, _) -> nm = p) ctx.bound with
+      | [ (_, _, ty) ] -> ok (snd ty)
+      | _ -> (
+          match
+            List.filter (fun (nm, _, _) -> nm = p) ctx.constrs
+          with
+          | [ (_, _, ty) ] -> ok (snd ty)
+          | _ -> err @@ `Impossible_ctx (ctx, "var not found: " ^ p)))
 
 (* TODO: check *)
-let find_typ_by_constr (ctx : ctx) (nm : string) :
+let find_typ_by_constr_variant (ctx : ctx) (nm : string) :
     (typ * ty list, 'a) result =
   match
     List.flatten
     @@ List.map
          (fun typ ->
            match typ.expr with
-           (* TODO: Add support for variants *)
            | TVariant l ->
                List.filter (fun (s, l) -> s = nm) l
                |> List.map (fun s -> (typ, s))
@@ -112,7 +118,7 @@ let find_typ_by_constr (ctx : ctx) (nm : string) :
          ctx.types
   with
   | [ (typ, (ctornm, tys)) ] -> ok @@ (typ, tys)
-  | _ -> err @@ `Impossible "constructor not found"
+  | _ -> err @@ `Impossible_ctx (ctx, "constructor not found")
 
 let process_trait (ctx : ctx) (id : id)
     ({ name; args; assoc_types; constraints; functions } : trait) :
@@ -156,136 +162,93 @@ let rec deduce_pat_type (ctx : ctx) (pat : pat) (ty : ty) :
         collect @@ List.map2 (deduce_pat_type ctx) t ts
         |> Result.map List.flatten
   | Constr (head, body), TApp (pth, args) ->
-      (* the complicated case :P *)
-      let* typ, tys = find_typ_by_constr ctx (to_str head) in
-      if typ.name <> pth then
-        err @@ `Wrong_Constructor_Type (pat, ty)
+      (* the complicated case for variants :P *)
+      let* typ, tys = find_typ_by_constr_variant ctx (to_str head) in
+      if
+        not
+          begin
+            match typ.expr with
+            | TVariant l -> List.mem (to_str pth) (List.map fst l)
+            | _ -> false
+          end
+      then
+        err @@ `Constr_Not_In_Type (pat, ty)
       else if List.length body <> List.length tys then
         err @@ `Mismatch_Pattern_Args (pat, ty)
       else
-        (* typ should be the same as we would get by
-           searching manually via pth
-        *)
-        failwith "handle this csae"
+        let+ x =
+          collect @@ List.map2 (deduce_pat_type ctx) body tys
+        in
+        List.flatten x
   | _ -> err @@ `Bad_Pattern (pat, ty)
 
 let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
-  match (tm, ty) with
-  | Let (id, pat, head, body), t ->
-      let* head't = infer_tm ctx head in
-      let* vars = deduce_pat_type ctx pat head't in
-      let ctx' =
-        List.fold_left
-          (fun acc (nm, ty) -> add_local acc nm id ty)
-          ctx vars
-      in
-      check_tm ctx' body t
-  | Match (_, _, _), t -> failwith "match"
-  | Lam (_, _, _, _), Arrow (a, b) -> failwith "lam"
-  | Lam _, _ -> err @@ `Lam_Not_Arrow (tm, ty)
-  | ITE (_, _, _, _), t -> failwith "ite"
-  | Annot (_, _, _), t -> failwith "annot"
-  | Record (_, _, _), t -> failwith "record"
-  | Project (_, _, _), t -> failwith "project"
-  | Poison (_, _), t -> failwith "poison"
-  | tm, ty ->
-      let+ tm't = infer_tm ctx tm in
-      ignore @@ unify tm't ty
+  begin
+    match (tm, ty) with
+    | Let (id, pat, head, body), t ->
+        let* head't = infer_tm ctx head in
+        let* vars = deduce_pat_type ctx pat head't in
+        let ctx' =
+          List.fold_left
+            (fun acc (nm, ty) -> add_local acc nm id ty)
+            ctx vars
+        in
+        check_tm ctx' body t
+    | Match (_, _, _), t -> failwith "match"
+    | Lam (_, pat, tymb, body), Arrow (a, b) ->
+        let* _ =
+          begin
+            match tymb with
+            | None -> ok ()
+            | Some t -> unify t a |$> fun _ -> ()
+          end
+        in
+        let* tys = deduce_pat_type ctx pat a in
+        let ctx' =
+          List.fold_left
+            (fun acc (a, b) -> add_local acc a noid b)
+            ctx tys
+        in
+        check_tm ctx' body b
+    | Lam _, _ -> err @@ `Lam_Not_Arrow (tm, ty)
+    | Annot (_, tm, ty), t ->
+        let+ _ = check_tm ctx tm ty
+        and+ _ = unify ty t in
+        ()
+    | Record (_, _, _), t -> failwith "record"
+    | Project (_, _, _), t -> failwith "project"
+    | Poison (_, _), t -> failwith "poison"
+    | tm, ty ->
+        let+ tm't = infer_tm ctx tm in
+        ignore @@ unify tm't ty
+  end
+  |$> fun () -> set_ty (get_tm_id tm) ty
 
 and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
-  match tm with
-  | App (id, f, x) ->
-      let* x't = collect @@ List.map (infer_tm ctx) x in
-      let rec go ty xs =
-        match (ty, xs) with
-        | Arrow (a, b), x :: xs ->
-            ignore @@ unify a x;
-            go b xs
-        | t, [] -> ok t
-        | _ -> err @@ `App_Mismatch (id, f, x)
-      in
-      let* f't = infer_tm ctx f in
-      go f't x't
-  | _ -> failwith "infer"
-
-(* TODO: document nicer *)
-let rec do_kind_app p l typ list : (kind, 'a) result =
-  match (typ, list) with
-  | KArrow (a, b), x :: xs ->
-      let* _ = unify_kind a x in
-      do_kind_app p l b xs
-  | Star, x :: xs -> err @@ `Kind_App_Doesn't_Match (p, l)
-  | t, [] -> ok t
-
-let rec check_ty (ctx : ctx) (k : kind) (ty : ty) : (unit, 'a) result
-    =
-  match (force ty, k) with
-  | TyInt, Star | TyBool, Star | TyChar, Star | TyString, Star ->
-      ok ()
-  | Free a, k ->
-      let k' = List.assoc a ctx.frees in
-      let+ _ = unify_kind k k' in
-      ()
-  | Custom p, k ->
-      let* kind = find_kind_by_nm ctx p in
-      let+ _ = unify_kind kind k in
-      ()
-  | Tuple t, Star ->
-      let+ _ = collect @@ List.map (fun x -> check_ty ctx Star x) t in
-      ()
-  | Arrow (a, b), Star ->
-      let+ _ = check_ty ctx Star a
-      and+ _ = check_ty ctx Star b in
-      ()
-  | TApp (p, l), k ->
-      let* kind = find_kind_by_nm ctx p in
-      let* args = collect @@ List.map (infer_ty ctx) l in
-      let* ret = do_kind_app p l kind args in
-      let+ _ = unify_kind ret k in
-      ()
-  | TForall (l, inner), k ->
-      let ctx' = add_frees ctx l in
-      (* TODO: I think this is correct, going off ghci? *)
-      check_ty ctx' k inner
-  | TyMeta m, _ -> begin
-      match get m with
-      | Solved t -> err @@ `Impossible "force should have handled"
-      | Unsolved -> err @@ `Cannot_Check_Unknown_Meta m
-    end
-  | t, k ->
-      let* inf = infer_ty ctx t in
-      let+ _ = unify_kind inf k in
-      ()
-
-and infer_ty (ctx : ctx) (ty : ty) : (kind, 'a) result =
-  match force ty with
-  | TyInt | TyBool | TyChar | TyString -> ok Star
-  | Free s -> ok @@ List.assoc s ctx.frees
-  | Custom p -> find_kind_by_nm ctx p
-  | Tuple t ->
-      let+ _ = collect @@ List.map (check_ty ctx Star) t in
-      Star
-  | Arrow (a, b) ->
-      let+ _ = check_ty ctx Star a
-      and+ _ = check_ty ctx Star b in
-      Star
-  | TApp (p, tyls) ->
-      let* k = find_kind_by_nm ctx p
-      and* rest = collect @@ List.map (infer_ty ctx) tyls in
-      let+ kind = do_kind_app p tyls k rest in
-      kind
-  | TForall (fv, t) ->
-      let ctx' = add_frees ctx fv in
-      infer_ty ctx' t
-  | TyMeta m -> begin
-      match get m with
-      | Solved _ -> err @@ `Impossible "force should have handled"
-      | Unsolved -> err @@ `Cannot_Check_Unknown_Meta m
-    end
-
-let typecheck_ty (ctx : ctx) (ty : ty) : (unit, 'a) result =
-  let* ty = is_rank_two ty in
-  check_ty ctx Star ty
+  begin
+    match tm with
+    | App (id, f, x) ->
+        let* x't = collect @@ List.map (infer_tm ctx) x in
+        let rec go ty xs =
+          match (ty, xs) with
+          | Arrow (a, b), x :: xs ->
+              ignore @@ unify a x;
+              go b xs
+          | t, [] -> ok t
+          | _ -> err @@ `App_Mismatch (id, f, x)
+        in
+        let* f't = infer_tm ctx f in
+        go f't x't
+    | Var (_, t) -> find_ty ctx t
+    | Bound (_, t) -> find_ty ctx (to_str t)
+    | _ ->
+        print_endline (show_ctx ctx);
+        print_endline (show_tm tm);
+        failwith "infer"
+  end
+  |$> fun ty ->
+  set_ty (get_tm_id tm) ty;
+  ty
 
 let typecheck_statement (ctx : ctx) (s : statement) :
     (statement, 'a) result =
@@ -293,11 +256,8 @@ let typecheck_statement (ctx : ctx) (s : statement) :
   | Definition (id, def) ->
       let ctx' = add_frees ctx def.free_vars in
       let ctx' = add_args ctx' id def.args in
-      let+ _ = failwith "check the body!"
-      and+ _ =
-        collect
-        @@ List.map (fun (a, b) -> typecheck_ty ctx' b) def.args
-      and+ _ = typecheck_ty ctx' def.ret in
+      (* TODO: check all toplevel types are valid *)
+      let+ _ = check_tm ctx' def.body def.ret in
       Definition (id, def)
   | Impl (id, impl) -> failwith "todo: typecheck impl"
   | _ -> ok s
@@ -306,4 +266,25 @@ let typecheck (files : statement list) : statement list =
   let ctx = List.fold_left collect_statement (empty ()) files in
   match collect @@ List.map (typecheck_statement ctx) files with
   | Ok s -> s
-  | Error e -> failwith "handle errors"
+  | Error e ->
+      List.map
+        (fun e ->
+          match e with
+          | `App_Mismatch (id, tm, tms) -> failwith "appmismatch"
+          | `Bad_Pattern (pat, ty) -> failwith "bad pat"
+          | `Bad_Unify ((t1, t1'), (t2, t2')) -> failwith "bad unify"
+          | `Constr_Not_In_Type (pat, ty) ->
+              failwith "constr not in typ"
+          | `Impossible i ->
+              print_endline i;
+              failwith "impossible"
+          | `Lam_Not_Arrow (tm, ty) -> failwith "lam not arrow"
+          | `Mismatch_Pattern_Args (pat, ty) ->
+              failwith "mismatch pat arg"
+          | `Mismatched_Tuple_Length (pat, ty) ->
+              failwith "tuple len mismatch"
+          | `Impossible_ctx (ctx, i) ->
+              print_endline (show_ctx ctx);
+              print_endline i;
+              failwith "impossible")
+        e
