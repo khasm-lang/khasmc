@@ -40,14 +40,12 @@ let is_rank_two (x : ty) : (ty, 'a) result =
   | true -> Ok x
   | false -> err @@ `Is_Not_Rank_Two x
 
-let match' x cont =
-  let+ x = x in
-  cont x
-
 type ctx = {
   bound : (string * id * ty') list;
-  (* constr name, associated type name, type *)
-  constrs : (string * string * ty') list;
+  (* constr name, associated type name,
+     actual arguments,
+     type *)
+  constrs : (string * string * ty list * ty') list;
   types : typ list;
   frees : freevar list;
   locals : (string * id * ty') list;
@@ -71,15 +69,25 @@ let add_typ ctx t =
       | TVariant l ->
           List.map
             (fun (name, args) ->
-              let final = Custom t.name in
+              let final = Custom (Base t.name) in
               let ty = mk_ty args final in
-              (path_append t.name name, to_str t.name, (t.args, ty)))
+              ( path_append (Base t.name) name,
+                t.name,
+                args,
+                (t.args, ty) ))
             l)
       @ ctx.constrs;
   }
 
 let add_local ctx nm id ty =
   { ctx with locals = (nm, id, ty) :: ctx.locals }
+
+let rec add_locals ctx l =
+  match l with
+  | [] -> ctx
+  | (nm, id, ty) :: xs ->
+      let ctx' = add_local ctx nm id ty in
+      add_locals ctx' xs
 
 let add_frees ctx frees = { ctx with frees = frees @ ctx.frees }
 
@@ -98,27 +106,25 @@ let find_ty (ctx : ctx) (p : string) : (ty, 'a) result =
       | [ (_, _, ty) ] -> ok (snd ty)
       | _ -> (
           match
-            List.filter (fun (nm, _, _) -> nm = p) ctx.constrs
+            List.filter (fun (nm, _, _, _) -> nm = p) ctx.constrs
           with
-          | [ (_, _, ty) ] -> ok (snd ty)
+          | [ (_, _, _, ty) ] -> ok (snd ty)
           | _ -> err @@ `Impossible_ctx (ctx, "var not found: " ^ p)))
 
 (* TODO: check *)
 let find_typ_by_constr_variant (ctx : ctx) (nm : string) :
     (typ * ty list, 'a) result =
-  match
-    List.flatten
-    @@ List.map
-         (fun typ ->
-           match typ.expr with
-           | TVariant l ->
-               List.filter (fun (s, l) -> s = nm) l
-               |> List.map (fun s -> (typ, s))
-           | _ -> [])
-         ctx.types
-  with
-  | [ (typ, (ctornm, tys)) ] -> ok @@ (typ, tys)
-  | _ -> err @@ `Impossible_ctx (ctx, "constructor not found")
+  match List.filter (fun (nm', _, _, _) -> nm = nm') ctx.constrs with
+  | [ (nm, tyname, args, _) ] -> begin
+      match
+        List.find_opt (fun (typ : typ) -> typ.name = tyname) ctx.types
+      with
+      | Some s -> ok (s, args)
+      | None ->
+          err
+          @@ `Impossible_ctx (ctx, "can't find constr parent " ^ nm)
+    end
+  | _ -> err @@ `Impossible_ctx (ctx, "can't find constr " ^ nm)
 
 let process_trait (ctx : ctx) (id : id)
     ({ name; args; assoc_types; constraints; functions } : trait) :
@@ -126,11 +132,11 @@ let process_trait (ctx : ctx) (id : id)
   (* we treat the trait functions as "magic" for the moment,
      giving them the most general type we can
   *)
-  let rec go (ctx : ctx) : definition list -> ctx = function
+  let rec go (ctx : ctx) : definition_no_body list -> ctx = function
     | [] -> ctx
     | def :: xs ->
         let ctx' =
-          add_def ctx (to_str def.name) id
+          add_def ctx def.name id
             (def.free_vars, mk_ty (List.map snd def.args) def.ret)
         in
         go ctx' xs
@@ -141,7 +147,7 @@ let collect_statement (ctx : ctx) (state : statement) : ctx =
   match state with
   | Definition (id, def) ->
       let ty = mk_ty (List.map snd def.args) def.ret in
-      add_def ctx (to_str def.name) id (def.free_vars, ty)
+      add_def ctx def.name id (def.free_vars, ty)
   | Type (id, typ) -> add_typ ctx typ
   | Trait (id, trait) -> process_trait ctx id trait
   | Impl (_, _) -> ctx (* we ignore impls for the moment *)
@@ -161,19 +167,10 @@ let rec deduce_pat_type (ctx : ctx) (pat : pat) (ty : ty) :
       else
         collect @@ List.map2 (deduce_pat_type ctx) t ts
         |> Result.map List.flatten
-  | Constr (head, body), TApp (pth, args) ->
+  | Constr (head, body), t ->
       (* the complicated case for variants :P *)
       let* typ, tys = find_typ_by_constr_variant ctx (to_str head) in
-      if
-        not
-          begin
-            match typ.expr with
-            | TVariant l -> List.mem (to_str pth) (List.map fst l)
-            | _ -> false
-          end
-      then
-        err @@ `Constr_Not_In_Type (pat, ty)
-      else if List.length body <> List.length tys then
+      if List.length body <> List.length tys then
         err @@ `Mismatch_Pattern_Args (pat, ty)
       else
         let+ x =
@@ -189,12 +186,25 @@ let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
         let* head't = infer_tm ctx head in
         let* vars = deduce_pat_type ctx pat head't in
         let ctx' =
-          List.fold_left
-            (fun acc (nm, ty) -> add_local acc nm id ty)
-            ctx vars
+          List.map (fun (nm, ty) -> (nm, id, ty)) vars
+          |> add_locals ctx
         in
         check_tm ctx' body t
-    | Match (_, _, _), t -> failwith "match"
+    | Match (id, head, body), t ->
+        let* head't = infer_tm ctx head in
+        let rec go pat =
+          match pat with
+          | [] -> ok ()
+          | (pat, body) :: xs ->
+              let* _ = go xs in
+              let* vars = deduce_pat_type ctx pat head't in
+              let ctx' =
+                List.map (fun (nm, ty) -> (nm, id, ty)) vars
+                |> add_locals ctx
+              in
+              check_tm ctx' body t
+        in
+        go body
     | Lam (_, pat, tymb, body), Arrow (a, b) ->
         let* _ =
           begin
@@ -219,8 +229,8 @@ let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
     | Project (_, _, _), t -> failwith "project"
     | Poison (_, _), t -> failwith "poison"
     | tm, ty ->
-        let+ tm't = infer_tm ctx tm in
-        ignore @@ unify tm't ty
+        let* tm't = infer_tm ctx tm in
+        unify tm't ty
   end
   |$> fun () -> set_ty (get_tm_id tm) ty
 
@@ -232,7 +242,7 @@ and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
         let rec go ty xs =
           match (ty, xs) with
           | Arrow (a, b), x :: xs ->
-              ignore @@ unify a x;
+              let* _ = unify a x in
               go b xs
           | t, [] -> ok t
           | _ -> err @@ `App_Mismatch (id, f, x)
@@ -241,6 +251,33 @@ and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
         go f't x't
     | Var (_, t) -> find_ty ctx t
     | Bound (_, t) -> find_ty ctx (to_str t)
+    | Bool _ -> ok TyBool
+    | String _ -> ok TyString
+    | Int _ -> ok TyInt
+    | Char _ -> ok TyChar
+    | Let (id, pat, head, body) ->
+        let* h't = infer_tm ctx head in
+        let* adds = deduce_pat_type ctx pat h't in
+        let ctx' =
+          List.map (fun (nm, ty) -> (nm, id, ty)) adds
+          |> add_locals ctx
+        in
+        infer_tm ctx' body
+    | ITE (id, i, t, e) ->
+        let* _ = check_tm ctx i TyBool in
+        begin
+          match infer_tm ctx t with
+          | Ok t't ->
+              let+ _ = check_tm ctx e t't in
+              t't
+          | Error _ ->
+              let* e't = infer_tm ctx e in
+              let+ _ = check_tm ctx t e't in
+              e't
+        end
+    | Annot (id, tm, ty) ->
+        let+ _ = check_tm ctx tm ty in
+        ty
     | _ ->
         print_endline (show_ctx ctx);
         print_endline (show_tm tm);
@@ -271,8 +308,17 @@ let typecheck (files : statement list) : statement list =
         (fun e ->
           match e with
           | `App_Mismatch (id, tm, tms) -> failwith "appmismatch"
-          | `Bad_Pattern (pat, ty) -> failwith "bad pat"
-          | `Bad_Unify ((t1, t1'), (t2, t2')) -> failwith "bad unify"
+          | `Bad_Pattern (pat, ty) ->
+              print_endline (show_pat pat);
+              print_endline (show_ty ty);
+              failwith "bad pat"
+          | `Bad_Unify ((t1, t1'), (t2, t2')) ->
+              print_endline (show_ty t1');
+              print_endline (show_ty t2');
+              print_endline "as part of:";
+              print_endline (show_ty t1);
+              print_endline (show_ty t2);
+              failwith "bad unify"
           | `Constr_Not_In_Type (pat, ty) ->
               failwith "constr not in typ"
           | `Impossible i ->

@@ -122,6 +122,10 @@ type constraint' = path * ty list
 let pp_exn fmt exn = Format.fprintf fmt "%s" (Printexc.to_string exn)
 
 type tm =
+  | Bool of id * bool
+  | Int of id * string
+  | String of id * string
+  | Char of id * string
   (* x *)
   | Var of id * string
   (* Foo.bar *)
@@ -150,8 +154,17 @@ type tm =
   | Poison of id * exn
 [@@deriving show { with_path = false }]
 
+type definition_no_body = {
+  name : string;
+  free_vars : freevar list;
+  constraints : constraint' list;
+  args : (string * ty) list;
+  ret : ty;
+}
+[@@deriving show { with_path = false }]
+
 type definition = {
-  name : path;
+  name : string;
   free_vars : freevar list;
   constraints : constraint' list;
   args : (string * ty) list;
@@ -160,20 +173,30 @@ type definition = {
 }
 [@@deriving show { with_path = false }]
 
+let to_definition_no_body (d : definition) : definition_no_body =
+  match d with
+  | { name; free_vars; constraints; args; ret; body = _body } ->
+      { name; free_vars; constraints; args; ret }
+
+let to_definition (b : tm) (d : definition_no_body) : definition =
+  match d with
+  | { name; free_vars; constraints; args; ret } ->
+      { body = b; name; free_vars; constraints; args; ret }
+
 type trait = {
-  name : path;
+  name : string;
   args : freevar list;
   (* any associated types *)
   assoc_types : freevar list;
   (* any constraints on said & on inputs *)
   constraints : constraint' list;
   (* member functions *)
-  functions : definition list;
+  functions : definition_no_body list;
 }
 [@@deriving show { with_path = false }]
 
 type impl = {
-  name : path;
+  name : string;
   args : ty list;
   assoc_types : (string * ty) list;
   impls : definition list;
@@ -181,7 +204,7 @@ type impl = {
 [@@deriving show { with_path = false }]
 
 type typ = {
-  name : path;
+  name : string;
   args : freevar list;
   expr : tyexpr;
 }
@@ -223,6 +246,10 @@ let[@tail_mod_cons] rec mk_ty (tyl : ty list) (r : ty) : ty =
 
 let get_tm_id (t : tm) : id =
   match t with
+  | Bool (i, _)
+  | String (i, _)
+  | Int (i, _)
+  | Char (i, _)
   | Var (i, _)
   | Bound (i, _)
   | App (i, _, _)
