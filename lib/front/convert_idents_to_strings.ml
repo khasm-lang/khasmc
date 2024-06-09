@@ -29,6 +29,7 @@ let rec collapse_pat (pat : pat) : pat =
 
 let rec collapse_tm (tm : tm) : tm =
   match (tm : tm) with
+  | String _ | Bool _ | Int _ | Char _ -> tm
   | Var (_, _) -> tm
   | Bound (i, p) -> Bound (i, collapse p)
   | App (i, a, bs) -> App (i, collapse_tm a, List.map collapse_tm bs)
@@ -73,7 +74,7 @@ let convert' (s : statement) : statement =
       Definition
         ( id,
           {
-            name = collapse name;
+            name;
             free_vars;
             constraints = collapse_cons constraints;
             args = List.map (fun (a, b) -> (a, collapse_ty b)) args;
@@ -81,29 +82,26 @@ let convert' (s : statement) : statement =
             body = collapse_tm body;
           } )
   | Type (id, { name; args; expr }) ->
-      Type
-        ( id,
-          { name = collapse name; args; expr = collapse_tyexpr expr }
-        )
+      Type (id, { name; args; expr = collapse_tyexpr expr })
   | Trait (i, { name; args; assoc_types; constraints; functions }) ->
       Trait
         ( i,
           {
-            name = collapse name;
+            name;
             args;
             assoc_types;
             constraints = collapse_cons constraints;
             functions =
               List.map
-                (fun { name; free_vars; constraints; args; ret; body } ->
+                (fun ({ name; free_vars; constraints; args; ret } :
+                       definition_no_body) ->
                   {
-                    name = collapse name;
+                    name;
                     free_vars;
                     constraints = collapse_cons constraints;
                     args =
                       List.map (fun (a, b) -> (a, collapse_ty b)) args;
                     ret = collapse_ty ret;
-                    body = collapse_tm body;
                   })
                 functions;
           } )
@@ -111,7 +109,7 @@ let convert' (s : statement) : statement =
       Impl
         ( i,
           {
-            name = collapse name;
+            name;
             args = List.map collapse_ty args;
             assoc_types =
               List.map (fun (a, b) -> (a, collapse_ty b)) assoc_types;
@@ -119,7 +117,7 @@ let convert' (s : statement) : statement =
               List.map
                 (fun { name; free_vars; constraints; args; ret; body } ->
                   {
-                    name = collapse name;
+                    name;
                     free_vars;
                     constraints = collapse_cons constraints;
                     args =

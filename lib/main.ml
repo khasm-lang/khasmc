@@ -10,43 +10,37 @@ let example_files =
       opens = [];
       toplevel =
         [
-          Type
+          Trait
             ( noid,
               {
-                name = Base "Ty";
-                args = [];
-                expr = TVariant [ ("Constr", [ TyInt ]) ];
-              } );
-          Definition
-            ( noid,
-              {
-                name = Base "id";
-                free_vars = [ "a" ];
+                name = "Trt";
+                args = [ "a" ];
                 constraints = [];
-                args = [ ("x", Free "a") ];
-                ret = Free "a";
-                body = Var (noid, "x");
+                assoc_types = [];
+                functions =
+                  [
+                    {
+                      name = "Foo";
+                      free_vars = [];
+                      constraints = [];
+                      args = [ ("x", TyInt) ];
+                      ret = Free "a";
+                    };
+                  ];
               } );
           Definition
             ( noid,
               {
-                name = Base "call";
+                name = "foo";
                 free_vars = [];
                 constraints = [];
-                args = [ ("w", TyInt) ];
+                args = [];
                 ret = TyInt;
                 body =
-                  App (noid, Var (noid, "id"), [ Var (noid, "w") ]);
-              } );
-          Definition
-            ( noid,
-              {
-                name = Base "test!";
-                free_vars = [];
-                constraints = [];
-                args = [];
-                ret = Custom (Base "Ty");
-                body = Bound (noid, InMod ("Ty", Base "Constr"));
+                  App
+                    ( noid,
+                      Bound (noid, InMod ("Trt", Base "Foo")),
+                      [ Int (noid, "5") ] );
               } );
         ];
     };
