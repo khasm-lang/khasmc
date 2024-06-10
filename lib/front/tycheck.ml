@@ -126,6 +126,16 @@ let find_typ_by_constr_variant (ctx : ctx) (nm : string) :
     end
   | _ -> err @@ `Impossible_ctx (ctx, "can't find constr " ^ nm)
 
+let find_typ_by_record_nm (ctx : ctx) (nm : string) :
+    (typ * (string * ty) list, 'a) result =
+  match List.filter (fun (t : typ) -> t.name = nm) ctx.types with
+  | [ x ] -> begin
+      match x.expr with
+      | TRecord l -> ok (x, l)
+      | _ -> err @@ `Type_Not_Record (ctx, nm)
+    end
+  | _ -> err @@ `Impossible_ctx (ctx, "can't find record: " ^ nm)
+
 let process_trait (ctx : ctx) (id : id)
     ({ name; args; assoc_types; constraints; functions } : trait) :
     ctx =
@@ -225,7 +235,37 @@ let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
         let+ _ = check_tm ctx tm ty
         and+ _ = unify ty t in
         ()
-    | Record (_, _, _), t -> failwith "record"
+    | Record (_, nm, fields), Custom t ->
+        let* typ, field't = find_typ_by_record_nm ctx (to_str nm) in
+        if nm <> t then
+          err @@ `Record_Type_Mismatch (ctx, nm, t)
+        else
+          let fields =
+            List.sort
+              (fun (nm, _) (nm2, _) -> String.compare nm nm2)
+              fields
+          in
+          let field't =
+            List.sort
+              (fun (nm, _) (nm2, _) -> String.compare nm nm2)
+              field't
+          in
+          begin
+            match List.combine fields field't with
+            | exception Invalid_argument _ ->
+                (* TODO: better errors here *)
+                err @@ `Mismatched_Record (ctx, fields, field't)
+            | comb ->
+                List.map
+                  (fun ((nm1, arg), (nm2, ty)) ->
+                    if nm1 <> nm2 then
+                      err @@ `Mismatched_Field_Ty (ctx, nm1, nm2)
+                    else
+                      check_tm ctx arg ty)
+                  comb
+                |> collect
+                |$> fun _ -> ()
+          end
     | Project (_, _, _), t -> failwith "project"
     | Poison (_, _), t -> failwith "poison"
     | tm, ty ->
@@ -299,10 +339,10 @@ let typecheck_statement (ctx : ctx) (s : statement) :
   | Impl (id, impl) -> failwith "todo: typecheck impl"
   | _ -> ok s
 
-let typecheck (files : statement list) : statement list =
+let typecheck (files : statement list) : (statement list, 'a) result =
   let ctx = List.fold_left collect_statement (empty ()) files in
   match collect @@ List.map (typecheck_statement ctx) files with
-  | Ok s -> s
+  | Ok s -> ok s
   | Error e ->
       List.map
         (fun e ->
@@ -332,5 +372,30 @@ let typecheck (files : statement list) : statement list =
           | `Impossible_ctx (ctx, i) ->
               print_endline (show_ctx ctx);
               print_endline i;
-              failwith "impossible")
+              failwith "impossible"
+          | `Mismatched_Field_Ty (ctx, s, e) ->
+              print_endline (show_ctx ctx);
+              print_endline s;
+              print_endline e;
+              failwith "mismatched field type"
+          | `Mismatched_Record (ctx, fields, tys) ->
+              print_endline (show_ctx ctx);
+              List.iter
+                (fun (nm, _) -> print_endline ("field: " ^ nm))
+                fields;
+              List.iter
+                (fun (nm, ty) ->
+                  print_endline ("field: " ^ nm ^ " : " ^ show_ty ty))
+                tys;
+              failwith "mismatched record"
+          | `Record_Type_Mismatch (ctx, exp, got) ->
+              print_endline (show_ctx ctx);
+              print_endline (to_str exp);
+              print_endline (to_str got);
+              failwith "record type mismatch"
+          | `Type_Not_Record (ctx, s) ->
+              print_endline (show_ctx ctx);
+              print_endline s;
+              failwith "type not record")
         e
+      |> collect

@@ -1,5 +1,6 @@
 open Front.Ast
 open Common.Info
+open Common.Error
 
 let example_files =
   [
@@ -10,42 +11,39 @@ let example_files =
       opens = [];
       toplevel =
         [
-          Trait
+          Type
             ( noid,
               {
-                name = "Trt";
-                args = [ "a" ];
-                constraints = [];
-                assoc_types = [];
-                functions =
-                  [
-                    {
-                      name = "Foo";
-                      free_vars = [];
-                      constraints = [];
-                      args = [ ("x", TyInt) ];
-                      ret = Free "a";
-                    };
-                  ];
+                name = "MyRecord";
+                args = [];
+                expr = TRecord [ ("foo", TyInt); ("bar", TyBool) ];
               } );
           Definition
             ( noid,
               {
-                name = "foo";
+                name = "RecordTest";
                 free_vars = [];
                 constraints = [];
                 args = [];
-                ret = TyInt;
+                ret = Custom (Base "MyRecord");
                 body =
-                  App
+                  Record
                     ( noid,
-                      Bound (noid, InMod ("Trt", Base "Foo")),
-                      [ Int (noid, "5") ] );
+                      Base "MyRecord",
+                      [
+                        ("foo", Int (noid, "5"));
+                        ("bar", Bool (noid, true));
+                      ] );
               } );
         ];
     };
   ]
 
+let driver () =
+  example_files
+  |> Front.Driver.do_frontend
+  |$> failwith "todo: middleend-y things"
+
 let main () =
   Printexc.record_backtrace true;
-  example_files |> Front.Driver.do_frontend |> failwith "todo!"
+  driver ()

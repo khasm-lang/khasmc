@@ -51,20 +51,19 @@ let rec find_naive_definition (ctx : ctx) (path : path) :
   | Base n -> begin
       match full_matches ctx.definitions (Base n) with
       | [ x ] -> ok x
-      | _ -> (
+      | _ -> begin
           match
             full_matches ctx.definitions (InMod (ctx.current, Base n))
           with
           | [] -> err (`No_Such_Variable (ctx, path))
-          | [ x ] -> ok x
-          | _ -> err (`Overlapping_Variable (ctx, path)))
+          | x :: _ -> ok x
+        end
     end
   | InMod (m, _tm) -> (
       match
         match full_matches ctx.definitions path with
         | [] -> err (`No_Such_Variable (ctx, path))
-        | [ x ] -> ok x
-        | _ -> err (`Overlapping_Variable (ctx, path))
+        | x :: _ -> ok x
       with
       | Ok s -> Ok s
       | Error e -> (
@@ -72,8 +71,7 @@ let rec find_naive_definition (ctx : ctx) (path : path) :
             full_matches ctx.definitions (InMod (ctx.current, path))
           with
           | [] -> err (`No_Such_Variable (ctx, path))
-          | [ x ] -> ok x
-          | _ -> err (`Overlapping_Variable (ctx, path))))
+          | x :: _ -> ok x))
 
 let handle_opens (ctx : ctx) : ctx =
   let remove_one path =
@@ -216,8 +214,8 @@ let rec handle_tm (bound : string list) (ctx : ctx) (tm : tm) :
       in
       Record (id, nm, fields)
   | Project (id, path, field) ->
-      let+ path = find_definition ctx path in
-      Project (id, path, field)
+      let+ tm = handle_tm bound ctx path in
+      Project (id, tm, field)
   | Poison (id, exn) -> ok @@ Poison (id, exn)
 
 let handle_constraints (ctx : ctx) (tm : constraint') :
@@ -359,7 +357,13 @@ let handle_file (ctx : ctx) (file : file) : (file * ctx, 'a) result =
                Definition (id, def)
            | Type (id, def) ->
                let+ t = handle_tyexpr ctx def.expr in
-               Type (id, { def with expr = t })
+               Type
+                 ( id,
+                   {
+                     def with
+                     expr = t;
+                     name = add_file' ctx def.name;
+                   } )
            | Trait (id, trait) ->
                let+ t = handle_trait ctx trait in
                Trait (id, t)
@@ -388,7 +392,7 @@ let handle_files files =
         | Error e -> Error e)
   in
   match go files ctx with
-  | Ok s -> s
+  | Ok s -> ok s
   | Error e ->
       let rec errfmt (e : 'a) : (id * string) list =
         match e with
@@ -408,5 +412,4 @@ let handle_files files =
       in
       let tmp = List.flatten @@ List.map errfmt e in
       let formatted = List.map (fun (a, b) -> format_error a b) tmp in
-      let total = String.concat "\n\n" formatted in
-      compiler_error Frontend' total
+      err' formatted

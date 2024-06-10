@@ -55,7 +55,7 @@ let rec collapse_tm (tm : tm) : tm =
         ( id,
           collapse pth,
           List.map (fun (a, b) -> (a, collapse_tm b)) flds )
-  | Project (i, p, s) -> Project (i, collapse p, s)
+  | Project (i, p, s) -> Project (i, collapse_tm p, s)
   | Poison (_, _) -> tm
 
 let rec collapse_tyexpr (tyexpr : tyexpr) : tyexpr =

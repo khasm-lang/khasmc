@@ -32,6 +32,7 @@ let collect (x : ('a, 'b list) result list) :
 
 let ( let/ ) x f = Result.map_error f x
 let ( |$> ) x f = Result.map f x
+let ( |/> ) x f = Result.map_error f x
 let ( |=> ) x f = Result.bind x f
 
 let option_app (f : 'a -> ('b, 'c) result) (x : 'a option) :

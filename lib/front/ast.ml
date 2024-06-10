@@ -149,7 +149,7 @@ type tm =
   *)
   | Record of id * path * (string * tm) list
   (* foo.bar *)
-  | Project of id * path * string
+  | Project of id * tm * string
   (* error *)
   | Poison of id * exn
 [@@deriving show { with_path = false }]
