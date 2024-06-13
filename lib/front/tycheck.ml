@@ -266,7 +266,21 @@ let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
                 |> collect
                 |$> fun _ -> ()
           end
-    | Project (_, _, _), t -> failwith "project"
+    | Project (_, tm, field), t ->
+        let* tm't = infer_tm ctx tm in
+        begin
+          match tm't with
+          | Custom r ->
+              let* typ, fields =
+                find_typ_by_record_nm ctx (to_str r)
+              in
+              begin
+                match List.assoc_opt field fields with
+                | Some n -> unify t n
+                | None -> err @@ `Field_Not_Found (ctx, field)
+              end
+          | _ -> err @@ `Project_Not_Record (ctx, tm't)
+        end
     | Poison (_, _), t -> failwith "poison"
     | tm, ty ->
         let* tm't = infer_tm ctx tm in
@@ -318,6 +332,7 @@ and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
     | Annot (id, tm, ty) ->
         let+ _ = check_tm ctx tm ty in
         ty
+        (* TODO: add a lot more cases here *)
     | _ ->
         print_endline (show_ctx ctx);
         print_endline (show_tm tm);
@@ -396,6 +411,8 @@ let typecheck (files : statement list) : (statement list, 'a) result =
           | `Type_Not_Record (ctx, s) ->
               print_endline (show_ctx ctx);
               print_endline s;
-              failwith "type not record")
+              failwith "type not record"
+          | `Project_Not_Record e -> failwith "e"
+          | `Field_Not_Found e -> failwith "fnf")
         e
       |> collect
