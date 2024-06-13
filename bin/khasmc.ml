@@ -1,1 +1,1 @@
-let () = Khasmc__Main.main ()
+let () = ignore @@ Khasmc__Main.main ()

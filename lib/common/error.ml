@@ -30,8 +30,7 @@ let collect (x : ('a, 'b list) result list) :
   | [] -> ok @@ List.map (fun (Ok s) -> s) x
   | xs -> Error (List.flatten @@ List.map (fun (Error s) -> s) xs)
 
-let ( let/ ) x f = Result.map_error f x
-let ( |$> ) x f = Result.map f x
+let ( |$> ) x f = match x with Ok s -> Ok (f s) | Error e -> Error e
 let ( |/> ) x f = Result.map_error f x
 let ( |=> ) x f = Result.bind x f
 

@@ -35,15 +35,28 @@ let example_files =
                         ("bar", Bool (noid, true));
                       ] );
               } );
+          Definition
+            ( noid,
+              {
+                name = "ProjTest";
+                free_vars = [];
+                constraints = [];
+                args = [ ("x", Custom (Base "MyRecord")) ];
+                ret = TyInt;
+                body = Project (noid, Var (noid, "x"), "foo");
+              } );
         ];
     };
   ]
 
-let driver () =
-  example_files
-  |> Front.Driver.do_frontend
-  |$> failwith "todo: middleend-y things"
+let driver () = example_files |> Front.Driver.do_frontend
 
 let main () =
   Printexc.record_backtrace true;
-  driver ()
+  driver () |> function
+  | Ok e ->
+      print_endline "ok!";
+      ok e
+  | Error e ->
+      print_endline "err :(";
+      err' e
