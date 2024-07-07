@@ -216,7 +216,6 @@ let rec handle_tm (bound : string list) (ctx : ctx) (tm : tm) :
   | Project (id, path, field) ->
       let+ tm = handle_tm bound ctx path in
       Project (id, tm, field)
-  | Poison (id, exn) -> ok @@ Poison (id, exn)
 
 let handle_constraints (ctx : ctx) (tm : constraint') :
     (constraint', 'a) result =
@@ -226,7 +225,7 @@ let handle_constraints (ctx : ctx) (tm : constraint') :
   (nm, tys)
 
 let handle_definition (ctx : ctx)
-    { name; free_vars; constraints; args; ret; body } :
+    { id; name; free_vars; constraints; args; ret; body } :
     (definition, 'a) result =
   let* cons =
     collect @@ List.map (handle_constraints ctx) constraints
@@ -237,6 +236,7 @@ let handle_definition (ctx : ctx)
   and+ body = handle_tm arg1 ctx body in
   let args = List.combine arg1 tys in
   {
+    id;
     name = add_file' ctx name;
     free_vars;
     constraints = cons;
@@ -286,8 +286,7 @@ let rec handle_trait (ctx : ctx) (trait : trait) : (trait, 'a) result
              dfn with
              name = to_str (InMod (trait.name, Base dfn.name));
            })
-    |> List.map
-         (to_definition (Poison (noid, Failure "handle_trait")))
+    |> List.map (to_definition (Var (noid, "%.%BAD BAD BAD%.%")))
     |> List.map (handle_definition ctx)
     |> collect
     |$> List.map to_definition_no_body
@@ -295,7 +294,13 @@ let rec handle_trait (ctx : ctx) (trait : trait) : (trait, 'a) result
   { trait with name = trait.name; constraints; functions }
 
 let rec handle_impl (ctx : ctx) (impl : impl) : (impl, 'a) result =
-  let+ args = collect @@ List.map (handle_ty ctx) impl.args
+  let+ args =
+    collect
+    @@ List.map
+         (fun (a, b) ->
+           let+ b = handle_ty ctx b in
+           (a, b))
+         impl.args
   and+ assoc_types =
     collect
     @@ List.map
@@ -306,7 +311,13 @@ let rec handle_impl (ctx : ctx) (impl : impl) : (impl, 'a) result =
   and+ impls =
     collect @@ List.map (handle_definition ctx) impl.impls
   in
-  { name = add_file' ctx impl.name; args; assoc_types; impls }
+  {
+    id = impl.id;
+    name = add_file' ctx impl.name;
+    args;
+    assoc_types;
+    impls;
+  }
 
 let rec base_name b =
   match b with
@@ -332,15 +343,14 @@ let handle_file (ctx : ctx) (file : file) : (file * ctx, 'a) result =
   let collect_names =
     List.map
       (function
-        | Definition (_, dfn) ->
-            InMod (file.name, Base dfn.name) :: []
-        | Type (_, def) ->
+        | Definition dfn -> InMod (file.name, Base dfn.name) :: []
+        | Type def ->
             InMod (file.name, Base def.name)
             :: get_constr_paths file def.name def.expr
-        | Trait (_, def) ->
+        | Trait def ->
             InMod (file.name, Base def.name)
             :: get_impl_paths file def.name def.functions
-        | Impl (_, impl) -> InMod (file.name, Base impl.name) :: [])
+        | Impl impl -> InMod (file.name, Base impl.name) :: [])
       file.toplevel
     |> List.flatten
     |> List.map (fun x -> (x, x))
@@ -352,24 +362,19 @@ let handle_file (ctx : ctx) (file : file) : (file * ctx, 'a) result =
     collect
     @@ List.map
          (function
-           | Definition (id, dfn) ->
+           | Definition dfn ->
                let+ def = handle_definition ctx dfn in
-               Definition (id, def)
-           | Type (id, def) ->
+               Definition def
+           | Type def ->
                let+ t = handle_tyexpr ctx def.expr in
                Type
-                 ( id,
-                   {
-                     def with
-                     expr = t;
-                     name = add_file' ctx def.name;
-                   } )
-           | Trait (id, trait) ->
+                 { def with expr = t; name = add_file' ctx def.name }
+           | Trait trait ->
                let+ t = handle_trait ctx trait in
-               Trait (id, t)
-           | Impl (id, impl) ->
+               Trait t
+           | Impl impl ->
                let+ t = handle_impl ctx impl in
-               Impl (id, t))
+               Impl t)
          file.toplevel
   in
   ({ file with toplevel = defs }, ctx)
@@ -412,4 +417,5 @@ let handle_files files =
       in
       let tmp = List.flatten @@ List.map errfmt e in
       let formatted = List.map (fun (a, b) -> format_error a b) tmp in
-      err' formatted
+      List.iter Log.error formatted;
+      err' "Module removal failed"

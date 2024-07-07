@@ -56,7 +56,6 @@ let rec collapse_tm (tm : tm) : tm =
           collapse pth,
           List.map (fun (a, b) -> (a, collapse_tm b)) flds )
   | Project (i, p, s) -> Project (i, collapse_tm p, s)
-  | Poison (_, _) -> tm
 
 let rec collapse_tyexpr (tyexpr : tyexpr) : tyexpr =
   match (tyexpr : tyexpr) with
@@ -69,64 +68,74 @@ let rec collapse_tyexpr (tyexpr : tyexpr) : tyexpr =
 
 let convert' (s : statement) : statement =
   match (s : statement) with
-  | Definition (id, { name; free_vars; constraints; args; ret; body })
+  | Definition { id; name; free_vars; constraints; args; ret; body }
     ->
       Definition
-        ( id,
-          {
-            name;
-            free_vars;
-            constraints = collapse_cons constraints;
-            args = List.map (fun (a, b) -> (a, collapse_ty b)) args;
-            ret = collapse_ty ret;
-            body = collapse_tm body;
-          } )
-  | Type (id, { name; args; expr }) ->
-      Type (id, { name; args; expr = collapse_tyexpr expr })
-  | Trait (i, { name; args; assoc_types; constraints; functions }) ->
+        {
+          id;
+          name;
+          free_vars;
+          constraints = collapse_cons constraints;
+          args = List.map (fun (a, b) -> (a, collapse_ty b)) args;
+          ret = collapse_ty ret;
+          body = collapse_tm body;
+        }
+  | Type { id; name; args; expr } ->
+      Type { id; name; args; expr = collapse_tyexpr expr }
+  | Trait { id; name; args; assoc_types; constraints; functions } ->
       Trait
-        ( i,
-          {
-            name;
-            args;
-            assoc_types;
-            constraints = collapse_cons constraints;
-            functions =
-              List.map
-                (fun ({ name; free_vars; constraints; args; ret } :
-                       definition_no_body) ->
-                  {
-                    name;
-                    free_vars;
-                    constraints = collapse_cons constraints;
-                    args =
-                      List.map (fun (a, b) -> (a, collapse_ty b)) args;
-                    ret = collapse_ty ret;
-                  })
-                functions;
-          } )
-  | Impl (i, { name; args; assoc_types; impls }) ->
+        {
+          id;
+          name;
+          args;
+          assoc_types;
+          constraints = collapse_cons constraints;
+          functions =
+            List.map
+              (fun ({ name; id; free_vars; constraints; args; ret } :
+                     definition_no_body) ->
+                {
+                  id;
+                  name;
+                  free_vars;
+                  constraints = collapse_cons constraints;
+                  args =
+                    List.map (fun (a, b) -> (a, collapse_ty b)) args;
+                  ret = collapse_ty ret;
+                })
+              functions;
+        }
+  | Impl { id; name; args; assoc_types; impls } ->
       Impl
-        ( i,
-          {
-            name;
-            args = List.map collapse_ty args;
-            assoc_types =
-              List.map (fun (a, b) -> (a, collapse_ty b)) assoc_types;
-            impls =
-              List.map
-                (fun { name; free_vars; constraints; args; ret; body } ->
-                  {
-                    name;
-                    free_vars;
-                    constraints = collapse_cons constraints;
-                    args =
-                      List.map (fun (a, b) -> (a, collapse_ty b)) args;
-                    ret = collapse_ty ret;
-                    body = collapse_tm body;
-                  })
-                impls;
-          } )
+        {
+          id;
+          name;
+          args = List.map (fun (a, b) -> (a, collapse_ty b)) args;
+          assoc_types =
+            List.map (fun (a, b) -> (a, collapse_ty b)) assoc_types;
+          impls =
+            List.map
+              (fun {
+                     id;
+                     name;
+                     free_vars;
+                     constraints;
+                     args;
+                     ret;
+                     body;
+                   } ->
+                {
+                  id;
+                  name;
+                  free_vars;
+                  constraints = collapse_cons constraints;
+                  args =
+                    List.map (fun (a, b) -> (a, collapse_ty b)) args;
+                  ret = collapse_ty ret;
+                  body = collapse_tm body;
+                })
+              impls;
+        }
 
 let convert (s : statement list) : statement list =
   List.map convert' s

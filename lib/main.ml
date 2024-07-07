@@ -11,40 +11,28 @@ let example_files =
       opens = [];
       toplevel =
         [
-          Type
-            ( noid,
-              {
-                name = "MyRecord";
-                args = [];
-                expr = TRecord [ ("foo", TyInt); ("bar", TyBool) ];
-              } );
           Definition
-            ( noid,
-              {
-                name = "RecordTest";
-                free_vars = [];
-                constraints = [];
-                args = [];
-                ret = Custom (Base "MyRecord");
-                body =
-                  Record
-                    ( noid,
-                      Base "MyRecord",
-                      [
-                        ("foo", Int (noid, "5"));
-                        ("bar", Bool (noid, true));
-                      ] );
-              } );
+            {
+              id = id' ();
+              name = "id";
+              constraints = [];
+              free_vars = [ "a" ];
+              args = [ ("x", Free "a") ];
+              ret = Free "a";
+              body = Var (id' (), "x");
+            };
           Definition
-            ( noid,
-              {
-                name = "ProjTest";
-                free_vars = [];
-                constraints = [];
-                args = [ ("x", Custom (Base "MyRecord")) ];
-                ret = TyInt;
-                body = Project (noid, Var (noid, "x"), "foo");
-              } );
+            {
+              id = id' ();
+              name = "integer";
+              constraints = [];
+              free_vars = [ "a"; "b" ];
+              args = [];
+              ret = Arrow (Free "b", Free "b");
+              body =
+                App
+                  (id' (), Var (id' (), "id"), [ Var (id' (), "id") ]);
+            };
         ];
     };
   ]
@@ -52,11 +40,22 @@ let example_files =
 let driver () = example_files |> Front.Driver.do_frontend
 
 let main () =
+  Common.Log.init_log ();
   Printexc.record_backtrace true;
-  driver () |> function
-  | Ok e ->
-      print_endline "ok!";
-      ok e
-  | Error e ->
-      print_endline "err :(";
-      err' e
+  ignore
+  @@ begin
+       match driver () with
+       | Ok e ->
+           print_endline "ok!";
+           ok e
+       | Error e ->
+           Common.Log.error "error";
+           print_endline "err :(";
+           err' e
+       | exception e ->
+           Common.Log.error "exception!";
+           print_endline "exception!";
+           err' "exn"
+     end;
+  Common.Log.print_log ();
+  Front.Tycheck.print_types ()
