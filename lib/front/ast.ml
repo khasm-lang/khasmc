@@ -87,7 +87,7 @@ and pp_ty (fmt : Format.formatter) (ty : ty) : unit =
   | Free s -> Format.fprintf fmt "'%s" s
   | Custom t -> Format.fprintf fmt "%a" pp_path t
   | Tuple t -> Format.fprintf fmt "(%a)" (pp_list fmt) t
-  | Arrow (a, b) -> Format.fprintf fmt "%a -> %a" pp_ty a pp_ty b
+  | Arrow (a, b) -> Format.fprintf fmt "(%a) -> %a" pp_ty a pp_ty b
   | TApp (p, l) ->
       Format.fprintf fmt "%a (%a)" pp_path p (pp_list fmt) l
   | TForall (s, t) ->
@@ -101,6 +101,11 @@ and pp_list fmt fmt x =
       pp_ty fmt x;
       Format.fprintf fmt ", ")
     x
+
+let print_ty ty =
+  pp_ty Format.std_formatter ty;
+  Format.print_newline ();
+  Format.print_flush ()
 
 (* also carries free vars *)
 type ty' = freevar list * ty [@@deriving show { with_path = false }]
@@ -150,8 +155,6 @@ type tm =
   | Record of id * path * (string * tm) list
   (* foo.bar *)
   | Project of id * tm * string
-  (* error *)
-  | Poison of id * exn
 [@@deriving show { with_path = false }]
 
 type definition_no_body = {
@@ -160,6 +163,7 @@ type definition_no_body = {
   constraints : constraint' list;
   args : (string * ty) list;
   ret : ty;
+  id : Common.Info.id;
 }
 [@@deriving show { with_path = false }]
 
@@ -170,18 +174,19 @@ type definition = {
   args : (string * ty) list;
   ret : ty;
   body : tm;
+  id : Common.Info.id;
 }
 [@@deriving show { with_path = false }]
 
 let to_definition_no_body (d : definition) : definition_no_body =
   match d with
-  | { name; free_vars; constraints; args; ret; body = _body } ->
-      { name; free_vars; constraints; args; ret }
+  | { name; free_vars; constraints; id; args; ret; body = _body } ->
+      { name; free_vars; constraints; id; args; ret }
 
 let to_definition (b : tm) (d : definition_no_body) : definition =
   match d with
-  | { name; free_vars; constraints; args; ret } ->
-      { body = b; name; free_vars; constraints; args; ret }
+  | { name; free_vars; constraints; id; args; ret } ->
+      { body = b; name; free_vars; id; constraints; args; ret }
 
 type trait = {
   name : string;
@@ -192,14 +197,16 @@ type trait = {
   constraints : constraint' list;
   (* member functions *)
   functions : definition_no_body list;
+  id : Common.Info.id;
 }
 [@@deriving show { with_path = false }]
 
 type impl = {
   name : string;
-  args : ty list;
+  args : (string * ty) list;
   assoc_types : (string * ty) list;
   impls : definition list;
+  id : Common.Info.id;
 }
 [@@deriving show { with_path = false }]
 
@@ -207,16 +214,17 @@ type typ = {
   name : string;
   args : freevar list;
   expr : tyexpr;
+  id : Common.Info.id;
 }
 [@@deriving show { with_path = false }]
 
 type statement =
   (* name, freevars, constraints, args, return type, term *)
-  | Definition of id * definition
+  | Definition of definition
   (* name, args, body *)
-  | Type of id * typ
-  | Trait of id * trait
-  | Impl of id * impl
+  | Type of typ
+  | Trait of trait
+  | Impl of impl
 [@@deriving show { with_path = false }]
 
 type file = {
@@ -259,6 +267,5 @@ let get_tm_id (t : tm) : id =
   | ITE (i, _, _, _)
   | Annot (i, _, _)
   | Record (i, _, _)
-  | Project (i, _, _)
-  | Poison (i, _) ->
+  | Project (i, _, _) ->
       i

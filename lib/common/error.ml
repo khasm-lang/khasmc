@@ -40,13 +40,3 @@ let option_app (f : 'a -> ('b, 'c) result) (x : 'a option) :
   | None -> ok None
   | Some n -> (
       match f n with Ok s -> ok @@ Some s | Error e -> Error e)
-
-type error_location = Frontend'
-[@@deriving show { with_path = false }]
-
-let compiler_error loc str =
-  print_string
-    ("Compiler error in " ^ show_error_location loc ^ " :\n");
-  print_string str;
-  print_string "\n\n Aborting compilation.\n";
-  exit 1

@@ -3,6 +3,7 @@ open Common.Info
 open Common.Error
 module BUR = BatUref
 open Unify
+open Common
 
 type ('a, 'b) either = ('a, 'b) Either.t
 type info += Type
@@ -13,6 +14,12 @@ type data += IsTrait'
 let is_trait id = set_property id IsTrait IsTrait'
 let set_ty id ty = set_property id Type (Type' ty)
 let get_ty id = get_property id Type
+
+let print_types () =
+  print_related_entries Type (fun id (Type' t) ->
+      print_string (show_id id);
+      print_string " : ";
+      print_ty (force t))
 
 let rec is_rank_one' (t : ty) : bool =
   match force t with
@@ -98,17 +105,40 @@ let add_args ctx id args =
       List.map (fun (a, b) -> (a, id, ([], b))) args @ ctx.locals;
   }
 
+let rec find_frees (ty : ty) =
+  match force ty with
+  | Free s ->
+      [ (s, "fresh_free + " ^ string_of_int @@ Fresh.fresh ()) ]
+  | Tuple t -> List.flatten @@ List.map find_frees t
+  | Arrow (a, b) -> find_frees a @ find_frees b
+  | TApp (_, b) -> List.flatten @@ List.map find_frees b
+  | TForall (_, s) -> find_frees s
+  | _ -> []
+
+let rec rename_frees' map ty =
+  match force ty with
+  | Free s -> Free (List.assoc s map)
+  | Tuple t -> Tuple (List.map (rename_frees' map) t)
+  | Arrow (a, b) -> Arrow (rename_frees' map a, rename_frees' map b)
+  | TApp (t, b) -> TApp (t, List.map (rename_frees' map) b)
+  | TForall (s, b) -> TForall (s, rename_frees' map b)
+  | _ -> ty
+
+let rename_frees ty =
+  let map = find_frees ty in
+  rename_frees' map ty
+
 let find_ty (ctx : ctx) (p : string) : (ty, 'a) result =
   match List.filter (fun (nm, _, _) -> nm = p) ctx.locals with
   | [ (_, _, ty) ] -> ok (snd ty)
   | _ -> (
       match List.filter (fun (nm, _, _) -> nm = p) ctx.bound with
-      | [ (_, _, ty) ] -> ok (snd ty)
+      | [ (_, _, ty) ] -> ok (rename_frees (snd ty))
       | _ -> (
           match
             List.filter (fun (nm, _, _, _) -> nm = p) ctx.constrs
           with
-          | [ (_, _, _, ty) ] -> ok (snd ty)
+          | [ (_, _, _, ty) ] -> ok (rename_frees @@ snd ty)
           | _ -> err @@ `Impossible_ctx (ctx, "var not found: " ^ p)))
 
 (* TODO: check *)
@@ -155,12 +185,12 @@ let process_trait (ctx : ctx) (id : id)
 
 let collect_statement (ctx : ctx) (state : statement) : ctx =
   match state with
-  | Definition (id, def) ->
+  | Definition def ->
       let ty = mk_ty (List.map snd def.args) def.ret in
-      add_def ctx def.name id (def.free_vars, ty)
-  | Type (id, typ) -> add_typ ctx typ
-  | Trait (id, trait) -> process_trait ctx id trait
-  | Impl (_, _) -> ctx (* we ignore impls for the moment *)
+      add_def ctx def.name def.id (def.free_vars, ty)
+  | Type typ -> add_typ ctx typ
+  | Trait trait -> process_trait ctx trait.id trait
+  | Impl _ -> ctx (* we ignore impls for the moment *)
 
 (*
    goal: to take a pattern, a context, and a type, and figure out
@@ -193,6 +223,7 @@ let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
   begin
     match (tm, ty) with
     | Let (id, pat, head, body), t ->
+        (* TODO: let generalize ? *)
         let* head't = infer_tm ctx head in
         let* vars = deduce_pat_type ctx pat head't in
         let ctx' =
@@ -220,7 +251,7 @@ let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
           begin
             match tymb with
             | None -> ok ()
-            | Some t -> unify t a |$> fun _ -> ()
+            | Some t -> unify ctx.frees t a |$> fun _ -> ()
           end
         in
         let* tys = deduce_pat_type ctx pat a in
@@ -233,7 +264,7 @@ let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
     | Lam _, _ -> err @@ `Lam_Not_Arrow (tm, ty)
     | Annot (_, tm, ty), t ->
         let+ _ = check_tm ctx tm ty
-        and+ _ = unify ty t in
+        and+ _ = unify ctx.frees ty t in
         ()
     | Record (_, nm, fields), Custom t ->
         let* typ, field't = find_typ_by_record_nm ctx (to_str nm) in
@@ -266,29 +297,14 @@ let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
                 |> collect
                 |$> fun _ -> ()
           end
-    | Project (_, tm, field), t ->
-        let* tm't = infer_tm ctx tm in
-        begin
-          match tm't with
-          | Custom r ->
-              let* typ, fields =
-                find_typ_by_record_nm ctx (to_str r)
-              in
-              begin
-                match List.assoc_opt field fields with
-                | Some n -> unify t n
-                | None -> err @@ `Field_Not_Found (ctx, field)
-              end
-          | _ -> err @@ `Project_Not_Record (ctx, tm't)
-        end
-    | Poison (_, _), t -> failwith "poison"
     | tm, ty ->
         let* tm't = infer_tm ctx tm in
-        unify tm't ty
+        unify ctx.frees tm't ty
   end
   |$> fun () -> set_ty (get_tm_id tm) ty
 
 and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
+  let open Common in
   begin
     match tm with
     | App (id, f, x) ->
@@ -296,20 +312,21 @@ and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
         let rec go ty xs =
           match (ty, xs) with
           | Arrow (a, b), x :: xs ->
-              let* _ = unify a x in
+              let* _ = unify ctx.frees a x in
               go b xs
           | t, [] -> ok t
           | _ -> err @@ `App_Mismatch (id, f, x)
         in
         let* f't = infer_tm ctx f in
         go f't x't
-    | Var (_, t) -> find_ty ctx t
-    | Bound (_, t) -> find_ty ctx (to_str t)
+    | Var (_, t) -> find_ty ctx t |$> inst_frees ctx.frees
+    | Bound (_, t) -> find_ty ctx (to_str t) |$> inst_frees ctx.frees
     | Bool _ -> ok TyBool
     | String _ -> ok TyString
     | Int _ -> ok TyInt
     | Char _ -> ok TyChar
     | Let (id, pat, head, body) ->
+        (* TODO: let generalization ? *)
         let* h't = infer_tm ctx head in
         let* adds = deduce_pat_type ctx pat h't in
         let ctx' =
@@ -329,10 +346,47 @@ and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
               let+ _ = check_tm ctx t e't in
               e't
         end
+    | Project (_, tm, field) ->
+        let* tm't = infer_tm ctx tm in
+        begin
+          match tm't with
+          | Custom r ->
+              let* typ, fields =
+                find_typ_by_record_nm ctx (to_str r)
+              in
+              begin
+                match List.assoc_opt field fields with
+                | Some n -> ok n
+                | None -> err @@ `Field_Not_Found (ctx, field)
+              end
+          | _ -> err @@ `Project_Not_Record (ctx, tm't)
+        end
     | Annot (id, tm, ty) ->
         let+ _ = check_tm ctx tm ty in
         ty
-        (* TODO: add a lot more cases here *)
+    (* TODO: add a lot more cases here *)
+    | Match (id, tm, exprs) ->
+        let* tm't = infer_tm ctx tm in
+        let rec go (pat, body) =
+          let* vars = deduce_pat_type ctx pat tm't in
+          let ctx' =
+            List.map (fun (nm, ty) -> (nm, id, ty)) vars
+            |> add_locals ctx
+          in
+          infer_tm ctx' body
+        in
+        List.map go exprs |> collect |=> fun tms ->
+        let rec go acc = function
+          | [] -> ok acc
+          | x :: xs ->
+              let* rest = go acc xs in
+              unify ctx.frees x rest |$> fun () -> x
+        in
+        begin
+          match tms with
+          | [] -> err @@ `Can't_Infer_Empty_Match (ctx, tm)
+          | x :: xs -> go x xs
+        end
     | _ ->
         print_endline (show_ctx ctx);
         print_endline (show_tm tm);
@@ -345,74 +399,77 @@ and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
 let typecheck_statement (ctx : ctx) (s : statement) :
     (statement, 'a) result =
   match s with
-  | Definition (id, def) ->
+  | Definition def ->
       let ctx' = add_frees ctx def.free_vars in
-      let ctx' = add_args ctx' id def.args in
+      let ctx' = add_args ctx' def.id def.args in
       (* TODO: check all toplevel types are valid *)
       let+ _ = check_tm ctx' def.body def.ret in
-      Definition (id, def)
-  | Impl (id, impl) -> failwith "todo: typecheck impl"
+      Definition def
+  | Impl impl -> failwith "todo: typecheck impl ?"
   | _ -> ok s
 
 let typecheck (files : statement list) : (statement list, 'a) result =
+  let open Common in
   let ctx = List.fold_left collect_statement (empty ()) files in
   match collect @@ List.map (typecheck_statement ctx) files with
   | Ok s -> ok s
   | Error e ->
-      List.map
+      List.iter
         (fun e ->
           match e with
-          | `App_Mismatch (id, tm, tms) -> failwith "appmismatch"
+          | `App_Mismatch (id, tm, tms) -> Log.error "appmismatch"
           | `Bad_Pattern (pat, ty) ->
-              print_endline (show_pat pat);
-              print_endline (show_ty ty);
-              failwith "bad pat"
+              Log.trace (show_pat pat);
+              Log.trace (show_ty ty);
+              Log.error "bad pat"
           | `Bad_Unify ((t1, t1'), (t2, t2')) ->
-              print_endline (show_ty t1');
-              print_endline (show_ty t2');
-              print_endline "as part of:";
-              print_endline (show_ty t1);
-              print_endline (show_ty t2);
-              failwith "bad unify"
+              Log.trace "bad unify";
+              Log.trace (show_ty t1');
+              Log.trace (show_ty t2');
+              Log.trace "as part of:";
+              Log.trace (show_ty t1);
+              Log.trace (show_ty t2);
+              Log.error "bad unify oop"
           | `Constr_Not_In_Type (pat, ty) ->
-              failwith "constr not in typ"
+              Log.error "constr not in typ"
           | `Impossible i ->
-              print_endline i;
-              failwith "impossible"
-          | `Lam_Not_Arrow (tm, ty) -> failwith "lam not arrow"
+              Log.trace i;
+              Log.error "impossible"
+          | `Lam_Not_Arrow (tm, ty) -> Log.error "lam not arrow"
           | `Mismatch_Pattern_Args (pat, ty) ->
-              failwith "mismatch pat arg"
+              Log.error "mismatch pat arg"
           | `Mismatched_Tuple_Length (pat, ty) ->
-              failwith "tuple len mismatch"
+              Log.error "tuple len mismatch"
           | `Impossible_ctx (ctx, i) ->
-              print_endline (show_ctx ctx);
-              print_endline i;
-              failwith "impossible"
+              Log.trace (show_ctx ctx);
+              Log.trace i;
+              Log.error "impossible"
           | `Mismatched_Field_Ty (ctx, s, e) ->
-              print_endline (show_ctx ctx);
-              print_endline s;
-              print_endline e;
-              failwith "mismatched field type"
+              Log.trace (show_ctx ctx);
+              Log.trace s;
+              Log.trace e;
+              Log.error "mismatched field type"
           | `Mismatched_Record (ctx, fields, tys) ->
-              print_endline (show_ctx ctx);
+              Log.trace (show_ctx ctx);
               List.iter
-                (fun (nm, _) -> print_endline ("field: " ^ nm))
+                (fun (nm, _) -> Log.trace ("field: " ^ nm))
                 fields;
               List.iter
                 (fun (nm, ty) ->
-                  print_endline ("field: " ^ nm ^ " : " ^ show_ty ty))
+                  Log.trace ("field: " ^ nm ^ " : " ^ show_ty ty))
                 tys;
-              failwith "mismatched record"
+              Log.error "mismatched record"
           | `Record_Type_Mismatch (ctx, exp, got) ->
-              print_endline (show_ctx ctx);
-              print_endline (to_str exp);
-              print_endline (to_str got);
-              failwith "record type mismatch"
+              Log.trace (show_ctx ctx);
+              Log.trace (to_str exp);
+              Log.trace (to_str got);
+              Log.error "record type mismatch"
           | `Type_Not_Record (ctx, s) ->
-              print_endline (show_ctx ctx);
-              print_endline s;
-              failwith "type not record"
-          | `Project_Not_Record e -> failwith "e"
-          | `Field_Not_Found e -> failwith "fnf")
-        e
-      |> collect
+              Log.trace (show_ctx ctx);
+              Log.trace s;
+              Log.error "type not record"
+          | `Project_Not_Record e -> Log.error "proj not record"
+          | `Field_Not_Found e -> Log.error "field not found"
+          | `Can't_Infer_Empty_Match e -> Log.error "empty match")
+        e;
+      err' "Typechecking failed"
