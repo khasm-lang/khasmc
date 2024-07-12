@@ -16,7 +16,7 @@ let set_ty id ty = set_property id Type (Type' ty)
 let get_ty id = get_property id Type
 
 let print_types () =
-  print_related_entries Type (fun id (Type' t) ->
+  print_related_entries Type (fun [@warning "-8"] id (Type' t) ->
       print_string (show_id id);
       print_string " : ";
       print_ty (force t))
@@ -60,7 +60,13 @@ type ctx = {
 [@@deriving show { with_path = false }]
 
 let empty () =
-  { bound = []; types = []; frees = []; locals = []; constrs = [] }
+  {
+    bound = [ ("MAGIC", id' (), ([ "a" ], Free "a")) ];
+    types = [];
+    frees = [];
+    locals = [];
+    constrs = [];
+  }
 
 let add_def ctx nm id ty =
   { ctx with bound = (nm, id, ty) :: ctx.bound }
@@ -107,8 +113,7 @@ let add_args ctx id args =
 
 let rec find_frees (ty : ty) =
   match force ty with
-  | Free s ->
-      [ (s, "fresh_free + " ^ string_of_int @@ Fresh.fresh ()) ]
+  | Free s -> [ (s, "fresh_free_" ^ string_of_int @@ Fresh.fresh ()) ]
   | Tuple t -> List.flatten @@ List.map find_frees t
   | Arrow (a, b) -> find_frees a @ find_frees b
   | TApp (_, b) -> List.flatten @@ List.map find_frees b
@@ -133,6 +138,8 @@ let find_ty (ctx : ctx) (p : string) : (ty, 'a) result =
   | [ (_, _, ty) ] -> ok (snd ty)
   | _ -> (
       match List.filter (fun (nm, _, _) -> nm = p) ctx.bound with
+      (* TODO: THIS IS VERY IMPORTANT !!! *)
+      (* HAVING CLASHING FREE VARIABLES IS NOT GOOD *)
       | [ (_, _, ty) ] -> ok (rename_frees (snd ty))
       | _ -> (
           match
@@ -233,17 +240,18 @@ let rec check_tm (ctx : ctx) (tm : tm) (ty : ty) : (unit, 'a) result =
         check_tm ctx' body t
     | Match (id, head, body), t ->
         let* head't = infer_tm ctx head in
-        let rec go pat =
-          match pat with
-          | [] -> ok ()
-          | (pat, body) :: xs ->
-              let* _ = go xs in
+        (* TODO: check *)
+        let go pat =
+          List.fold_right
+            (fun (pat, body) acc ->
+              let* _ = acc in
               let* vars = deduce_pat_type ctx pat head't in
               let ctx' =
                 List.map (fun (nm, ty) -> (nm, id, ty)) vars
                 |> add_locals ctx
               in
-              check_tm ctx' body t
+              check_tm ctx' body t)
+            pat (ok ())
         in
         go body
     | Lam (_, pat, tymb, body), Arrow (a, b) ->
@@ -318,9 +326,10 @@ and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
           | _ -> err @@ `App_Mismatch (id, f, x)
         in
         let* f't = infer_tm ctx f in
-        go f't x't
-    | Var (_, t) -> find_ty ctx t |$> inst_frees ctx.frees
-    | Bound (_, t) -> find_ty ctx (to_str t) |$> inst_frees ctx.frees
+        let f't' = inst_frees ctx.frees f't in
+        go f't' x't
+    | Var (_, t) -> find_ty ctx t
+    | Bound (_, t) -> find_ty ctx (to_str t)
     | Bool _ -> ok TyBool
     | String _ -> ok TyString
     | Int _ -> ok TyInt
@@ -396,8 +405,8 @@ and infer_tm (ctx : ctx) (tm : tm) : (ty, 'a) result =
   set_ty (get_tm_id tm) ty;
   ty
 
-let typecheck_statement (ctx : ctx) (s : statement) :
-    (statement, 'a) result =
+let typecheck_statement (traits : trait list) (ctx : ctx)
+    (s : statement) : (statement, 'a) result =
   match s with
   | Definition def ->
       let ctx' = add_frees ctx def.free_vars in
@@ -405,13 +414,63 @@ let typecheck_statement (ctx : ctx) (s : statement) :
       (* TODO: check all toplevel types are valid *)
       let+ _ = check_tm ctx' def.body def.ret in
       Definition def
-  | Impl impl -> failwith "todo: typecheck impl ?"
+  | Impl impl ->
+      let rec subst_free (ty : ty) : ty =
+        match force (ty : ty) with
+        | Free s -> begin
+            match List.assoc_opt s impl.args with
+            | Some n -> n
+            | None -> Free s
+          end
+        | Tuple t -> Tuple (List.map subst_free t)
+        | Arrow (a, b) -> Arrow (subst_free a, subst_free b)
+        | TApp (a, b) -> TApp (a, List.map subst_free b)
+        | TForall (a, b) -> TForall (a, subst_free b)
+        | _ -> ty
+      in
+      (* TODO: this is not correct in the general case *)
+      let related_trait =
+        List.find (fun (t : trait) -> t.name = impl.name) traits
+      in
+      let funs =
+        List.sort
+          (fun (t1 : definition) t2 -> String.compare t1.name t2.name)
+          impl.impls
+      in
+      let tfuns =
+        List.sort
+          (fun (t1 : definition_no_body) t2 ->
+            String.compare t1.name t2.name)
+          related_trait.functions
+      in
+      List.map2
+        (fun (fn : definition) (tfn : definition_no_body) ->
+          let args =
+            List.map2
+              (fun (nm, _) (_, ty) -> (nm, subst_free ty))
+              fn.args tfn.args
+          in
+          let ret = subst_free tfn.ret in
+          let ctx' = add_frees ctx tfn.free_vars in
+          let ctx' = add_args ctx' fn.id args in
+          check_tm ctx' fn.body ret)
+        funs tfuns
+      |> collect
+      |$> fun _ -> Impl impl
   | _ -> ok s
 
 let typecheck (files : statement list) : (statement list, 'a) result =
   let open Common in
   let ctx = List.fold_left collect_statement (empty ()) files in
-  match collect @@ List.map (typecheck_statement ctx) files with
+  let traits =
+    List.filter (function Trait _ -> true | _ -> false) files
+    |> List.map (function
+         | Trait t -> t
+         | _ -> Log.fatal "shouldn't be non traits")
+  in
+  match
+    collect @@ List.map (typecheck_statement traits ctx) files
+  with
   | Ok s -> ok s
   | Error e ->
       List.iter
