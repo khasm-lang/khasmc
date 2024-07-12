@@ -11,27 +11,43 @@ let example_files =
       opens = [];
       toplevel =
         [
-          Definition
+          Trait
             {
-              id = id' ();
-              name = "id";
+              name = "Show";
+              args = [ "a" ];
+              assoc_types = [];
               constraints = [];
-              free_vars = [ "a" ];
-              args = [ ("x", Free "a") ];
-              ret = Free "a";
-              body = Var (id' (), "x");
+              functions =
+                [
+                  {
+                    name = "show";
+                    free_vars = [];
+                    constraints = [];
+                    args = [ ("dummy", Free "a") ];
+                    ret = TyString;
+                    id = id' ();
+                  };
+                ];
+              id = id' ();
             };
-          Definition
+          Impl
             {
+              name = "Show";
+              args = [ ("a", TyInt) ];
+              assoc_types = [];
+              impls =
+                [
+                  {
+                    name = "show";
+                    free_vars = [];
+                    constraints = [];
+                    args = [ ("dummy", TyInt) ];
+                    ret = TyInt;
+                    body = Var (id' (), "MAGIC");
+                    id = id' ();
+                  };
+                ];
               id = id' ();
-              name = "integer";
-              constraints = [];
-              free_vars = [ "a"; "b" ];
-              args = [];
-              ret = Arrow (Free "b", Free "b");
-              body =
-                App
-                  (id' (), Var (id' (), "id"), [ Var (id' (), "id") ]);
             };
         ];
     };
@@ -54,7 +70,8 @@ let main () =
            err' e
        | exception e ->
            Common.Log.error "exception!";
-           print_endline "exception!";
+           print_endline (Printexc.to_string e);
+           Printexc.print_backtrace stdout;
            err' "exn"
      end;
   Common.Log.print_log ();

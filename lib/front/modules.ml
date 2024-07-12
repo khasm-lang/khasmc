@@ -12,6 +12,14 @@ type ctx = {
 }
 [@@deriving show { with_path = false }]
 
+let empty_ctx () =
+  {
+    definitions = [ (Base "MAGIC", Base "MAGIC") ];
+    included = [];
+    open' = [];
+    current = "";
+  }
+
 let debug f p =
   print_string "\n------ DEBUG ------\n";
   print_string (f p);
@@ -286,12 +294,17 @@ let rec handle_trait (ctx : ctx) (trait : trait) : (trait, 'a) result
              dfn with
              name = to_str (InMod (trait.name, Base dfn.name));
            })
-    |> List.map (to_definition (Var (noid, "%.%BAD BAD BAD%.%")))
+    |> List.map (to_definition (Var (noid, "MAGIC")))
     |> List.map (handle_definition ctx)
     |> collect
     |$> List.map to_definition_no_body
   in
-  { trait with name = trait.name; constraints; functions }
+  {
+    trait with
+    name = add_file' ctx trait.name;
+    constraints;
+    functions;
+  }
 
 let rec handle_impl (ctx : ctx) (impl : impl) : (impl, 'a) result =
   let+ args =
@@ -383,9 +396,7 @@ let handle_files files =
   (* currently handles them in given order
      TODO: implement some sort of proper solver or something
   *)
-  let ctx =
-    { definitions = []; included = []; open' = []; current = "" }
-  in
+  let ctx = empty_ctx () in
   let rec go files ctx =
     match files with
     | [] -> ok []

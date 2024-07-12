@@ -98,5 +98,11 @@ let unify exe (a : ty) (b : ty) : (unit, 'a) result =
   | s -> ok ()
   | exception BadUnify (q, w) -> err @@ `Bad_Unify ((a, q), (b, w))
 
+let unify_no_inst (a : ty) (b : ty) : (unit, 'a) result =
+  let cont a b = raise (BadUnify (a, b)) in
+  match unify' cont a b with
+  | s -> ok ()
+  | exception BadUnify (q, w) -> err @@ `Bad_Unify ((a, q), (b, w))
+
 let unify_b exe a b =
   match unify exe a b with Ok _ -> true | Error _ -> false

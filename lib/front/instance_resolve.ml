@@ -72,56 +72,6 @@ let solve ctx id fnname ty trait =
         Log.trace (Ast.show_impl s);
         set_property id Traitfn_inst (Traitfn_inst' (Some s.id))
 
-let test () =
-  let open Ast in
-  let show =
-    {
-      name = "Show";
-      args = [ "a" ];
-      assoc_types = [];
-      constraints = [];
-      functions =
-        [
-          {
-            name = "show";
-            free_vars = [];
-            constraints = [];
-            args = [ ("dummy", Free "a") ];
-            ret = TyString;
-            id = id' ();
-          };
-        ];
-      id = id' ();
-    }
-  in
-  let ctx =
-    {
-      trait_fns = [ ("show", show) ];
-      impls =
-        [
-          {
-            name = "Show";
-            args = [ ("a", TyInt) ];
-            assoc_types = [];
-            impls =
-              [
-                {
-                  name = "show";
-                  free_vars = [];
-                  constraints = [];
-                  args = [ ("dummy", TyInt) ];
-                  ret = TyString;
-                  body = Var (noid, "DUMMY");
-                  id = id' ();
-                };
-              ];
-            id = id' ();
-          };
-        ];
-    }
-  in
-  solve ctx (id' ()) "show" (Arrow (TyInt, TyString)) show
-
 (* trait fn names & impls *)
 let gather_needed_info (stmts : statement list) : ctx =
   List.fold_left
