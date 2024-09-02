@@ -1,0 +1,2 @@
+open Result
+include Either
