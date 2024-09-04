@@ -1,8 +1,11 @@
 open Share.Uuid
+open Share.Maybe
 
 (* ideally these would be newtypes, but ocaml doesn't have those *)
-type resolved = R of int
+type resolved = R of int [@@deriving show { with_path = false }]
+
 type unresolved = U of string
+[@@deriving show { with_path = false }]
 
 (* the long and short here is that we index
    stuff by identifier type, for ease of figuruing out
@@ -22,7 +25,6 @@ and 'a typ =
   | TyBool
   | TyTuple of 'a typ list
   | TyArrow of 'a typ * 'a typ
-  | TyRecord of 'a field list
   | TyPoly of 'a
   | TyCustom of 'a
   | TyFun of 'a * 'a typ list
@@ -37,8 +39,6 @@ let rec force (t : 'a typ) : 'a typ =
   match (t : 'a typ) with
   | TyTuple t -> TyTuple (List.map force t)
   | TyArrow (a, b) -> TyArrow (force a, force b)
-  | TyRecord r ->
-      TyRecord (List.map (fun (Field (a, b)) -> Field (a, force b)) r)
   | TyFun (a, b) -> TyFun (a, List.map force b)
   | TyRef a -> TyRef (force a)
   | TyMeta m -> begin
@@ -79,12 +79,40 @@ type 'a expr =
   | Project of data * 'a expr * int
   | Ref of data * 'a expr
   | Modify of data * 'a * 'a expr
+  | Record of data * ('a * 'a expr) list
 [@@deriving show { with_path = false }]
+
+let get_uuid (e : 'a expr) : uuid =
+  match e with
+  | Var (i, _) -> i.uuid
+  | Int (i, _) -> i.uuid
+  | String (i, _) -> i.uuid
+  | Char (i, _) -> i.uuid
+  | Float (i, _) -> i.uuid
+  | Bool (i, _) -> i.uuid
+  | LetIn (i, _, _, _, _) -> i.uuid
+  | Seq (i, _, _) -> i.uuid
+  | Funccall (i, _, _) -> i.uuid
+  | Binop (i, _) -> i.uuid
+  | Lambda (i, _, _, _) -> i.uuid
+  | Tuple (i, _) -> i.uuid
+  | Annot (i, _, _, _, _) -> i.uuid
+  | Match (i, _, _) -> i.uuid
+  | Project (i, _, _) -> i.uuid
+  | Ref (i, _) -> i.uuid
+  | Modify (i, _, _) -> i.uuid
+  | Record (i, _) -> i.uuid
 
 type 'a typdef_case =
   | Record of 'a field list
   | Sum of ('a * 'a typ list) list
 [@@deriving show { with_path = false }]
+
+let rec typ_list_to_typ (t : 'a typ list) : 'a typ =
+  match t with
+  | [] -> failwith "empty typ"
+  | [ x ] -> x
+  | x :: xs -> TyArrow (x, typ_list_to_typ xs)
 
 type 'a typdef = {
   data : data;
@@ -98,7 +126,7 @@ type 'a trait_bound =
   | Bound of 'a * 'a typ list (* trait name, "args" *)
 [@@deriving show { with_path = false }]
 
-type 'a definition = {
+type ('a, 'p) definition = {
   data : data;
   name : 'a;
   typeargs : 'a list;
@@ -106,9 +134,12 @@ type 'a definition = {
   bounds : 'a trait_bound list;
   return : 'a typ;
   (* essentially for cross-compatibility with other structures *)
-  body : 'a expr option;
+  body : ('a expr, 'p) maybe;
 }
 [@@deriving show { with_path = false }]
+
+let forget_body : ('a, yes) definition -> ('a, no) definition =
+ fun x -> { x with body = Nothing }
 
 type 'a trait = {
   data : data;
@@ -116,8 +147,7 @@ type 'a trait = {
   args : 'a list;
   assoc : 'a list;
   requirements : 'a trait_bound list;
-  (* PREREQ: should not contain a body *)
-  functions : 'a definition list;
+  functions : ('a, no) definition list;
 }
 [@@deriving show { with_path = false }]
 
@@ -126,12 +156,11 @@ type 'a impl = {
   parent : uuid option;
   args : ('a * 'a typ) list;
   assocs : ('a * 'a typ) list;
-  (* PREREQ: should contain a body *)
-  impls : 'a definition list;
+  impls : ('a, yes) definition list;
 }
 [@@deriving show { with_path = false }]
 
-let definition_type (d : 'a definition) : 'a typ =
+let definition_type (type a) (d : ('a, a) definition) : 'a typ =
   List.fold_right
     (fun (_, ty) acc -> TyArrow (ty, acc))
     d.args d.return
@@ -140,5 +169,5 @@ type 'a toplevel =
   | Typdef of 'a typdef
   | Trait of 'a trait
   | Impl of 'a impl
-  | Definition of 'a definition
+  | Definition of ('a, yes) definition
 [@@deriving show { with_path = false }]
