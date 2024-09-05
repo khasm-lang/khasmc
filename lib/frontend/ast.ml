@@ -26,8 +26,7 @@ and 'a typ =
   | TyTuple of 'a typ list
   | TyArrow of 'a typ * 'a typ
   | TyPoly of 'a
-  | TyCustom of 'a
-  | TyFun of 'a * 'a typ list
+  | TyCustom of 'a * 'a typ list
   | TyRef of 'a typ (* mutability shock horror *)
   | TyMeta of 'a meta
 [@@deriving show { with_path = false }]
@@ -39,11 +38,23 @@ let rec force (t : 'a typ) : 'a typ =
   match (t : 'a typ) with
   | TyTuple t -> TyTuple (List.map force t)
   | TyArrow (a, b) -> TyArrow (force a, force b)
-  | TyFun (a, b) -> TyFun (a, List.map force b)
+  | TyCustom (a, b) -> TyCustom (a, List.map force b)
   | TyRef a -> TyRef (force a)
   | TyMeta m -> begin
       match m with Unresolved -> t | Resolved t -> force t
     end
+  | _ -> t
+
+let rec instantiate (map : ('a * 'a typ) list) (t : 'a typ) : 'a typ =
+  let f = instantiate map in
+  match force (t : 'a typ) with
+  | TyTuple t -> TyTuple (List.map f t)
+  | TyArrow (a, b) -> TyArrow (f a, f b)
+  | TyPoly x -> begin
+      match List.assoc_opt x map with Some n -> n | None -> TyPoly x
+    end
+  | TyCustom (x, t) -> TyCustom (x, List.map f t)
+  | TyRef t -> TyRef (f t)
   | _ -> t
 
 type binop = Binop of string [@@deriving show { with_path = false }]
@@ -74,12 +85,12 @@ type 'a expr =
   | Binop of data * binop
   | Lambda of data * 'a * 'a typ option * 'a expr
   | Tuple of data * 'a expr list
-  | Annot of data * 'a expr * 'a typ * 'a typ * 'a typ
+  | Annot of data * 'a expr * 'a typ
   | Match of data * 'a expr * ('a case * 'a expr) list
   | Project of data * 'a expr * int
   | Ref of data * 'a expr
   | Modify of data * 'a * 'a expr
-  | Record of data * ('a * 'a expr) list
+  | Record of data * 'a * ('a * 'a expr) list
 [@@deriving show { with_path = false }]
 
 let get_uuid (e : 'a expr) : uuid =
@@ -96,12 +107,12 @@ let get_uuid (e : 'a expr) : uuid =
   | Binop (i, _) -> i.uuid
   | Lambda (i, _, _, _) -> i.uuid
   | Tuple (i, _) -> i.uuid
-  | Annot (i, _, _, _, _) -> i.uuid
+  | Annot (i, _, _) -> i.uuid
   | Match (i, _, _) -> i.uuid
   | Project (i, _, _) -> i.uuid
   | Ref (i, _) -> i.uuid
   | Modify (i, _, _) -> i.uuid
-  | Record (i, _) -> i.uuid
+  | Record (i, _, _) -> i.uuid
 
 type 'a typdef_case =
   | Record of 'a field list
