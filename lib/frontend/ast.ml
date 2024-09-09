@@ -4,6 +4,12 @@ open Share.Maybe
 (* ideally these would be newtypes, but ocaml doesn't have those *)
 type resolved = R of int [@@deriving show { with_path = false }]
 
+let fresh_resolved =
+  let i = ref 0 in
+  fun () ->
+    decr i;
+    !i
+
 type unresolved = U of string
 [@@deriving show { with_path = false }]
 
@@ -28,7 +34,7 @@ and 'a typ =
   | TyPoly of 'a
   | TyCustom of 'a * 'a typ list
   | TyRef of 'a typ (* mutability shock horror *)
-  | TyMeta of 'a meta
+  | TyMeta of 'a meta ref
 [@@deriving show { with_path = false }]
 
 and 'a field = Field of 'a * 'a typ
@@ -41,8 +47,23 @@ let rec force (t : 'a typ) : 'a typ =
   | TyCustom (a, b) -> TyCustom (a, List.map force b)
   | TyRef a -> TyRef (force a)
   | TyMeta m -> begin
-      match m with Unresolved -> t | Resolved t -> force t
+      match !m with Unresolved -> t | Resolved t -> force t
     end
+  | _ -> t
+
+let rec to_metas (polys : 'a list) (t : 'a typ) : 'a typ =
+  let f = to_metas polys in
+  match force (t : 'a typ) with
+  | TyTuple t -> TyTuple (List.map f t)
+  | TyArrow (a, b) -> TyArrow (f a, f b)
+  | TyPoly x -> begin
+      if not @@ List.mem x polys then
+        TyMeta (ref Unresolved)
+      else
+        t
+    end
+  | TyCustom (x, t) -> TyCustom (x, List.map f t)
+  | TyRef t -> TyRef (f t)
   | _ -> t
 
 let rec instantiate (map : ('a * 'a typ) list) (t : 'a typ) : 'a typ =
@@ -56,8 +77,6 @@ let rec instantiate (map : ('a * 'a typ) list) (t : 'a typ) : 'a typ =
   | TyCustom (x, t) -> TyCustom (x, List.map f t)
   | TyRef t -> TyRef (f t)
   | _ -> t
-
-type binop = Binop of string [@@deriving show { with_path = false }]
 
 type 'a case =
   | CaseVar of 'a
@@ -82,7 +101,7 @@ type 'a expr =
   | LetIn of data * 'a case * 'a typ option * 'a expr * 'a expr
   | Seq of data * 'a expr * 'a expr
   | Funccall of data * 'a expr * 'a expr
-  | Binop of data * binop
+  | Binop of data * 'a
   | Lambda of data * 'a * 'a typ option * 'a expr
   | Tuple of data * 'a expr list
   | Annot of data * 'a expr * 'a typ
@@ -133,8 +152,19 @@ type 'a typdef = {
 }
 [@@deriving show { with_path = false }]
 
+let typdef_and_ctor_to_typ (t : 'a typdef) (i : 'a) : 'a typ =
+  match t.content with
+  | Record _ -> failwith "shouldn't be record"
+  | Sum s ->
+      let ctor = List.assoc i s in
+      let custom =
+        TyCustom (t.name, List.map (fun x -> TyPoly x) t.args)
+      in
+      typ_list_to_typ (ctor @ [ custom ])
+
 type 'a trait_bound =
-  | Bound of 'a * 'a typ list (* trait name, "args" *)
+  | Bound of
+      'a * 'a typ list * 'a typ list (* trait name, args, assocs *)
 [@@deriving show { with_path = false }]
 
 type ('a, 'p) definition = {
@@ -164,7 +194,7 @@ type 'a trait = {
 
 type 'a impl = {
   data : data;
-  parent : uuid option;
+  parent : 'a trait;
   args : ('a * 'a typ) list;
   assocs : ('a * 'a typ) list;
   impls : ('a, yes) definition list;
