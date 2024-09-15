@@ -38,6 +38,7 @@ type ctx = {
   (* name, parent *)
   ctors : (resolved * resolved typdef) list;
   types : resolved typdef list;
+  traits: resolved trait list;
   traitfuns : (resolved * resolved trait) list;
   funs : (resolved * (resolved, no) definition) list;
   locals : (resolved * resolved typ) list;
@@ -49,6 +50,7 @@ let empty_ctx () =
   {
     ctors = [];
     types = [];
+    traits = [];
     traitfuns = [];
     funs = [];
     locals = [];
@@ -118,20 +120,24 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
       *)
       | TyCustom (head, targs) ->
           (* find ty*)
-          let ty =
-            List.find (fun (x : 'a typdef) -> x.name = head) ctx.types
-          in
+         begin match
+           List.find_opt (fun (x : 'a typdef) -> x.name = head) ctx.types
+         with
+         | None -> err "can't find type"
+         | Some ty ->
           begin
             match ty.content with
-            | Record _ -> failwith "shouldn't be a record (fun)"
+            | Record _ -> failwith "shouldn't be a record (fun?)"
             | Sum s ->
                 (* find constructor *)
-                let ctor = List.find (fun x -> fst x = name) s in
+               begin match List.find_opt (fun x -> fst x = name) s with
+               | None -> err "can't find ctor"
+               | Some ctor ->
                 let map = List.combine ty.args targs in
                 (* fill in all the type arguments *)
                 let inst = List.map (instantiate map) (snd ctor) in
                 break_and_map args inst
-          end
+          end end end
       | _ -> err "not custom but should be"
     end
 
@@ -278,11 +284,18 @@ let rec infer (ctx : ctx) (e : resolved expr) :
        let typ = List.find (fun (x: 'a typdef) -> x.name = nm) ctx.types in
        begin match typ.content with
        | Record r -> 
-          if not @@ List.for_all (fun (name, value) ->
+          if not @@ (List.for_all (fun (name, value) ->
                         match List.assoc_opt name r with
                         | Some _ -> true
                         | None -> false
                       ) fields
+                     &&
+                       List.for_all (fun (name, typ) ->
+                           match List.assoc_opt name fields with
+                           | Some _ -> true
+                           | None -> false
+                         ) r
+                    )
           then
             err "record decl does not match type"
           else
@@ -297,10 +310,13 @@ let rec infer (ctx : ctx) (e : resolved expr) :
             |> Result.map_error (String.concat " ")
             |> fun results ->
                let* res = results in
-               let types = List.map (fun ((a,b)) -> b) r in
-               List.iter2 (unify' ctx.local_polys) res types;
+               let res = List.combine (List.map fst fields) res in
+               List.iter (
+                   fun res ->
+                   let match' = List.assoc (fst res) r in
+                   unify' ctx.local_polys (snd res) match') res;
                ok @@ TyCustom(typ.name, List.map snd metas)
-       | _ -> failwith "can't make a record out of a sum type"
+       | _ -> err "can't make a record out of a sum type"
        end
   in
   let uuid = get_uuid e in

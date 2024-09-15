@@ -12,7 +12,8 @@ let chainl1 e op =
   in
   e >>= fun init -> go init
 
-let parens p = spaces *> char '(' *> (spaces *> p) <* char ')'
+let char c = spaces *> char c <* spaces
+let parens p = spaces *> (char '(' *> p <* char ')')
 
 let integer =
   spaces *> take_while1 (function '0' .. '9' -> true | _ -> false)
