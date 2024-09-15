@@ -4,6 +4,35 @@ open Share.Result
 open Share.Maybe
 open Unify
 
+let typ_pp t = print_endline (show_typ pp_resolved t)
+
+(*
+  ASSUMPTIONS:
+  this module makes a number of assumptions about the data being
+  passed into it. these being violated will cause Issues.
+
+  - all pieces of the same information have the same id
+  - all pieces of unrelated information have seperate ids
+
+  for example, something like this:
+
+  trait Foo {
+  type b;
+  fun foo : Self -> b
+  }
+
+  fun dothing (type T) {T: Foo} (x: T): T.{Foo}.b = foo x
+
+  must be something like
+
+  trait 0 {
+  type 1;
+  fun 2 : 0 -> 1
+  }
+
+  fun 3 (type 4) {4: 0} (5: 4): 4.{0}.1 = 2 5
+
+ *)
 
 type ctx = {
   (* name, parent *)
@@ -14,6 +43,7 @@ type ctx = {
   locals : (resolved * resolved typ) list;
   local_polys : resolved list;
 }
+[@@deriving show {with_path = false}]
 
 let empty_ctx () =
   {
@@ -140,8 +170,16 @@ let rec infer (ctx : ctx) (e : resolved expr) :
          *)
         begin
           match a'ty with
-          | TyArrow (q, w) ->
+          | TyArrow _ ->
              let* b'ty = infer ctx b in
+             (* NOTE: we do stuff in q that needs to affect w
+                therefore, we must meta them *first*, then unify
+                them - warning suppression because we obviously
+                already checked that it's an arrow
+              *)
+             let [@warning "-8"] TyArrow(q,w) =
+               to_metas ctx.local_polys a'ty
+             in
              let* _ = unify ctx.local_polys b'ty q in
              ok w
           | _ -> err "must function call on function type"
@@ -219,7 +257,7 @@ let rec infer (ctx : ctx) (e : resolved expr) :
                 perform an instantiation
            *)
              let map = List.combine typ.args args in
-             let Field(_, typ) = List.nth fields i in
+             let (_, typ) = List.nth fields i in
              ok @@ instantiate map typ
           | Sum _ -> err "should be record not sum"
           end
@@ -236,7 +274,34 @@ let rec infer (ctx : ctx) (e : resolved expr) :
        (* this case is mildly annoying, because we have to deal
           with instantiation more explicitly
         *)
-       failwith "records"
+       (* a bit TODO *)
+       let typ = List.find (fun (x: 'a typdef) -> x.name = nm) ctx.types in
+       begin match typ.content with
+       | Record r -> 
+          if not @@ List.for_all (fun (name, value) ->
+                        match List.assoc_opt name r with
+                        | Some _ -> true
+                        | None -> false
+                      ) fields
+          then
+            err "record decl does not match type"
+          else
+            let our_polys = typ.args in
+            let metas =
+              List.map
+                (fun poly -> (poly, TyMeta (ref Unresolved)))
+                our_polys
+            in
+            List.map (fun field -> infer ctx (snd field)) fields
+            |> collect
+            |> Result.map_error (String.concat " ")
+            |> fun results ->
+               let* res = results in
+               let types = List.map (fun ((a,b)) -> b) r in
+               List.iter2 (unify' ctx.local_polys) res types;
+               ok @@ TyCustom(typ.name, List.map snd metas)
+       | _ -> failwith "can't make a record out of a sum type"
+       end
   in
   let uuid = get_uuid e in
   add_type uuid ty;
@@ -334,6 +399,9 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
         *)
        let* ty = infer ctx e in
        let* _ = unify ctx.local_polys ty t in
+       print_endline "check";
+       typ_pp t;
+       typ_pp ty;
        ok ty
   in
   let uuid = get_uuid e in
@@ -344,14 +412,11 @@ let typecheck_definition (ctx : ctx) (d : (resolved, yes) definition)
     : (unit, string) result =
   let polys = d.typeargs in
   let args = d.args in
-  let self = (d.name, forget_body d) in
   let ctx =
     {
       ctx with
       locals = ctx.locals @ args;
       local_polys = ctx.local_polys @ polys;
-      (* yay recursion *)
-      funs = self :: ctx.funs;
     }
   in
   let body = get d.body in
@@ -407,6 +472,14 @@ let gather (t : resolved toplevel list) : ctx =
           { ctx with funs = (d.name, forget_body d) :: ctx.funs })
     ctx t
 
-let typecheck_toplevel (t : resolved toplevel list) : unit =
+let typecheck (t : resolved toplevel list) : unit =
   let ctx = gather t in
-
+  List.map (typecheck_toplevel ctx) t
+  |> collect
+  |> function
+    | Ok _ ->
+       print_endline "worked!";
+       ()
+    | Error e ->
+       List.iter (print_endline) e;
+       failwith "typechecking failed :despair:"

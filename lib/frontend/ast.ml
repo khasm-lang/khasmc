@@ -33,12 +33,12 @@ and 'a typ =
   | TyArrow of 'a typ * 'a typ
   | TyPoly of 'a
   | TyCustom of 'a * 'a typ list
+  | TyAssoc of 'a * 'a * 'a (* <A as T>::B *)
   | TyRef of 'a typ (* mutability shock horror *)
   | TyMeta of 'a meta ref
 [@@deriving show { with_path = false }]
 
-and 'a field = Field of 'a * 'a typ
-[@@deriving show { with_path = false }]
+and 'a field = 'a * 'a typ [@@deriving show { with_path = false }]
 
 let rec force (t : 'a typ) : 'a typ =
   match (t : 'a typ) with
@@ -51,20 +51,17 @@ let rec force (t : 'a typ) : 'a typ =
     end
   | _ -> t
 
-let rec to_metas (polys : 'a list) (t : 'a typ) : 'a typ =
-  let f = to_metas polys in
-  match force (t : 'a typ) with
-  | TyTuple t -> TyTuple (List.map f t)
-  | TyArrow (a, b) -> TyArrow (f a, f b)
-  | TyPoly x -> begin
-      if not @@ List.mem x polys then
-        TyMeta (ref Unresolved)
-      else
-        t
-    end
-  | TyCustom (x, t) -> TyCustom (x, List.map f t)
-  | TyRef t -> TyRef (f t)
-  | _ -> t
+let get_metas t =
+  let rec g t =
+    match force t with
+    | TyTuple t -> List.map g t |> List.flatten
+    | TyArrow (a, b) -> g a @ g b
+    | TyCustom (_, t) -> List.map g t |> List.flatten
+    | TyRef r -> g r
+    | TyPoly a -> [ a ]
+    | _ -> []
+  in
+  g t
 
 let rec instantiate (map : ('a * 'a typ) list) (t : 'a typ) : 'a typ =
   let f = instantiate map in
@@ -78,6 +75,18 @@ let rec instantiate (map : ('a * 'a typ) list) (t : 'a typ) : 'a typ =
   | TyRef t -> TyRef (f t)
   | _ -> t
 
+let to_metas polys t =
+  let metas = get_metas t in
+  List.map
+    (fun x ->
+      if not @@ List.mem x polys then
+        [ (x, TyMeta (ref Unresolved)) ]
+      else
+        [])
+    metas
+  |> List.flatten
+  |> fun map -> instantiate map t
+
 type 'a case =
   | CaseVar of 'a
   | CaseTuple of 'a case list
@@ -90,6 +99,8 @@ type data = {
   span : (string * int * int) option;
 }
 [@@deriving show { with_path = false }]
+
+let data () = { uuid = Share.Uuid.uuid (); span = None }
 
 type 'a expr =
   | Var of data * 'a
@@ -194,7 +205,7 @@ type 'a trait = {
 
 type 'a impl = {
   data : data;
-  parent : 'a trait;
+  parent : 'a;
   args : ('a * 'a typ) list;
   assocs : ('a * 'a typ) list;
   impls : ('a, yes) definition list;

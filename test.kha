@@ -1,0 +1,2 @@
+(typdef 0 () (record (1 TyInt) (2 TyString)))
+(let 3 () () ((4 (custom 0))) (TyInt) (proj 1 4))

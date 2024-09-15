@@ -7,4 +7,4 @@ let uuid =
   let x = ref (-1) in
   fun () ->
     incr x;
-    !x
+    UUID !x
