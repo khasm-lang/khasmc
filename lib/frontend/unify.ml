@@ -64,7 +64,11 @@ let rec unify_h (t1: 'a typ) (t2: 'a typ): ('a typ, string) result
      | Resolved _ -> failwith "impossible"
      | Unresolved -> a := Resolved t; ok t
      end
-  | _, _ -> err "these don't unify_h"
+  | a, b ->
+     print_endline "unify issue:";
+     print_endline (show_typ pp_resolved a);
+     print_endline (show_typ pp_resolved b);
+     err "these don't unify bozo"
 
 let unify polys a b =
   (* ensure that we get rid of any non-local polys so that we
