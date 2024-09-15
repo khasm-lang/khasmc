@@ -15,11 +15,14 @@ let main () =
     Angstrom.parse_string ~consume:Angstrom.Consume.All toplevel s
   with
   | Ok e ->
+      print_endline "parsed:";
       List.iter
         (fun x -> print_endline (show_toplevel pp_resolved x))
         e;
+      print_endline "end\n";
       typecheck e;
-      test ()
+      print_endline "\ntypes:";
+      print_by_uuid (show_typ pp_resolved) type_information
   | Error s ->
       print_endline "noooo it failed :despair:";
       print_endline s

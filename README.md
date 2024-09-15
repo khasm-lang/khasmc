@@ -2,15 +2,9 @@
 
 The compiler for the khasm programming language.
 
-## On pause
-
-Due to some ongoing conditions, the development of khasm is currently on pause. I'll be back at some point soon, hopefully!
-
-Unfortunatly, due to some divergence between compiler and vision, and code rot in this repo, the "new" khasm will most likely require a full rewrite of the compiler, which may take a while.
-
 ## NOTE:
 
-Khasm and khasmc are still in pre-β development.
+Khasm and khasmc are still in pre-beta development.
 The below partially writes like it is a currently working language - it is not.
 Consider the below, for the moment, a wishlist for what this language will hopefully eventually look like.
 
@@ -28,30 +22,30 @@ Here's a hello world program in khasm:
 
 ```ocaml
 import Stdlib
-let main (): unit =
+fun main (): unit =
     Stdlib.print "Hello, World!"
 ```
 
 The classic recursive fibonacci:
 ```ocaml
-let fib (n: int): int =
+fun fib (n: int): int =
     if n <= 1 then
         1
     else fib n + fib (n - 1)
-{- No let rec needed! -}
+(* No let rec needed! *)
 ```
 
 List operations:
 ```ocaml
 import List
 
-let add_three (l: List int): List int =
+fun add_three (l: List int): List int =
     l
     |> List.map (\x -> x + 3)
 
-{- 
+(* 
     Piping is the most natural way of expressing many problems - and it's always optimized away.
--}
+*)
 
 ```
 Want laziness for list operations? We can do that too!
@@ -59,18 +53,33 @@ Want laziness for list operations? We can do that too!
 import List
 import Stream
 
-let streaming_add_two (l: List int): Stream int =
+fun streaming_add_two (l: List int): Stream int =
     l
     |> Stream.from
     |> Stream.map (\x -> x + 2)
 ```
+Traits? You bet!
+```ocaml
+trait Show a =
+	fun show : a -> String
+end
+
+(* slight sugar for `impl Show Int` *)
+impl Show for Int = 
+	fun show (x: Int): String =
+		int_to_string x
+end
+
+let two_ints_to_strings (x: Int) (y: Int): (String, String) = 
+	(show x, show y)
+```
+
 
 ## Goals:
 - Simple, but expressive, with a core featureset encompassing no more than:
   - Algebraic Data Types (rust's `enum`)
   - Easy to use records
   - Pattern matching
-  - Polymorphic errors (akin to OCaml's polymorphic varients)
   - Simplified traits/typeclasses ()
   - Easy-to-use controlled local and global mutation
   - No inductive lists by default!

@@ -1,2 +1,7 @@
-(typdef 0 () (record (1 TyInt) (2 TyString)))
-(let 3 () () ((4 (custom 0))) (TyInt) (proj 1 4))
+(typdef 0 () (sum (1 TyInt) (2 TyString)))
+(let 3 () () () (custom 0) ($ (1) int))
+(let 4 () () () TyInt ((
+     match 3
+     ((ctor 1 5) (5))
+     ((ctor 2 6) (int))
+)))
