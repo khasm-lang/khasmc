@@ -70,7 +70,7 @@ impl Show for Int =
 		int_to_string x
 end
 
-let two_ints_to_strings (x: Int) (y: Int): (String, String) = 
+fun two_ints_to_strings (x: Int) (y: Int): (String, String) = 
 	(show x, show y)
 ```
 

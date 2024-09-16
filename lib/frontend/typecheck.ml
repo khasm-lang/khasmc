@@ -129,7 +129,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
             match ty.content with
             | Record _ -> failwith "shouldn't be a record (fun?)"
             | Sum s ->
-                (* find constructor *)
+               (* find constructor *)
                begin match List.find_opt (fun x -> fst x = name) s with
                | None -> err "can't find ctor"
                | Some ctor ->
@@ -380,8 +380,8 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
     | Match (_, scrut, cases) ->
        (* see comments in infer
           should probably factor all this out tbh
-        *)
-       let* scrut_typ = infer ctx scrut in
+        *) 
+      let* scrut_typ = infer ctx scrut in
        let handle_case (case: 'a case * 'a expr): ('a typ, string) result =
          let case, expr = case in
          let* vars = break_down_case_pattern ctx case scrut_typ in
