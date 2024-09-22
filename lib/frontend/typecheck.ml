@@ -462,7 +462,9 @@ let typecheck_definition (ctx : ctx) (d : (resolved, yes) definition)
 
 let typecheck_impl (ctx: ctx) (i: resolved impl): (unit, string) result =
   (* TODO: check that args match the trait *)
-  List.map (typecheck_definition ctx) i.impls
+  i.impls
+  |> List.map snd (* we don't care about the unique name at the moment *)
+  |> List.map (typecheck_definition ctx) 
   |> collect
   |> Result.map_error (String.concat " ")
   |> Result.map (fun _ -> ())

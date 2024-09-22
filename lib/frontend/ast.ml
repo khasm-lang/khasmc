@@ -237,10 +237,12 @@ type 'a trait = {
 type 'a impl = {
   data : data;
   parent : 'a;
-  polys : 'a list;
   args : ('a * 'a typ) list;
   assocs : ('a * 'a typ) list;
-  impls : ('a, yes) definition list;
+  (* we give each impl function a unique name alongside it's
+     name predefined from the trait
+  *)
+  impls : ('a * ('a, yes) definition) list;
 }
 [@@deriving show { with_path = false }]
 

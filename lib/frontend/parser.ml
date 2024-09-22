@@ -317,7 +317,14 @@ let impl =
              let* t = typ in
              return (i, t))))
   in
-  let* impls = parens @@ many definition_body in
+  let* impls =
+    parens
+    @@ many
+    @@
+    let* id = id in
+    let* d = definition_body in
+    return (id, d)
+  in
   return @@ ({ data = d (); parent; args; assocs; impls } : 'a impl)
 
 let toplevel =
