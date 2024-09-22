@@ -23,7 +23,7 @@ Here's a hello world program in khasm:
 ```ocaml
 import Stdlib
 fun main (): unit =
-    Stdlib.print "Hello, World!"
+    println "Hello, World!"
 ```
 
 The classic recursive fibonacci:
@@ -61,12 +61,11 @@ fun streaming_add_two (l: List int): Stream int =
 Traits? You bet!
 ```ocaml
 trait Show a =
-	fun show : a -> String
+	fun show : a -> string
 end
 
-(* slight sugar for `impl Show Int` *)
-impl Show for Int = 
-	fun show (x: Int): String =
+impl Show int = 
+	fun show (x: int): string =
 		int_to_string x
 end
 
