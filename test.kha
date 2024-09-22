@@ -3,7 +3,7 @@
 ))
 
 (impl 5 0 ((1 TyInt)) () (
-      (let 2 () () ((6 TyInt)) TyString ($ (-1) 6))
+      9 (let 2 () () ((6 TyInt)) TyString ($ (-1) 6))
 ))
 
 (let 8 () () () TyString ($ (2) int))
