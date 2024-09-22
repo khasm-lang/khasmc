@@ -1,8 +1,9 @@
-(typdef 0 () (sum (1 TyInt) (2 TyString)))
-(let 3 () () () (custom 0) ($ (1) int))
-(let 4 () () () TyInt ((
-     match 3
-     ((ctor 1 5) (5))
-     ((ctor 2 6) (int))
-)))
+(trait 0 (1) () () (
+       (let 2 (3) () ((4 (poly 3))) TyString)
+))
 
+(impl 5 0 ((1 TyInt)) () (
+      (let 2 () () ((6 TyInt)) TyString ($ (-1) 6))
+))
+
+(let 8 () () () TyString ($ (2) int))

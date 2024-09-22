@@ -5,7 +5,7 @@ open Share.Maybe
 type resolved = R of int [@@deriving show { with_path = false }]
 
 let fresh_resolved =
-  let i = ref 0 in
+  let i = ref (-10) in
   fun () ->
     decr i;
     !i
@@ -33,12 +33,19 @@ and 'a typ =
   | TyArrow of 'a typ * 'a typ
   | TyPoly of 'a
   | TyCustom of 'a * 'a typ list
-  | TyAssoc of 'a * 'a * 'a (* <A as T>::B *)
+  | TyAssoc of
+      'a * 'a trait_bound * 'a (* <A as T a b, whatever>::B *)
   | TyRef of 'a typ (* mutability shock horror *)
   | TyMeta of 'a meta ref
 [@@deriving show { with_path = false }]
 
 and 'a field = 'a * 'a typ [@@deriving show { with_path = false }]
+
+and 'a trait_bound =
+  'a
+  * ('a * 'a typ) list
+  * ('a * 'a typ) list (* trait name, args, assocs *)
+[@@deriving show { with_path = false }]
 
 let rec force (t : 'a typ) : 'a typ =
   match (t : 'a typ) with
@@ -51,7 +58,13 @@ let rec force (t : 'a typ) : 'a typ =
     end
   | _ -> t
 
-let get_metas t =
+let copy_typ (t : 'a typ) : 'a typ =
+  (* note: kinda expensive
+     SAFETY: duh
+  *)
+  t |> Obj.repr |> Obj.dup |> Obj.obj
+
+let get_polys t =
   let rec g t =
     match force t with
     | TyTuple t -> List.map g t |> List.flatten
@@ -75,8 +88,7 @@ let rec instantiate (map : ('a * 'a typ) list) (t : 'a typ) : 'a typ =
   | TyRef t -> TyRef (f t)
   | _ -> t
 
-let to_metas polys t =
-  let metas = get_metas t in
+let make_metas polys metas =
   List.map
     (fun x ->
       if not @@ List.mem x polys then
@@ -85,7 +97,32 @@ let to_metas polys t =
         [])
     metas
   |> List.flatten
-  |> fun map -> instantiate map t
+
+let to_metas polys t =
+  let metas = get_polys t in
+  let map = make_metas polys metas in
+  instantiate map t
+
+let to_metas' polys t =
+  let metas = get_polys t in
+  let map = make_metas polys metas in
+  (instantiate map t, map)
+
+let rec back_to_polys gen t =
+  let f = back_to_polys gen in
+  match force t with
+  | TyTuple t -> TyTuple (List.map f t)
+  | TyArrow (q, w) -> TyArrow (f q, f w)
+  | TyCustom (x, t) -> TyCustom (x, List.map f t)
+  | TyRef t -> TyRef (f t)
+  | TyMeta m -> begin
+      match !m with
+      | Resolved _ -> failwith "impossible"
+      | Unresolved ->
+          m := Resolved (TyPoly (gen ()));
+          t
+    end
+  | t -> t
 
 type 'a case =
   | CaseVar of 'a
@@ -112,7 +149,6 @@ type 'a expr =
   | LetIn of data * 'a case * 'a typ option * 'a expr * 'a expr
   | Seq of data * 'a expr * 'a expr
   | Funccall of data * 'a expr * 'a expr
-  | Binop of data * 'a
   | Lambda of data * 'a * 'a typ option * 'a expr
   | Tuple of data * 'a expr list
   | Annot of data * 'a expr * 'a typ
@@ -134,7 +170,6 @@ let get_uuid (e : 'a expr) : uuid =
   | LetIn (i, _, _, _, _) -> i.uuid
   | Seq (i, _, _) -> i.uuid
   | Funccall (i, _, _) -> i.uuid
-  | Binop (i, _) -> i.uuid
   | Lambda (i, _, _, _) -> i.uuid
   | Tuple (i, _) -> i.uuid
   | Annot (i, _, _) -> i.uuid
@@ -155,6 +190,7 @@ let rec typ_list_to_typ (t : 'a typ list) : 'a typ =
   | [ x ] -> x
   | x :: xs -> TyArrow (x, typ_list_to_typ xs)
 
+(* TODO: support GADTs*)
 type 'a typdef = {
   data : data;
   name : 'a;
@@ -172,11 +208,6 @@ let typdef_and_ctor_to_typ (t : 'a typdef) (i : 'a) : 'a typ =
         TyCustom (t.name, List.map (fun x -> TyPoly x) t.args)
       in
       typ_list_to_typ (ctor @ [ custom ])
-
-type 'a trait_bound =
-  | Bound of
-      'a * 'a typ list * 'a typ list (* trait name, args, assocs *)
-[@@deriving show { with_path = false }]
 
 type ('a, 'p) definition = {
   data : data;
@@ -206,6 +237,7 @@ type 'a trait = {
 type 'a impl = {
   data : data;
   parent : 'a;
+  polys : 'a list;
   args : ('a * 'a typ) list;
   assocs : ('a * 'a typ) list;
   impls : ('a, yes) definition list;

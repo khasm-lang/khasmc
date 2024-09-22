@@ -71,6 +71,10 @@ let rec unify_h (t1: 'a typ) (t2: 'a typ): ('a typ, string) result
      err "these don't unify bozo"
 
 let unify polys a b =
+  print_endline "UNIFY";
+  print_endline (show_typ pp_resolved a);
+  print_endline (show_typ pp_resolved b);
+  print_endline "END";
   (* ensure that we get rid of any non-local polys so that we
      don't end up "losing" polymorphism
    *)
