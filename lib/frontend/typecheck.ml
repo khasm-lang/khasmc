@@ -34,6 +34,17 @@ let typ_pp t = print_endline (show_typ pp_resolved t)
 
  *)
 
+(*
+  general TODOs:
+  - add meta refinement
+  f : ?
+  x : int
+  f x
+  =>
+  f : int -> ?
+ *)
+
+
 type ctx = {
   (* name, parent *)
   ctors : (resolved * resolved typdef) list;
@@ -53,7 +64,8 @@ let empty_ctx () =
     traits = [];
     traitfuns = [];
     funs = [];
-    locals = [];
+    (* magic, for testing *)
+    locals = [(R (-1), TyArrow(TyPoly (R (-2)), TyPoly (R (-3))))];
     local_polys = [];
   }
 
@@ -148,7 +160,11 @@ let rec infer (ctx : ctx) (e : resolved expr) :
   let* ty =
     match e with
     (* try find that thing *)
-    | Var (i, v) -> search ctx v
+    | Var (i, v) ->
+       let* found = search ctx v in
+       (* instantiate stuff now, to assist meta propogation *)
+       to_metas ctx.local_polys found
+       |> ok
     | Int (_, _) -> ok TyInt
     | String (_, _) -> ok TyString
     | Char (_, _) -> ok TyChar
@@ -164,6 +180,7 @@ let rec infer (ctx : ctx) (e : resolved expr) :
         (* get everything out *)
         let* vars = break_down_case_pattern ctx case head'ty in
         let ctx' = add_locals ctx vars in
+        (* TODO: let generalization? *)
         infer ctx' body
     | Seq (_, a, b) ->
         (* we know the first branch must be unit *)
@@ -176,21 +193,12 @@ let rec infer (ctx : ctx) (e : resolved expr) :
          *)
         begin
           match a'ty with
-          | TyArrow _ ->
+          | TyArrow (q,w) ->
              let* b'ty = infer ctx b in
-             (* NOTE: we do stuff in q that needs to affect w
-                therefore, we must meta them *first*, then unify
-                them - warning suppression because we obviously
-                already checked that it's an arrow
-              *)
-             let [@warning "-8"] TyArrow(q,w) =
-               to_metas ctx.local_polys a'ty
-             in
              let* _ = unify ctx.local_polys b'ty q in
              ok w
           | _ -> err "must function call on function type"
         end
-    | Binop (_, v) -> search ctx v
     | Lambda (_, v, typ, body) ->
        (* if we don't have a static type we can
           make a meta in order to try and infer the body
@@ -228,6 +236,9 @@ let rec infer (ctx : ctx) (e : resolved expr) :
           a pain, because you want to keep all of those possible
           erroring unifies, but you also don't want the whole thing
           to be a mess
+
+          TODO: note that GADT "helping" cannot be done in the
+          inference case
         *)
        let* scrut_typ = infer ctx scrut in
        let handle_case (case: 'a case * 'a expr): ('a typ, string) result =
@@ -283,7 +294,10 @@ let rec infer (ctx : ctx) (e : resolved expr) :
        (* a bit TODO *)
        let typ = List.find (fun (x: 'a typdef) -> x.name = nm) ctx.types in
        begin match typ.content with
-       | Record r -> 
+       | Record r ->
+          (* make sure that the lists contain each other
+             TODO: make more efficient
+           *)
           if not @@ (List.for_all (fun (name, value) ->
                         match List.assoc_opt name r with
                         | Some _ -> true
@@ -380,8 +394,15 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
     | Match (_, scrut, cases) ->
        (* see comments in infer
           should probably factor all this out tbh
+
+          TODO: add GADT "helping" so that something like
+          let e : Eq a b -> a -> b = fun eq x ->
+          match eq with
+          | Refl -> x
+          end
+          works
         *) 
-      let* scrut_typ = infer ctx scrut in
+       let* scrut_typ = infer ctx scrut in
        let handle_case (case: 'a case * 'a expr): ('a typ, string) result =
          let case, expr = case in
          let* vars = break_down_case_pattern ctx case scrut_typ in

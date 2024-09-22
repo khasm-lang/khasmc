@@ -16,8 +16,15 @@ let char c = spaces *> char c <* spaces
 let parens p = spaces *> (char '(' *> p <* char ')')
 
 let integer =
-  spaces *> take_while1 (function '0' .. '9' -> true | _ -> false)
-  >>| int_of_string
+  spaces
+  *> choice
+       [
+         take_while1 (function '0' .. '9' -> true | _ -> false)
+         >>| int_of_string;
+         ( char '-'
+         *> take_while1 (function '0' .. '9' -> true | _ -> false)
+         >>| fun x -> int_of_string x * -1 );
+       ]
 
 let id = spaces *> integer >>= fun i -> return @@ R i
 let cons x xs = x :: xs
@@ -29,6 +36,19 @@ let sep_by2 s p =
 
 let typ =
   fix (fun typ ->
+      let rec trait_bound : 'a trait_bound Angstrom.t =
+        parens @@ id >>= fun i ->
+        parens
+          (many
+          @@ ( id >>= fun x ->
+               typ >>= fun y -> return (x, y) ))
+        >>= fun one ->
+        parens
+          (many
+          @@ ( id >>= fun x ->
+               typ >>= fun y -> return (x, y) ))
+        >>= fun two -> return @@ (i, one, two)
+      in
       choice
         [
           string "TyInt" *> return TyInt;
@@ -45,13 +65,26 @@ let typ =
           parens
             ( string "custom" *> id >>= fun t ->
               many typ >>= fun l -> return @@ TyCustom (t, l) );
-          parens
-            ( string "assoc" *> count 3 id >>= fun [ a; b; c ] ->
-              return @@ TyAssoc (a, b, c) );
+          (* parens
+             ( string "assoc" *> count 3 id >>= fun [ a; b; c ] ->
+               return @@ TyAssoc (a, b, c) ); *)
           parens (string "ref" *> typ >>= fun i -> return @@ TyRef i);
           parens (string "meta" *> (return @@ TyMeta (ref Unresolved)));
           parens typ;
         ])
+
+let rec trait_bound : 'a trait_bound Angstrom.t =
+  parens @@ id >>= fun i ->
+  parens
+    (many
+    @@ ( id >>= fun x ->
+         typ >>= fun y -> return (x, y) ))
+  >>= fun one ->
+  parens
+    (many
+    @@ ( id >>= fun x ->
+         typ >>= fun y -> return (x, y) ))
+  >>= fun two -> return @@ (i, one, two)
 
 let case =
   fix (fun case ->
@@ -186,11 +219,6 @@ let typdef =
        return { data = d (); name = i; args; content }
      end
 
-let trait_bound =
-  parens @@ id >>= fun i ->
-  parens (many typ) >>= fun one ->
-  parens (many typ) >>= fun two -> return @@ Bound (i, one, two)
-
 let definition_body =
   parens
   @@
@@ -250,10 +278,11 @@ let definition_nobody =
 let trait =
   parens
   @@
+  let* _ = string "trait" in
   let* name = id in
   let* args = parens @@ many id in
   let* assoc = parens @@ many id in
-  let* requires = many trait_bound in
+  let* requires = parens @@ many trait_bound in
   let* functions = parens @@ many definition_nobody in
   return
     {
@@ -268,6 +297,8 @@ let trait =
 let impl =
   parens
   @@
+  let* _ = string "impl" in
+
   let* name = id in
   let* parent = id in
   let* args =
