@@ -24,7 +24,17 @@ let main () =
       print_endline "end\n";
       typecheck e;
       print_endline "\ntypes:";
-      print_by_uuid (show_typ pp_resolved) type_information
+      print_by_uuid (show_typ pp_resolved) type_information;
+      print_endline "----------------\n";
+      let context = build_ctx e in
+      let example_bound : 'a trait_bound =
+        (UUID 100, R 0, [ (R 1, TyInt) ], [])
+      in
+      begin
+        match search_impls context example_bound with
+        | Ok s -> print_endline (show_solved s)
+        | Error e -> print_endline e
+      end
   | Error s ->
       print_endline "noooo it failed :despair:";
       print_endline s

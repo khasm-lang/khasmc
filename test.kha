@@ -1,6 +1,13 @@
-(trait 0 (1) () () (
-       (let 2 (3) () ((4 (poly 3))) TyString)
+(trait 0 (1) () (
+       (50 10 ((11 (poly 1))) ())
+)
+(
+       (let 2 () () ((4 (poly 1))) TyString)
 ))
+
+(trait 10 (11) () () ())
+
+(impl 12 10 ((11 TyInt)) () ())
 
 (impl 5 0 ((1 TyInt)) () (
       9 (let 2 () () ((6 TyInt)) TyString ($ (-1) 6))
