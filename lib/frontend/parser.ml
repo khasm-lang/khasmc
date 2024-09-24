@@ -87,13 +87,15 @@ let rec trait_bound : 'a trait_bound Angstrom.t =
   id >>= fun i ->
   parens
     (many
-    @@ ( id >>= fun x ->
-         typ >>= fun y -> return (x, y) ))
+    @@ parens
+         ( id >>= fun x ->
+           typ >>= fun y -> return (x, y) ))
   >>= fun one ->
   parens
     (many
-    @@ ( id >>= fun x ->
-         typ >>= fun y -> return (x, y) ))
+    @@ parens
+         ( id >>= fun x ->
+           typ >>= fun y -> return (x, y) ))
   >>= fun two -> return @@ (id1, i, one, two)
 
 let case =
@@ -331,7 +333,7 @@ let impl =
     parens
     @@ many
     @@
-    let* id = id in
+    let* id = uuid in
     let* d = definition_body in
     return (id, d)
   in

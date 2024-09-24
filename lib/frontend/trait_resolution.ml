@@ -93,6 +93,8 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
   with
   | None -> err @@ "can't find trait " ^ show_resolved name
   | Some trait -> (
+      print_endline "trait:";
+      print_endline (show_trait pp_resolved trait);
       match List.find_opt (fun (a, b) -> a = trait) ctx.by_trait with
       | None -> err @@ "can't find impls for " ^ show_resolved name
       | Some (_, impls) ->
@@ -125,6 +127,8 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
                       List.map
                         (fun (a, b) -> get_polys a @ get_polys b)
                         assocs';
+                      List.map fst impl_args :: [];
+                      List.map fst impl_assocs :: [];
                     ]
                     |> List.flatten
                     |> List.flatten
@@ -133,6 +137,24 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
                     (* make sure to keep local rigids rigid *)
                     make_metas ctx.local_polys all_metas
                   in
+                  (* prematurely solve all of the arguments and assocs *)
+                  let args_assocs = impl_args @ impl_assocs in
+                  List.iter
+                    (fun (name, typ) ->
+                      match List.assoc_opt name args_assocs with
+                      | Some t -> begin
+                          match typ with
+                          | TyMeta m -> begin
+                              match !m with
+                              | Resolved _ -> failwith "impossible"
+                              | Unresolved ->
+                                  m := Resolved t;
+                                  ()
+                            end
+                          | _ -> ()
+                        end
+                      | None -> ())
+                    map;
                   (* turn all the polys that aren't rigid into metas *)
                   let args'inst =
                     List.map (twice (instantiate map)) args'
@@ -158,7 +180,19 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
                      find impls for all of the traits that are bounds
                      for this one
                   *)
+                  print_endline "huh?";
+                  List.iter
+                    (fun (R i, a) ->
+                      print_int i;
+                      print_string " = ";
+                      typ_pp a)
+                    map;
                   let trait_subproblems = trait.requirements in
+                  List.iter
+                    (fun a ->
+                      print_endline (show_trait_bound pp_resolved a))
+                    trait_subproblems;
+                  print_endline "wuh";
                   let f =
                     List.map (fun (a, b) -> (a, instantiate map b))
                   in

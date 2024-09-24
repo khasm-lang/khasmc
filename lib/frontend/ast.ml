@@ -61,10 +61,8 @@ let rec force (t : 'a typ) : 'a typ =
   | _ -> t
 
 let copy_typ (t : 'a typ) : 'a typ =
-  (* note: kinda expensive
-     SAFETY: duh
-  *)
-  t |> Obj.repr |> Obj.dup |> Obj.obj
+  (* noop for testing *)
+  t
 
 let get_polys t =
   let rec g t =
@@ -241,10 +239,10 @@ type 'a impl = {
   parent : 'a;
   args : ('a * 'a typ) list;
   assocs : ('a * 'a typ) list;
-  (* we give each impl function a unique name alongside it's
+  (* we give each impl function a unique id alongside it's
      name predefined from the trait
   *)
-  impls : ('a * ('a, yes) definition) list;
+  impls : (uuid * ('a, yes) definition) list;
 }
 [@@deriving show { with_path = false }]
 
