@@ -26,6 +26,10 @@ let integer =
          >>| fun x -> int_of_string x * -1 );
        ]
 
+let uuid =
+  let* i = integer in
+  return @@ Share.Uuid.UUID i
+
 let id = spaces *> integer >>= fun i -> return @@ R i
 let cons x xs = x :: xs
 
@@ -37,7 +41,10 @@ let sep_by2 s p =
 let typ =
   fix (fun typ ->
       let rec trait_bound : 'a trait_bound Angstrom.t =
-        parens @@ id >>= fun i ->
+        parens
+        @@
+        let* id1 = uuid in
+        id >>= fun i ->
         parens
           (many
           @@ ( id >>= fun x ->
@@ -47,7 +54,7 @@ let typ =
           (many
           @@ ( id >>= fun x ->
                typ >>= fun y -> return (x, y) ))
-        >>= fun two -> return @@ (i, one, two)
+        >>= fun two -> return @@ (id1, i, one, two)
       in
       choice
         [
@@ -74,7 +81,10 @@ let typ =
         ])
 
 let rec trait_bound : 'a trait_bound Angstrom.t =
-  parens @@ id >>= fun i ->
+  parens
+  @@
+  let* id1 = uuid in
+  id >>= fun i ->
   parens
     (many
     @@ ( id >>= fun x ->
@@ -84,7 +94,7 @@ let rec trait_bound : 'a trait_bound Angstrom.t =
     (many
     @@ ( id >>= fun x ->
          typ >>= fun y -> return (x, y) ))
-  >>= fun two -> return @@ (i, one, two)
+  >>= fun two -> return @@ (id1, i, one, two)
 
 let case =
   fix (fun case ->

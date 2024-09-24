@@ -2,10 +2,12 @@ open Share.Uuid
 open Frontend.Ast
 open Frontend.Typecheck
 open Frontend.Parser
+open Frontend.Trait_resolution
 
 let r x = R x
 
 let main () =
+  test ();
   print_endline "hey hey";
   let file = Sys.argv.(1) in
   let s = In_channel.with_open_bin file In_channel.input_all in
