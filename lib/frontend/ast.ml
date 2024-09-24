@@ -42,9 +42,11 @@ and 'a typ =
 and 'a field = 'a * 'a typ [@@deriving show { with_path = false }]
 
 and 'a trait_bound =
-  'a
-  * ('a * 'a typ) list
-  * ('a * 'a typ) list (* trait name, args, assocs *)
+  uuid
+  * 'a
+  (* unique id, trait name*)
+  * ('a * 'a typ) list (* args *)
+  * ('a * 'a typ) list (* assocs *)
 [@@deriving show { with_path = false }]
 
 let rec force (t : 'a typ) : 'a typ =
