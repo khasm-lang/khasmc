@@ -39,12 +39,15 @@ List operations:
 ```ocaml
 import List
 
-fun add_three (l: List int): List int =
-    l
-    |> List.map (\x -> x + 3)
+fun process (l: List int): List int =
+    List.map (fn x -> x + 3) l
+    |> List.filter (fn x -> x % 2 == 0)
+    |> List.map (fn x -> gcd x 10)
+    |> List.fold_left (fn acc x -> acc + x)
 
 (* 
     Piping is the most natural way of expressing many problems - and it's always optimized away.
+    In fact, in cases like the above, it's often possible for the entire expression to be compiled down to a single loop!
 *)
 
 ```
@@ -56,7 +59,7 @@ import Stream
 fun streaming_add_two (l: List int): Stream int =
     l
     |> Stream.from
-    |> Stream.map (\x -> x + 2)
+    |> Stream.map (fn x -> x + 2)
 ```
 Traits? You bet!
 ```ocaml
@@ -64,8 +67,8 @@ trait Show a =
 	fun show : a -> string
 end
 
-impl Show int = 
-	fun show (x: int): string =
+impl Show Int = 
+	fun show (x: Int): String =
 		int_to_string x
 end
 
