@@ -56,7 +56,7 @@ Want laziness for list operations? We can do that too!
 import List
 import Stream
 
-fun streaming_add_two (l: List int): Stream int =
+fun streaming_add_two (l: List Int): Stream Int =
     l
     |> Stream.from
     |> Stream.map (fn x -> x + 2)
@@ -64,7 +64,7 @@ fun streaming_add_two (l: List int): Stream int =
 Traits? You bet!
 ```ocaml
 trait Show a =
-	fun show : a -> string
+	fun show : a -> String
 end
 
 impl Show Int = 
