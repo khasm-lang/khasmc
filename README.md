@@ -74,7 +74,13 @@ end
 
 fun two_ints_to_strings (x: Int) (y: Int): (String, String) = 
 	(show x, show y)
+
+(* Trait object, too: *)
+
+fun trait_object (t: dyn Show): String = show t
+fun returns_trait_object (): dyn Show = dyn 10 (* we use dyn in both type position, and to create a trait object *)
 ```
+
 
 
 ## Goals:
@@ -82,7 +88,7 @@ fun two_ints_to_strings (x: Int) (y: Int): (String, String) =
   - Algebraic Data Types (rust's `enum`)
   - Easy to use records
   - Pattern matching
-  - Simplified traits/typeclasses ()
+  - Simplified traits/typeclasses
   - Easy-to-use controlled local and global mutation
   - No inductive lists by default!
 - Optimizations encompassing all the common functional usecases
