@@ -51,7 +51,7 @@ fun process (l: List int): List int =
 *)
 
 ```
-Want laziness for list operations? We can do that too!
+Lazy list/Stream operations
 ```ocaml
 import List
 import Stream
@@ -61,7 +61,7 @@ fun streaming_add_two (l: List Int): Stream Int =
     |> Stream.from
     |> Stream.map (fn x -> x + 2)
 ```
-Traits? You bet!
+Traits:
 ```ocaml
 trait Show a =
 	fun show : a -> String
@@ -90,6 +90,7 @@ fun returns_trait_object (): dyn Show = dyn 10 (* we use dyn in both type positi
   - Pattern matching
   - Simplified traits/typeclasses
   - Easy-to-use controlled local and global mutation
-  - No inductive lists by default!
+  - No inductive lists by default
+- Native Async capabilities, a-la Erlang and Go
 - Optimizations encompassing all the common functional usecases
 - A comprehensive (mostly) non-opinionated standard library
