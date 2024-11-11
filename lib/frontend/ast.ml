@@ -33,8 +33,7 @@ and 'a typ =
   | TyArrow of 'a typ * 'a typ
   | TyPoly of 'a
   | TyCustom of 'a * 'a typ list
-  | TyAssoc of
-      'a * 'a trait_bound * 'a (* <A as T a b, whatever>::B *)
+  | TyAssoc of 'a trait_bound * 'a (* <A as T a b, whatever>::B *)
   | TyRef of 'a typ (* mutability shock horror *)
   | TyMeta of 'a meta ref
 [@@deriving show { with_path = false }]
@@ -235,6 +234,7 @@ type 'a trait = {
 [@@deriving show { with_path = false }]
 
 type 'a impl = {
+  (* TODO: support stuff of the form impl<A> T<A>*)
   data : data;
   parent : 'a;
   args : ('a * 'a typ) list;
