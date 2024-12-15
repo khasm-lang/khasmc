@@ -38,7 +38,12 @@ type ctx = {
   impls : resolved_by list;
   (* any local polys (needed?) *)
   local_polys : resolved list;
+  (* functions with trait bounds *)
+  has_bounds : (resolved * resolved trait_bound list) list;
 }
+[@@deriving show { with_path = false }]
+
+let has_bounds ctx id = List.assoc_opt id ctx.has_bounds
 
 let impls_by_trait (c : ctx) (i : resolved trait) : resolved_by list =
   List.filter
@@ -61,10 +66,42 @@ let build_ctx top =
                 (fun (a : ('a, 'b) definition) -> (a.name, t))
                 t.functions
               @ acc.methods;
+            has_bounds =
+              (* for each function, we add its required bounds
+                 (as we allow functions to add on extra bounds if
+                 they so wish (TODO: is this valid????))
+
+                 then, we add "itself" as a bound - this way, if
+                 something computes the bounds of, say, show, they
+                 get Show T as the "primary" bound, which is exactly
+                 what we want them to solve for
+              *)
+              (let f = List.map (fun x -> (x, TyPoly x)) in
+               List.map
+                 (fun (a : ('a, 'b) definition) ->
+                   let t : resolved trait_bound =
+                     (uuid (), t.name, f t.args, f t.assoc)
+                   in
+                   (a.name, t :: a.bounds))
+                 t.functions
+               @ acc.has_bounds);
           }
       | Impl i -> { acc with impls = Global i :: acc.impls }
-      | Definition _ -> acc)
-    { traits = []; methods = []; impls = []; local_polys = [] }
+      | Definition d ->
+          if d.bounds = [] then
+            acc
+          else
+            {
+              acc with
+              has_bounds = (d.name, d.bounds) :: acc.has_bounds;
+            })
+    {
+      traits = [];
+      methods = [];
+      impls = [];
+      local_polys = [];
+      has_bounds = [];
+    }
     top
 
 type solved =
@@ -72,7 +109,9 @@ type solved =
   | Solution of uuid * resolved_by * solved list
 [@@deriving show { with_path = false }]
 
-let impl_collection : solved by_uuid = new_by_uuid 100
+(* the allmighty map of uuid -> solved trait bounds *)
+let trait_information : (uuid, solved list) Hashtbl.t =
+  new_by_uuid 100
 
 let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
     (solved, string) result =
@@ -86,8 +125,6 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
     | None -> err @@ "can't find trait " ^ show_resolved name
     | Some n -> ok n
   in
-  print_endline "trait:";
-  print_endline (show_trait pp_resolved trait);
   let* impls =
     match impls_by_trait ctx trait with
     | [] -> err @@ "can't find impls for " ^ show_resolved name
@@ -109,21 +146,21 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
           let twice f (a, b) = (f a, f b) in
           let* args' = zipby args impl_args in
           let* assocs' = zipby assocs impl_assocs in
-          (* copy to ensure no "cross influences" *)
-          let args' = List.map (twice copy_typ) args' in
-          let assocs' = List.map (twice copy_typ) assocs' in
-          (* TODO: expensive *)
+          (* copy to ensure no "cross influences" (PLACEBO) *)
+          let args' =
+            List.map (twice copy_typ) args' |> List.map (twice force)
+          in
+          let assocs' =
+            List.map (twice copy_typ) assocs'
+            |> List.map (twice force)
+          in
+          let get_both_polys (a, b) = get_polys a @ get_polys b in
           let all_metas =
-            [
-              List.map (fun (a, b) -> get_polys a @ get_polys b) args';
-              List.map
-                (fun (a, b) -> get_polys a @ get_polys b)
-                assocs';
-              List.map fst impl_args :: [];
-              List.map fst impl_assocs :: [];
-            ]
-            |> List.flatten
-            |> List.flatten
+            List.map fst impl_args
+            @ List.map fst impl_assocs
+            @ (List.flatten @@ List.map get_both_polys args')
+            @ List.flatten
+            @@ List.map get_both_polys assocs'
           in
           let map =
             (* make sure to keep local rigids rigid *)
@@ -175,17 +212,8 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
              find impls for all of the traits that are bounds
              for this one
           *)
-          List.iter
-            (fun (R i, a) ->
-              print_int i;
-              print_string " = ";
-              typ_pp a)
-            map;
           (* also check requirements *)
           let trait_subproblems = trait.requirements in
-          List.iter
-            (fun a -> print_endline (show_trait_bound pp_resolved a))
-            trait_subproblems;
           (* make sure to instantiate all of those tyvars *)
           let f = List.map (fun (a, b) -> (a, instantiate map b)) in
           let subproblems_inst : 'a trait_bound list =
@@ -209,30 +237,145 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
         | Error e -> go xs)
   in
   let* sol = go impls in
-  let (Solution (uuid, _, deps)) = sol in
-  Hashtbl.add impl_collection uuid sol;
   ok sol
 
-let resolve_expr (ctx : ctx) (e : resolved expr) :
+let solve_all_bounds_for (ctx : ctx) (uuid : uuid) (e : resolved)
+    (bounds : resolved trait_bound list) : (unit, string) result =
+  (*
+    So: We know that we're solving for <e>, and that it's part of
+    trait <trt>. We can fetch the type information for <e>, which
+    we need to do in order to figure out what instance we want to
+    search for. So, we grab that type info, "match everything up"
+    via taking the expected type of the function v.s. the trait's
+    version of the type to generate a set of constraints like so:
+
+    in show 5, show : Int -> String
+
+    but in
+    trait Show T =
+    show : T -> String
+    end
+
+    show : T(bound) -> String
+
+    so we generate T = Int (nothing fancy - just grabbing eagerly)
+
+    and solve for Show String, which then gives us a Solution that
+    we link to the uuid of the resolved.
+   *)
+  print_endline "\n\nSOLVER:";
+  let* exp_typ =
+    match Hashtbl.find_opt raw_type_information e with
+    | Some s -> Ok (force s)
+    | None -> Error ("No raw type info found for" ^ show_resolved e)
+  in
+  let* real_typ =
+    match Hashtbl.find_opt type_information uuid with
+    | Some s -> Ok (force s)
+    | None -> Error ("No type info found for" ^ show_resolved e)
+  in
+  let* trait =
+    match List.assoc_opt e ctx.methods with
+    | Some t -> ok t
+    | None -> Error ("No trait for " ^ show_resolved e)
+  in
+  let all_polys = trait.args @ trait.assoc in
+  let rec go real exp =
+    match (force real, force exp) with
+    | a, b when a = b -> []
+    | a, TyPoly b when List.mem b all_polys -> [ (b, a) ]
+    | TyTuple a, TyTuple b -> List.flatten (List.map2 go a b)
+    | TyArrow (a, b), TyArrow (q, w) ->
+        (* LHS usually smaller than rhs*)
+        go a q @ go b w
+    | TyCustom (_, a), TyCustom (_, b) ->
+        List.flatten (List.map2 go a b)
+    | TyAssoc (a, _), TyAssoc (b, _) ->
+        do_within_trait_bound'2 go a b |> List.flatten
+    | TyRef a, TyRef b -> go a b
+    | TyMeta a, TyMeta b when a = b -> []
+    | _, _ -> failwith "impossible: solver.go no match"
+  in
+  let polys_to_reals = go real_typ exp_typ in
+  List.iter
+    (fun (a, b) ->
+      print_string (show_resolved a ^ " := ");
+      print_endline (show_typ pp_resolved b))
+    polys_to_reals;
+  print_string "exp:  ";
+  print_endline (show_typ pp_resolved exp_typ);
+  print_string "real: ";
+  print_endline (show_typ pp_resolved real_typ);
+  let computed_bounds =
+    List.map
+      (do_within_trait_bound (subst_polys polys_to_reals))
+      bounds
+  in
+  List.iter
+    (fun x -> print_endline (show_trait_bound pp_resolved x))
+    computed_bounds;
+  let* solutions =
+    List.map (search_impls ctx) computed_bounds
+    |> collect
+    |> Result.map_error (String.concat "\n")
+  in
+  print_endline "\nSOLUTIONS:";
+  List.iter (fun x -> print_endline (show_solved x)) solutions;
+  (* add to the allmighty trait information table *)
+  Hashtbl.replace trait_information uuid solutions;
+  ok ()
+
+let rec resolve_expr (ctx : ctx) (e : resolved expr) :
     (unit, string) result =
+  print_endline "resolve_expr";
+  print_endline (show_expr pp_resolved e);
   match e with
-  | Var (_, _) -> failwith "tmp"
-  | Int (_, _) -> failwith "tmp"
-  | String (_, _) -> failwith "tmp"
-  | Char (_, _) -> failwith "tmp"
-  | Float (_, _) -> failwith "tmp"
-  | Bool (_, _) -> failwith "tmp"
-  | LetIn (_, _, _, _, _) -> failwith "tmp"
-  | Seq (_, _, _) -> failwith "tmp"
-  | Funccall (_, _, _) -> failwith "tmp"
-  | Lambda (_, _, _, _) -> failwith "tmp"
-  | Tuple (_, _) -> failwith "tmp"
-  | Annot (_, _, _) -> failwith "tmp"
-  | Match (_, _, _) -> failwith "tmp"
-  | Project (_, _, _) -> failwith "tmp"
-  | Ref (_, _) -> failwith "tmp"
-  | Modify (_, _, _) -> failwith "tmp"
-  | Record (_, _, _) -> failwith "tmp"
+  | Var (d, id) ->
+      print_endline (show_resolved id);
+      begin
+        match has_bounds ctx id with
+        | Some bounds ->
+            print_endline "wuh";
+            solve_all_bounds_for ctx d.uuid id bounds
+        | None -> ok ()
+      end
+  | Int (_, _) -> ok ()
+  | String (_, _) -> ok ()
+  | Char (_, _) -> ok ()
+  | Float (_, _) -> ok ()
+  | Bool (_, _) -> ok ()
+  | LetIn (_data, _case, _ty, head, body) ->
+      let* _ = resolve_expr ctx head in
+      let* _ = resolve_expr ctx body in
+      ok ()
+  | Seq (_, a, b) ->
+      let* _ = resolve_expr ctx a in
+      let* _ = resolve_expr ctx b in
+      ok ()
+  | Funccall (_, a, b) ->
+      let* _ = resolve_expr ctx a in
+      let* _ = resolve_expr ctx b in
+      ok ()
+  | Lambda (_, id, _, e) -> resolve_expr ctx e
+  | Tuple (_, es) ->
+      List.map (resolve_expr ctx) es
+      |> collect
+      |> Result.map_error (String.concat "\n")
+      |> Result.map (fun _ -> ())
+  | Annot (_, e, _) -> resolve_expr ctx e
+  | Match (_, _, xs) ->
+      List.map (fun (c, e) -> resolve_expr ctx e) xs
+      |> collect
+      |> Result.map_error (String.concat "\n")
+      |> Result.map (fun _ -> ())
+  | Project (_, e, _) -> resolve_expr ctx e
+  | Ref (_, r) -> resolve_expr ctx r
+  | Modify (_, _, e) -> resolve_expr ctx e
+  | Record (_, _, xs) ->
+      List.map (fun (c, e) -> resolve_expr ctx e) xs
+      |> collect
+      |> Result.map_error (String.concat "\n")
+      |> Result.map (fun _ -> ())
 
 let resolve_definition (ctx : ctx) (d : (resolved, yes) definition) :
     (unit, string) result =
@@ -247,10 +390,13 @@ let resolve_definition (ctx : ctx) (d : (resolved, yes) definition) :
 
 let resolve_impl (ctx : ctx) (i : resolved impl) :
     (unit, string) result =
-  failwith "tmp"
+  print_endline "TODO resolve impl";
+  ok ()
 
 let resolve (top : resolved toplevel list) : (unit, string) result =
   let ctx = build_ctx top in
+  print_endline "ctx:";
+  print_endline (show_ctx ctx);
   let rec go = function
     | Definition d -> resolve_definition ctx d
     | Impl i -> resolve_impl ctx i

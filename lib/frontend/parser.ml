@@ -30,7 +30,14 @@ let uuid =
   let* i = integer in
   return @@ Share.Uuid.UUID i
 
-let id = spaces *> integer >>= fun i -> return @@ R i
+let ident =
+  spaces
+  *> take_while1 (function
+       | 'a' .. 'z' -> true
+       | 'A' .. 'Z' -> true
+       | _ -> false)
+
+let id = spaces *> ident >>= fun i -> return @@ R i
 let cons x xs = x :: xs
 
 let sep_by2 s p =
@@ -117,12 +124,12 @@ let expr =
   fix (fun expr ->
       choice
         [
-          (id >>= fun i -> return @@ Var (d (), i));
           string "int" *> return (Int (d (), "5"));
           string "string" *> return (String (d (), "hi"));
           string "float" *> return (Float (d (), "8.7"));
           string "bool" *> return (Bool (d (), true));
           string "char" *> return (Char (d (), "g"));
+          (id >>= fun i -> return @@ Var (d (), i));
           parens
             (string "letin"
             *>
@@ -310,8 +317,6 @@ let impl =
   parens
   @@
   let* _ = string "impl" in
-
-  let* name = id in
   let* parent = id in
   let* args =
     parens

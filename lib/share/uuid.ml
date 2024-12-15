@@ -1,5 +1,4 @@
 type uuid = UUID of int [@@deriving show { with_path = false }]
-type 'a by_uuid = (uuid, 'a) Hashtbl.t
 
 let new_by_uuid n : (uuid, 'a) Hashtbl.t = Hashtbl.create n
 
@@ -12,7 +11,7 @@ let print_by_uuid show p =
   |> print_endline
 
 let uuid =
-  let x = ref (-1) in
+  let x = ref 1000 in
   fun () ->
     incr x;
     UUID !x

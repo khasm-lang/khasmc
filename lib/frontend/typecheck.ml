@@ -65,7 +65,7 @@ let empty_ctx () =
     traitfuns = [];
     funs = [];
     (* magic, for testing *)
-    locals = [(R (-1), TyArrow(TyPoly (R (-2)), TyPoly (R (-3))))];
+    locals = [(R "MAGIC", TyArrow(TyPoly (R "-1"), TyPoly (R "-2")))];
     local_polys = [];
   }
 
@@ -98,11 +98,18 @@ let search (ctx : ctx) (id : resolved) : (resolved typ, string) result
         in
         definition_type d);
 
-    failwith "variable not found"
+    begin
+      print_endline "variable not found:";
+      print_endline (show_resolved id);
+      failwith "oops"
+    end
   with DoneTy s -> ok s
 
-let type_information : resolved typ by_uuid = new_by_uuid 100
+let type_information : (uuid, resolved typ) Hashtbl.t = new_by_uuid 100
 let add_type uuid typ = Hashtbl.replace type_information uuid typ
+
+let raw_type_information : (resolved, resolved typ) Hashtbl.t = Hashtbl.create 100
+let add_raw_type id typ = Hashtbl.replace raw_type_information id (force typ)
 
 let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
     (t : resolved typ) :
@@ -179,6 +186,8 @@ let rec infer (ctx : ctx) (e : resolved expr) :
         in
         (* get everything out *)
         let* vars = break_down_case_pattern ctx case head'ty in
+        (* add the relevant type information to the raw type database *)
+        ignore (List.map (fun (a,b) -> add_raw_type a b) vars);
         let ctx' = add_locals ctx vars in
         (* TODO: let generalization? *)
         infer ctx' body
@@ -220,6 +229,7 @@ let rec infer (ctx : ctx) (e : resolved expr) :
           end
        | _ -> ok ()
        in
+       add_raw_type v (force typ);
        ok @@ TyArrow(typ, body'ty)
     | Tuple (_, ts) ->
        (* i love fp *)
@@ -244,6 +254,8 @@ let rec infer (ctx : ctx) (e : resolved expr) :
        let handle_case (case: 'a case * 'a expr): ('a typ, string) result =
          let case, expr = case in
          let* vars = break_down_case_pattern ctx case scrut_typ in
+         (* add raw type info for each *)
+         ignore (List.map (fun (a,b) -> add_raw_type a b) vars);
          let ctx = add_locals ctx vars in
          infer ctx expr
        in
@@ -355,6 +367,7 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
          | None -> infer ctx head
        in
        let* vars = break_down_case_pattern ctx case head'ty in
+       ignore (List.map (fun (a,b) -> add_raw_type a b) vars);
        let ctx = add_locals ctx vars in
        check ctx body t
     | Seq (_, a, b) ->
@@ -374,6 +387,7 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
                    | None -> ok q
                    end
           in
+          add_raw_type v ty;
           let ctx = add_local ctx v ty in
           check ctx body w
        | _ -> err "lambda cannot be non-function type"
@@ -406,6 +420,7 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
        let handle_case (case: 'a case * 'a expr): ('a typ, string) result =
          let case, expr = case in
          let* vars = break_down_case_pattern ctx case scrut_typ in
+         ignore (List.map (fun (a,b) -> add_raw_type a b) vars);
          let ctx = add_locals ctx vars in
          (* only difference is that we can check this time *)
          check ctx expr t
@@ -449,6 +464,7 @@ let typecheck_definition (ctx : ctx) (d : (resolved, yes) definition)
     : (unit, string) result =
   let polys = d.typeargs in
   let args = d.args in
+  ignore (List.map (fun (a,b) -> add_raw_type a b) args);
   let ctx =
     {
       ctx with
@@ -473,7 +489,11 @@ let typecheck_toplevel (ctx: ctx) (t: resolved toplevel):
       (unit, string) result =
   match t with
   | Typdef _ -> ok ()
-  | Trait _ -> ok ()
+  | Trait f ->
+     List.iter (fun (d: ('a, 'b) definition) ->
+         add_raw_type d.name (definition_type d)
+       ) f.functions;
+     ok ()
   | Impl i ->
      typecheck_impl ctx i
   | Definition d ->
@@ -518,6 +538,7 @@ let typecheck (t : resolved toplevel list) : unit =
   |> function
     | Ok _ ->
        print_endline "worked!";
+       (* TODO: make sure metas don't escape (iter hashtbl?) *)
        ()
     | Error e ->
        List.iter (print_endline) e;

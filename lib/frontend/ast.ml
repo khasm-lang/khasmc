@@ -2,13 +2,13 @@ open Share.Uuid
 open Share.Maybe
 
 (* ideally these would be newtypes, but ocaml doesn't have those *)
-type resolved = R of int [@@deriving show { with_path = false }]
+type resolved = R of string [@@deriving show { with_path = false }]
 
 let fresh_resolved =
   let i = ref (-10) in
   fun () ->
     decr i;
-    !i
+    string_of_int !i
 
 type unresolved = U of string
 [@@deriving show { with_path = false }]
@@ -48,6 +48,45 @@ and 'a trait_bound =
   * ('a * 'a typ) list (* assocs *)
 [@@deriving show { with_path = false }]
 
+let do_within_trait_bound (fn : 'a typ -> 'a typ) (t : 'a trait_bound)
+    : 'a trait_bound =
+  let uuid, name, args, assoc = t in
+  let snd_f (a, b) = (a, fn b) in
+  (uuid, name, List.map snd_f args, List.map snd_f assoc)
+
+let do_within_trait_bound' (fn : 'a typ -> 'b) (t : 'a trait_bound) :
+    'b list =
+  let uuid, name, args, assoc = t in
+  List.map (fun x -> fn (snd x)) args
+  @ List.map (fun x -> fn (snd x)) assoc
+
+let do_within_trait_bound'2 (fn : 'a typ -> 'a typ -> 'b) q w :
+    'b list =
+  let uuid, name, args1, assoc1 = q in
+  let uuid, name, args2, assoc2 = w in
+  List.map2 (fun x y -> fn (snd x) (snd y)) args1 args2
+  @ List.map2 (fun x y -> fn (snd x) (snd y)) assoc1 assoc2
+
+let rec regeneralize (nw : unit -> 'a) (ty : 'a typ) =
+  let f = regeneralize nw in
+  match ty with
+  | TyTuple t -> TyTuple (List.map f t)
+  | TyArrow (a, b) -> TyArrow (f a, f b)
+  | TyCustom (c, t) -> TyCustom (c, List.map f t)
+  | TyAssoc (trt, a) -> TyAssoc (do_within_trait_bound f trt, a)
+  | TyRef r -> TyRef (f r)
+  | TyMeta m ->
+      TyMeta
+        (ref
+           begin
+             match !m with
+             | Resolved m -> Resolved m
+             | Unresolved ->
+                 m := Resolved (TyPoly (nw ()));
+                 Resolved (TyMeta m)
+           end)
+  | _ -> ty
+
 let rec force (t : 'a typ) : 'a typ =
   match (t : 'a typ) with
   | TyTuple t -> TyTuple (List.map force t)
@@ -57,10 +96,22 @@ let rec force (t : 'a typ) : 'a typ =
   | TyMeta m -> begin
       match !m with Unresolved -> t | Resolved t -> force t
     end
+  | TyAssoc (bd, a) -> TyAssoc (do_within_trait_bound force bd, a)
   | _ -> t
 
 let copy_typ (t : 'a typ) : 'a typ =
-  (* noop for testing *)
+  let rec gather (t : 'a typ) =
+    match t with
+    | TyTuple t -> List.flatten (List.map gather t)
+    | TyArrow (a, b) -> gather a @ gather b
+    | TyCustom (_, ts) -> List.flatten (List.map gather ts)
+    | TyAssoc (e, _) -> List.flatten (do_within_trait_bound' gather e)
+    | TyRef r -> gather r
+    | TyMeta m -> [ ref m ]
+    | _ -> []
+  in
+  let xs = gather t in
+  let within_tree = List.filter (fun t -> List.memq t xs) xs in
   t
 
 let get_polys t =
@@ -122,6 +173,20 @@ let rec back_to_polys gen t =
           t
     end
   | t -> t
+
+let rec subst_polys (map : ('a * 'a typ) list) (x : 'a typ) : 'a typ =
+  let f = subst_polys map in
+  match force (x : 'a typ) with
+  | TyTuple t -> TyTuple (List.map f t)
+  | TyArrow (a, b) -> TyArrow (f a, f b)
+  | TyPoly k -> begin
+      match List.assoc_opt k map with Some t -> t | None -> x
+    end
+  | TyCustom (a, bnd) -> TyCustom (a, List.map f bnd)
+  | TyAssoc (bnd, a) -> TyAssoc (do_within_trait_bound f bnd, a)
+  | TyRef r -> TyRef (f r)
+  | TyMeta m -> x
+  | _ -> x
 
 type 'a case =
   | CaseVar of 'a
