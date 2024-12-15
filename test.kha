@@ -1,16 +1,17 @@
-(trait 0 (1) () (
-       (50 10 ((11 (poly 1))) ())
+(trait SHOW (SHOWT) () (
+       (50 RANDOM ((RANDOMT (poly SHOWT))) ())
 )
 (
-       (let 2 () () ((4 (poly 1))) TyString)
+       (let show () () ((showarg (poly SHOWT))) TyString)
 ))
 
-(trait 10 (11) () () ())
+(trait RANDOM (RANDOMT) () () ())
 
-(impl 12 10 ((11 TyInt)) () ())
 
-(impl 5 0 ((1 TyInt)) () (
-      9 (let 2 () () ((6 TyInt)) TyString ($ (-1) 6))
+(impl RANDOM ((RANDOMT TyInt)) () ())
+
+(impl SHOW ((SHOWT TyInt)) () (
+      9 (let show () () ((showx TyInt)) TyString ($ (MAGIC) showx))
 ))
 
-(let 8 () () () TyString ($ (2) int))
+(let foo () () () TyString ($ (show) int))

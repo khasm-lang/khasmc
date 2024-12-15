@@ -28,11 +28,17 @@ let main () =
       print_endline "----------------\n";
       let context = build_ctx e in
       let example_bound : 'a trait_bound =
-        (UUID 100, R 0, [ (R 1, TyInt) ], [])
+        (UUID 100, R "SHOW", [ (R "SHOWT", TyInt) ], [])
       in
       begin
         match search_impls context example_bound with
         | Ok s -> print_endline (show_solved s)
+        | Error e -> print_endline e
+      end;
+      print_endline "-----------------\n";
+      begin
+        match resolve e with
+        | Ok () -> ()
         | Error e -> print_endline e
       end
   | Error s ->
