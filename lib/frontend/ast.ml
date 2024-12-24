@@ -99,20 +99,14 @@ let rec force (t : 'a typ) : 'a typ =
   | TyAssoc (bd, a) -> TyAssoc (do_within_trait_bound force bd, a)
   | _ -> t
 
-let copy_typ (t : 'a typ) : 'a typ =
-  let rec gather (t : 'a typ) =
-    match t with
-    | TyTuple t -> List.flatten (List.map gather t)
-    | TyArrow (a, b) -> gather a @ gather b
-    | TyCustom (_, ts) -> List.flatten (List.map gather ts)
-    | TyAssoc (e, _) -> List.flatten (do_within_trait_bound' gather e)
-    | TyRef r -> gather r
-    | TyMeta m -> [ ref m ]
-    | _ -> []
-  in
-  let xs = gather t in
-  let within_tree = List.filter (fun t -> List.memq t xs) xs in
-  t
+type ptr = int64
+
+let ptr_of (x : 'a) : ptr =
+  (* SEGFAULTS IF CALLED ON AN INT *)
+  if Obj.is_int (Obj.repr x) then
+    failwith "ptr_of integer"
+  else
+    Obj.magic x
 
 let get_polys t =
   let rec g t =

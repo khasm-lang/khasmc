@@ -146,14 +146,9 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
           let twice f (a, b) = (f a, f b) in
           let* args' = zipby args impl_args in
           let* assocs' = zipby assocs impl_assocs in
-          (* copy to ensure no "cross influences" (PLACEBO) *)
-          let args' =
-            List.map (twice copy_typ) args' |> List.map (twice force)
-          in
-          let assocs' =
-            List.map (twice copy_typ) assocs'
-            |> List.map (twice force)
-          in
+          (* force to ensure no "cross influences" (PLACEBO) *)
+          let args' = List.map (twice force) args' in
+          let assocs' = List.map (twice force) assocs' in
           let get_both_polys (a, b) = get_polys a @ get_polys b in
           let all_metas =
             List.map fst impl_args
