@@ -3,9 +3,9 @@
 (library
  (public_name khasmc)
  (name khasmc)
- (libraries angstrom fmt batteries ppx_deriving)
+ (libraries angstrom sedlex fmt batteries ppx_deriving)
  (preprocess
-  (pps ppx_deriving.show))
+  (pps ppx_deriving.show sedlex.ppx))
  (flags
   (-warn-error -A -g -annot))
  (ocamlopt_flags

@@ -13,9 +13,8 @@ let main () =
   let s = In_channel.with_open_bin file In_channel.input_all in
   print_endline "file:";
   print_endline s;
-  match
-    Angstrom.parse_string ~consume:Angstrom.Consume.All toplevel s
-  with
+  let lexbuf = Sedlexing.Utf8.from_string s in
+  match toplevel lexbuf with
   | Ok e ->
       print_endline "parsed:";
       List.iter
