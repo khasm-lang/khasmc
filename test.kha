@@ -5,3 +5,5 @@ end
 impl Show Int =
      fun< 9 > show (showx : Int): String = MAGIC showx
 end
+
+fun main (x : Int): String = show x 
