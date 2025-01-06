@@ -1,17 +1,7 @@
-(trait SHOW (SHOWT) () (
-       (50 RANDOM ((RANDOMT (poly SHOWT))) ())
-)
-(
-       (let show () () ((showarg (poly SHOWT))) TyString)
-))
+trait Show 'showt =
+      fun show (showarg : 'showt): String
+end
 
-(trait RANDOM (RANDOMT) () () ())
-
-
-(impl RANDOM ((RANDOMT TyInt)) () ())
-
-(impl SHOW ((SHOWT TyInt)) () (
-      9 (let show () () ((showx TyInt)) TyString ($ (MAGIC) showx))
-))
-
-(let foo () () () TyString ($ (show) int))
+impl Show Int =
+     fun< 9 > show (showx : Int): String = MAGIC showx
+end

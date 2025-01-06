@@ -258,7 +258,6 @@ let solve_all_bounds_for (ctx : ctx) (uuid : uuid) (e : resolved)
     and solve for Show String, which then gives us a Solution that
     we link to the uuid of the resolved.
    *)
-  print_endline "\n\nSOLVER:";
   let* exp_typ =
     match Hashtbl.find_opt raw_type_information e with
     | Some s -> Ok (force s)
@@ -314,7 +313,6 @@ let solve_all_bounds_for (ctx : ctx) (uuid : uuid) (e : resolved)
     |> collect
     |> Result.map_error (String.concat "\n")
   in
-  print_endline "\nSOLUTIONS:";
   List.iter (fun x -> print_endline (show_solved x)) solutions;
   (* add to the allmighty trait information table *)
   Hashtbl.replace trait_information uuid solutions;
@@ -322,18 +320,12 @@ let solve_all_bounds_for (ctx : ctx) (uuid : uuid) (e : resolved)
 
 let rec resolve_expr (ctx : ctx) (e : resolved expr) :
     (unit, string) result =
-  print_endline "resolve_expr";
-  print_endline (show_expr pp_resolved e);
   match e with
-  | Var (d, id) ->
-      print_endline (show_resolved id);
-      begin
-        match has_bounds ctx id with
-        | Some bounds ->
-            print_endline "wuh";
-            solve_all_bounds_for ctx d.uuid id bounds
-        | None -> ok ()
-      end
+  | Var (d, id) -> begin
+      match has_bounds ctx id with
+      | Some bounds -> solve_all_bounds_for ctx d.uuid id bounds
+      | None -> ok ()
+    end
   | Int (_, _) -> ok ()
   | String (_, _) -> ok ()
   | Char (_, _) -> ok ()
@@ -377,7 +369,10 @@ let resolve_definition (ctx : ctx) (d : (resolved, yes) definition) :
   (* The most pressing thing we have to deal with
      (as all global impls are already in the ctx)
      is adding our "local" impls in, so that they can be correctly
-     resolvd & tagged.
+     resolved & tagged.
+
+     TODO: handle that trait dependencies should be avaliable when
+     doing resolution
   *)
   let bounds = d.bounds |> List.map (fun p -> Local p) in
   let ctx = { ctx with impls = bounds @ ctx.impls } in
@@ -385,8 +380,10 @@ let resolve_definition (ctx : ctx) (d : (resolved, yes) definition) :
 
 let resolve_impl (ctx : ctx) (i : resolved impl) :
     (unit, string) result =
-  print_endline "TODO resolve impl";
-  ok ()
+  List.map (fun (a, b) -> resolve_definition ctx b) i.impls
+  |> collect
+  |> Result.map_error (String.concat "\n")
+  |> Result.map (fun _ -> ())
 
 let resolve (top : resolved toplevel list) : (unit, string) result =
   let ctx = build_ctx top in
