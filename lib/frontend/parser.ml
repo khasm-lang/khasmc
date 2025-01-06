@@ -8,58 +8,7 @@ let char = [%sedlex.regexp? Compl '"']
 let string = [%sedlex.regexp? '"', Star char, '"']
 let float = [%sedlex.regexp? num, '.', num]
 
-type t_TOKEN =
-  | LEFTB
-  | RIGHTB
-  | LEFTP
-  | RIGHTP
-  | LEFTC
-  | RIGHTC
-  | GT
-  | LT
-  | DOLLAR
-  | HASH
-  | AT
-  | STAR
-  | BANG
-  | PERCENT
-  | PLUS
-  | MINUS
-  | AND
-  | PIPE
-  | COMMA
-  | SEMICOLON
-  | COLON
-  | EQUALS
-  | FSLASH
-  | BSLASH
-  | TYPE
-  | TRAIT
-  | REF
-  | WHERE
-  | LET
-  | IN
-  | AS
-  | ARROW
-  | TYINT
-  | TYSTRING
-  | TYCHAR
-  | TYFLOAT
-  | TYBOOL
-  | IMPL
-  | MODULE
-  | END
-  | MATCH
-  | FUN
-  | BOOL of bool
-  | STRING of string
-  | ID of string
-  | TYPEID of string
-  | POLYID of string
-  | INT of string
-  | FLOAT of string
-  | DONE
-[@@deriving show { with_path = false }]
+open Token
 
 let rec lexer_ buf : (t_TOKEN, exn) Result.t =
   match
@@ -136,7 +85,80 @@ let lexer buf =
   in
   go []
 
+let next buf =
+  match !buf with
+  | x :: xs ->
+      buf := xs;
+      x
+  | [] -> failwith "next on empty buffer"
+
+let next' buf = ignore (next buf)
+
+let peek buf =
+  match !buf with
+  | x :: xs -> x
+  | [] -> failwith "peek on empty buffer"
+
+let peek2 buf =
+  match !buf with
+  | x :: y :: xs -> y
+  | _ -> failwith "peek2 on emptyish buffer"
+
+let type' buf = failwith "parse types"
+let expr buf = failwith "parse exprs"
+
+let rec toplevel' buf =
+  match next buf with
+  | FUN -> begin
+      let (ID name) = next buf in
+      let targs =
+        match peek buf with
+        | LEFTB ->
+            let xs =
+              begin
+                match peek2 buf with
+                | TYPE ->
+                    next' buf;
+                    next' buf;
+                    let rec go () =
+                      match next buf with
+                      | TYPEID t -> t :: go ()
+                      | RIGHTB -> []
+                      | _ -> failwith "parsing type list what"
+                    in
+                    Some (go ())
+                | _ -> None
+              end
+            in
+            xs
+        | _ -> None
+      in
+      let targs = match targs with Some xs -> xs | None -> [] in
+      let bounds = failwith "bounds" in
+      let arg_list =
+        let rec go () =
+          match peek buf with
+          | LEFTP ->
+              next' buf;
+              let (ID argnm) = next buf in
+              let COLON = next buf in
+              let typ = type' buf in
+              let RIGHTP = next buf in
+              (argnm, typ) :: go ()
+          | _ -> []
+        in
+        go ()
+      in
+      let COLON = next buf in
+      let typ = type' buf in
+      let EQUALS = next buf in
+      let body = expr buf in
+      failwith "todo"
+    end
+  | _ -> failwith "todo"
+
 let toplevel buf =
-  let toks = lexer buf in
-  List.iter (fun s -> print_endline (show_t_TOKEN s)) toks;
-  Error ":("
+  let toks = ref (lexer buf) in
+  List.iter (fun x -> print_string (show_t_TOKEN x ^ " ")) !toks;
+  print_newline ();
+  toplevel' toks
