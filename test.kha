@@ -1,9 +1,16 @@
+fun main (x : Int): String = show x
+
 trait Show 'showt =
       fun show (showarg : 'showt): String
+      fun name (unit : ()): String
 end
 
-impl Show Int =
-     fun< 9 > show (showx : Int): String = MAGIC showx
+impl Show ('showt Int) =
+     fun 9 show (showx : Int): String = magic showx
+     fun 10 name (unit : ()): String = "Int"
 end
 
-fun main (x : Int): String = show x 
+impl Show ('showt Char) =
+     fun 11 show (showc : Char): String = magic showc
+     fun 12 name (unit : ()): String = "Char"
+end

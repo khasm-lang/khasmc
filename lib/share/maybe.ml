@@ -5,8 +5,8 @@ type (_, _) maybe =
   | Nothing : ('a, no) maybe
   | Just : 'a -> ('a, yes) maybe
 
-let pp_maybe :
-    type q w. ('a -> q -> unit) -> 's -> 'a -> (q, w) maybe -> unit =
+let pp_maybe : type q w.
+    ('a -> q -> unit) -> 's -> 'a -> (q, w) maybe -> unit =
  fun p1 _ fmt x ->
   match x with
   | Nothing -> Format.fprintf fmt "Nothing"
