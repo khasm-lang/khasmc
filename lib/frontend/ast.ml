@@ -197,6 +197,16 @@ type data = {
 
 let data () = { uuid = Share.Uuid.uuid (); span = None }
 
+type binop =
+  | Add
+  | Sub
+  | Mul
+  | Div
+  | LAnd
+  | LOr
+  | Eq
+[@@deriving show { with_path = false }]
+
 type 'a expr =
   | Var of data * 'a
   | Int of data * string
@@ -207,6 +217,7 @@ type 'a expr =
   | LetIn of data * 'a case * 'a typ option * 'a expr * 'a expr
   | Seq of data * 'a expr * 'a expr
   | Funccall of data * 'a expr * 'a expr
+  | Binop of data * binop * 'a expr * 'a expr
   | Lambda of data * 'a * 'a typ option * 'a expr
   | Tuple of data * 'a expr list
   | Annot of data * 'a expr * 'a typ
@@ -228,6 +239,7 @@ let get_uuid (e : 'a expr) : uuid =
   | LetIn (i, _, _, _, _) -> i.uuid
   | Seq (i, _, _) -> i.uuid
   | Funccall (i, _, _) -> i.uuid
+  | Binop (i, _, _, _) -> i.uuid
   | Lambda (i, _, _, _) -> i.uuid
   | Tuple (i, _) -> i.uuid
   | Annot (i, _, _) -> i.uuid
@@ -286,7 +298,7 @@ type 'a trait = {
   data : data;
   name : 'a;
   args : 'a list;
-  assoc : 'a list;
+  assocs : 'a list;
   requirements : 'a trait_bound list;
   functions : ('a, no) definition list;
 }

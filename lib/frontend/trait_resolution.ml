@@ -80,7 +80,7 @@ let build_ctx top =
                List.map
                  (fun (a : ('a, 'b) definition) ->
                    let t : resolved trait_bound =
-                     (uuid (), t.name, f t.args, f t.assoc)
+                     (uuid (), t.name, f t.args, f t.assocs)
                    in
                    (a.name, t :: a.bounds))
                  t.functions
@@ -226,9 +226,11 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
 
           ok @@ Solution (unique, impl, attempts)
         with
-        | Ok sol ->
-            (* TODO: check we don't get multiple solutions? *)
-            ok sol
+        | Ok sol -> begin
+            match go xs with
+            | Error _ -> ok sol
+            | Ok _ -> err "multiple solutions! no bueno :("
+          end
         | Error e -> go xs)
   in
   let* sol = go impls in
@@ -273,7 +275,7 @@ let solve_all_bounds_for (ctx : ctx) (uuid : uuid) (e : resolved)
     | Some t -> ok t
     | None -> Error ("No trait for " ^ show_resolved e)
   in
-  let all_polys = trait.args @ trait.assoc in
+  let all_polys = trait.args @ trait.assocs in
   let rec go real exp =
     match (force real, force exp) with
     | a, b when a = b -> []
@@ -343,6 +345,7 @@ let rec resolve_expr (ctx : ctx) (e : resolved expr) :
       let* _ = resolve_expr ctx a in
       let* _ = resolve_expr ctx b in
       ok ()
+  | Binop (_, op, a, b) -> failwith "TODO: binops"
   | Lambda (_, id, _, e) -> resolve_expr ctx e
   | Tuple (_, es) ->
       List.map (resolve_expr ctx) es

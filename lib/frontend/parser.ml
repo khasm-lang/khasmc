@@ -1,85 +1,16 @@
-let digit = [%sedlex.regexp? '0' .. '9']
-let num = [%sedlex.regexp? Plus digit]
-let id = [%sedlex.regexp? Plus ll]
-let tid = [%sedlex.regexp? lu, Plus (ll | lu)]
-let polyid = [%sedlex.regexp? '\'', id]
-let space = [%sedlex.regexp? Plus (zs | cc)]
-let char = [%sedlex.regexp? Compl '"']
-let string = [%sedlex.regexp? '"', Star char, '"']
-let float = [%sedlex.regexp? num, '.', num]
+[@@@ocaml.warning "-8-28-26"]
 
 open Token
+open Share.Uuid
+open Share.Maybe
+open Ast
 
-let rec lexer_ buf : (t_TOKEN, exn) Result.t =
-  match
-    begin
-      match%sedlex buf with space -> () | _ -> ()
-    end;
-    begin
-      match%sedlex buf with
-      | '(' -> LEFTP
-      | ')' -> RIGHTP
-      | '{' -> LEFTC
-      | '}' -> RIGHTC
-      | '>' -> GT
-      | '<' -> LT
-      | '$' -> DOLLAR
-      | '#' -> HASH
-      | '@' -> AT
-      | '!' -> BANG
-      | '*' -> STAR
-      | '%' -> PERCENT
-      | '+' -> PLUS
-      | '-' -> MINUS
-      | '&' -> AND
-      | '|' -> PIPE
-      | ',' -> COMMA
-      | ';' -> SEMICOLON
-      | ':' -> COLON
-      | '=' -> EQUALS
-      | '/' -> FSLASH
-      | '\\' -> BSLASH
-      | "type" -> TYPE
-      | "trait" -> TRAIT
-      | "ref" -> REF
-      | "where" -> WHERE
-      | "let" -> LET
-      | "in" -> IN
-      | "as" -> AS
-      | "->" -> ARROW
-      | "Int" -> TYINT
-      | "String" -> TYSTRING
-      | "Char" -> TYCHAR
-      | "Float64" -> TYFLOAT
-      | "Bool" -> TYBOOL
-      | "impl" -> IMPL
-      | "module" -> MODULE
-      | "end" -> END
-      | "match" -> MATCH
-      | "fun" -> FUN
-      | "true" -> BOOL true
-      | "false" -> BOOL false
-      | string -> STRING (Sedlexing.Utf8.lexeme buf)
-      | id -> ID (Sedlexing.Utf8.lexeme buf)
-      | tid -> TYPEID (Sedlexing.Utf8.lexeme buf)
-      | polyid -> POLYID (Sedlexing.Utf8.lexeme buf)
-      | num -> INT (Sedlexing.Utf8.lexeme buf)
-      | float -> FLOAT (Sedlexing.Utf8.lexeme buf)
-      | eof -> DONE
-      | any -> failwith (Sedlexing.Utf8.lexeme buf)
-      | _ -> failwith "IMPOSSIBLE"
-    end
-  with
-  | s -> Ok s
-  | exception e ->
-      print_endline "ERROR!";
-      print_endline (Printexc.to_string e);
-      Error e
+let data' () : data = { uuid = uuid (); span = None }
 
 let lexer buf =
   let rec go acc =
     match lexer_ buf with
-    | Ok DONE -> List.rev acc
+    | Ok DONE -> List.rev (DONE :: acc)
     | Ok s -> go (s :: acc)
     | Error e -> List.rev acc
   in
@@ -104,61 +35,420 @@ let peek2 buf =
   | x :: y :: xs -> y
   | _ -> failwith "peek2 on emptyish buffer"
 
-let type' buf = failwith "parse types"
-let expr buf = failwith "parse exprs"
+exception ParseError
+
+let expect tok buf =
+  match next buf with
+  | s when s = tok -> ()
+  | s ->
+      print_endline "expect failed";
+      print_endline ("wanted: " ^ show_t_TOKEN tok);
+      print_endline ("got: " ^ show_t_TOKEN s);
+      raise ParseError
+
+let prec x =
+  match x with
+  | PLUS | MINUS -> 20
+  | STAR | FSLASH -> 30
+  | AND | PIPE -> 10
+  | EQUALS -> 0
+  | _ -> -1
+
+let to_binop x =
+  match x with
+  | PLUS -> Add
+  | MINUS -> Sub
+  | STAR -> Mul
+  | FSLASH -> Div
+  | AND -> LAnd
+  | PIPE -> LOr
+  | EQUALS -> Eq
+  | _ -> failwith "to_binop failed"
+
+let rec type' buf =
+  let start =
+    match next buf with
+    | LEFTP -> begin
+        match peek buf with
+        | RIGHTP ->
+            next' buf;
+            TyTuple []
+        | _ ->
+            let s = type' buf in
+            begin
+              match next buf with
+              | RIGHTP -> s
+              | COMMA ->
+                  (* tuple *)
+                  let rec go () =
+                    let s = type' buf in
+                    match next buf with
+                    | RIGHTP -> []
+                    | COMMA -> s :: go ()
+                  in
+                  TyTuple (s :: go ())
+            end
+      end
+    | TYINT -> TyInt
+    | TYSTRING -> TyString
+    | TYCHAR -> TyChar
+    | TYFLOAT -> TyFloat
+    | POLYID s -> TyPoly s
+    | REF -> TyRef (type' buf)
+    | TYPEID s -> begin
+        match peek buf with
+        | TYPEID _ | POLYID _ | LEFTP _ ->
+            (* custom with args *)
+            failwith "args"
+        | _ -> failwith "no args"
+      end
+    | _ -> failwith "other type weirdness"
+  in
+  match peek buf with
+  | ARROW ->
+      next' buf;
+      let rest = type' buf in
+      TyArrow (start, rest)
+  | _ -> start
+
+let rec case' buf =
+  match next buf with
+  | ID s ->
+      (* maybe custom, maybe not *)
+      let rec handle () =
+        begin
+          match peek buf with
+          | LEFTP ->
+              (* subexpr *)
+              next' buf;
+              let sub = case' buf in
+              expect RIGHTP buf;
+              sub :: handle ()
+          | ID s ->
+              (* subvar *)
+              next' buf;
+              CaseVar s :: handle ()
+          | _ ->
+              (* not any of that *)
+              []
+        end
+      in
+      begin
+        match handle () with [] -> CaseVar s | xs -> CaseCtor (s, xs)
+      end
+  | LEFTP ->
+      (* tuple or abbrev *)
+      failwith "tuple"
+  | _ -> failwith "huh?"
+
+module Expr = struct
+  let ( let* ) = Option.bind
+
+  let ( let+ ) x f =
+    match x with
+    | None ->
+        print_endline "let+ None";
+        raise ParseError
+    | Some s -> f s
+
+  let some x = Some x
+
+  let rec expr curr curr_prec buf =
+    let t = peek buf in
+    print_endline (show_t_TOKEN t);
+    match prec t with
+    | -1 ->
+        (* no valid operator char - maybe application? *)
+        (* must be a current for this to be true *)
+        begin
+          match expr_small buf with
+          | None ->
+              (* not application *)
+              some curr
+          | Some s ->
+              (* yes application *)
+              let rec do_app () =
+                match expr_small buf with
+                | None -> []
+                | Some s -> s :: do_app ()
+              in
+              let rest = do_app () |> List.rev in
+              let orig = Funccall (data' (), curr, s) in
+              some
+                (List.fold_right
+                   (fun acc x -> Funccall (data' (), x, acc))
+                   rest orig)
+        end
+    | prec ->
+        if prec < curr_prec then
+          some curr
+        else begin
+          next' buf;
+          let* rhs = expr' prec buf in
+          let c = Binop (data' (), to_binop t, curr, rhs) in
+          expr c curr_prec buf
+        end
+
+  and expr' curr_prec buf =
+    let* curr = expr_small buf in
+    expr curr curr_prec buf
+
+  and expr_small buf =
+    let exception NoValid in
+    try
+      begin
+        match peek buf with
+        | LEFTP ->
+            next' buf;
+            let* e = expr' 0 buf in
+            expect RIGHTP buf;
+            some e
+        | ID i ->
+            next' buf;
+            some @@ Var (data' (), i)
+        | INT i ->
+            next' buf;
+            some @@ Int (data' (), i)
+        | FLOAT i ->
+            next' buf;
+            some @@ Float (data' (), i)
+        | STRING i ->
+            next' buf;
+            some @@ String (data' (), i)
+        | BOOL b ->
+            next' buf;
+            some @@ Bool (data' (), b)
+        | LET -> begin
+            next' buf;
+            let case = case' buf in
+            let ty =
+              match next buf with
+              | COLON ->
+                  let ty = type' buf in
+                  expect EQUALS buf;
+                  Some ty
+              | EQUALS -> None
+            in
+            let+ expr'' = expr' 0 buf in
+            expect IN buf;
+            let+ body = expr' 0 buf in
+            some @@ LetIn (data' (), case, ty, expr'', body)
+          end
+        | IF -> begin
+            next' buf;
+            let+ c = expr' 0 buf in
+            expect THEN buf;
+            let+ true' = expr' 0 buf in
+            expect ELSE buf;
+            let+ false' = expr' 0 buf in
+            let cases =
+              [
+                (CaseCtor (R " internal true", []), true');
+                (CaseCtor (R " internal false", []), false');
+              ]
+            in
+            some @@ Match (data' (), c, cases)
+          end
+        | _ -> raise NoValid
+      end
+    with NoValid -> None
+end
+
+open Expr
+
+let trait_bound buf : 'a trait_bound =
+  let (ID s) = next buf in
+  let rec getlist () =
+    match peek buf with
+    | LEFTP ->
+        next' buf;
+        let (ID main) = next buf in
+        let ty = type' buf in
+        expect RIGHTP buf;
+        (main, ty) :: getlist ()
+    | _ -> []
+  in
+  let a = getlist () in
+  expect SEMICOLON buf;
+  let b = getlist () in
+  (uuid (), s, a, b)
+
+let definition_up_to_body buf =
+  begin
+    match peek buf with FUN -> next' buf | _ -> ()
+  end;
+  let (ID name) = next buf in
+  let targs =
+    match peek buf with
+    | LEFTB ->
+        let xs =
+          begin
+            match peek2 buf with
+            | TYPE ->
+                next' buf;
+                next' buf;
+                let rec go () =
+                  match next buf with
+                  | POLYID t -> t :: go ()
+                  | RIGHTB -> []
+                  | t ->
+                      print_endline (show_t_TOKEN t);
+                      failwith "parsing type list weird"
+                in
+                Some (go ())
+            | _ -> None
+          end
+        in
+        xs
+    | _ -> None
+  in
+  let targs = match targs with Some xs -> xs | None -> [] in
+  let bounds =
+    let rec go () =
+      match peek buf with
+      | LEFTB ->
+          next' buf;
+          let b = trait_bound buf in
+          let RIGHTB = next buf in
+          b :: go ()
+      | _ -> []
+    in
+    go ()
+  in
+  let arg_list =
+    let rec go () =
+      match peek buf with
+      | LEFTP ->
+          next' buf;
+          let (ID argnm) = next buf in
+          let COLON = next buf in
+          let typ = type' buf in
+          let RIGHTP = next buf in
+          (argnm, typ) :: go ()
+      | _ -> []
+    in
+    go ()
+  in
+  let COLON = next buf in
+  let ret = type' buf in
+  {
+    data = data' ();
+    name;
+    typeargs = targs;
+    args = arg_list;
+    bounds;
+    return = ret;
+    body = Nothing;
+  }
 
 let rec toplevel' buf =
   match next buf with
   | FUN -> begin
-      let (ID name) = next buf in
-      let targs =
-        match peek buf with
-        | LEFTB ->
-            let xs =
-              begin
-                match peek2 buf with
-                | TYPE ->
-                    next' buf;
-                    next' buf;
-                    let rec go () =
-                      match next buf with
-                      | TYPEID t -> t :: go ()
-                      | RIGHTB -> []
-                      | _ -> failwith "parsing type list what"
-                    in
-                    Some (go ())
-                | _ -> None
-              end
-            in
-            xs
-        | _ -> None
+      let definition_main = definition_up_to_body buf in
+      let EQUALS = next buf in
+      let+ body = expr' 0 buf in
+      let data = data' () in
+      let res =
+        Definition { definition_main with body = Just body }
       in
-      let targs = match targs with Some xs -> xs | None -> [] in
-      let bounds = failwith "bounds" in
-      let arg_list =
+      res :: toplevel' buf
+    end
+  | TRAIT ->
+      let (TYPEID name) = next buf in
+      let rec list () =
+        match peek buf with
+        | POLYID p ->
+            next' buf;
+            p :: list ()
+        | _ -> []
+      in
+      let args = list () in
+      let assocs =
+        match next buf with
+        | SEMICOLON ->
+            let a = list () in
+            expect EQUALS buf;
+            a
+        | EQUALS -> []
+        | _ -> failwith "trait what is this"
+      in
+      let requirements =
         let rec go () =
           match peek buf with
           | LEFTP ->
               next' buf;
-              let (ID argnm) = next buf in
-              let COLON = next buf in
-              let typ = type' buf in
-              let RIGHTP = next buf in
-              (argnm, typ) :: go ()
+              let req = trait_bound buf in
+              expect RIGHTP buf;
+              req :: go ()
           | _ -> []
         in
         go ()
       in
-      let COLON = next buf in
-      let typ = type' buf in
-      let EQUALS = next buf in
-      let body = expr buf in
-      failwith "todo"
-    end
-  | _ -> failwith "todo"
+      print_endline "wuh?";
+      print_endline (show_t_TOKEN (peek buf));
+      let rec go () =
+        match peek buf with
+        | END ->
+            next' buf;
+            []
+        | _ ->
+            let def = definition_up_to_body buf in
+            def :: go ()
+      in
+      let defs = go () in
+      Trait
+        {
+          data = data' ();
+          name;
+          args;
+          assocs;
+          requirements;
+          functions = defs;
+        }
+      :: toplevel' buf
+  | IMPL ->
+      let (TYPEID name) = next buf in
+      let rec list () =
+        match peek buf with
+        | LEFTP ->
+            next' buf;
+            let (POLYID p) = next buf in
+            let ty = type' buf in
+            expect RIGHTP buf;
+            (p, ty) :: list ()
+        | _ -> []
+      in
+      let args = list () in
+      let assocs =
+        match next buf with
+        | SEMICOLON ->
+            let s = list () in
+            expect EQUALS buf;
+            s
+        | EQUALS -> []
+      in
+      let rec go () =
+        match next buf with
+        | FUN ->
+            let (INT i) = next buf in
+            let def = definition_up_to_body buf in
+            expect EQUALS buf;
+            let+ body = expr' 0 buf in
+            (UUID (int_of_string i), { def with body = Just body })
+            :: go ()
+        | END -> []
+      in
+      let funs = go () in
+      Impl
+        { data = data' (); parent = name; args; assocs; impls = funs }
+      :: toplevel' buf
+  | DONE -> []
+  | t ->
+      print_endline (show_t_TOKEN t);
+      failwith "anything other than definition"
 
 let toplevel buf =
   let toks = ref (lexer buf) in
   List.iter (fun x -> print_string (show_t_TOKEN x ^ " ")) !toks;
   print_newline ();
-  toplevel' toks
+  Ok (toplevel' toks)
