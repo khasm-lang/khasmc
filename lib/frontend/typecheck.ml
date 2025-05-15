@@ -126,6 +126,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
     |> Result.map_error (String.concat " ")
   in
   match c with
+  | CaseLit p -> ok []
   | CaseVar v -> ok [ (v, t) ]
   | CaseTuple tu -> begin
       match t with
@@ -221,7 +222,25 @@ let rec infer (ctx : ctx) (e : resolved expr) :
               ok w
           | _ -> err "must function call on function type"
         end
-    | Binop (_, op, a, b) -> failwith "TODO: binop"
+    | Binop (_, op, a, b) -> begin
+        match op with
+        | Add | Sub | Mul | Div ->
+            let* t =
+              match check ctx a TyInt with
+              | Ok _ -> ok TyInt
+              | Error _ -> check ctx a TyFloat
+            in
+            let* _ = check ctx b t in
+            ok t
+        | LAnd | LOr ->
+            let* _ = check ctx a TyBool in
+            let* _ = check ctx b TyBool in
+            ok TyBool
+        | Eq ->
+            let* ty = infer ctx a in
+            let* _ = check ctx b ty in
+            ok TyBool
+      end
     | Lambda (_, v, typ, body) ->
         (* if we don't have a static type we can
           make a meta in order to try and infer the body
@@ -499,9 +518,6 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
         *)
         let* ty = infer ctx e in
         let* _ = unify ctx.local_polys ty t in
-        print_endline "check";
-        typ_pp t;
-        typ_pp ty;
         ok ty
   in
   let uuid = get_uuid e in
@@ -584,7 +600,6 @@ let typecheck (t : resolved toplevel list) : unit =
   let ctx = gather t in
   List.map (typecheck_toplevel ctx) t |> collect |> function
   | Ok _ ->
-      print_endline "worked!";
       (* TODO: make sure metas don't escape (iter hashtbl?) *)
       ()
   | Error e ->

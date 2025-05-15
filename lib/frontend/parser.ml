@@ -155,7 +155,6 @@ module Expr = struct
 
   let rec expr curr curr_prec buf =
     let t = peek buf in
-    print_endline (show_t_TOKEN t);
     match prec t with
     | -1 ->
         (* no valid operator char - maybe application? *)
@@ -243,8 +242,8 @@ module Expr = struct
             let+ false' = expr' 0 buf in
             let cases =
               [
-                (CaseCtor (R " internal true", []), true');
-                (CaseCtor (R " internal false", []), false');
+                (CaseLit (LBool true), true');
+                (CaseLit (LBool false), false');
               ]
             in
             some @@ Match (data' (), c, cases)
@@ -257,12 +256,12 @@ end
 open Expr
 
 let trait_bound buf : 'a trait_bound =
-  let (ID s) = next buf in
+  let (TYPEID s) = next buf in
   let rec getlist () =
     match peek buf with
     | LEFTP ->
         next' buf;
-        let (ID main) = next buf in
+        let (POLYID main) = next buf in
         let ty = type' buf in
         expect RIGHTP buf;
         (main, ty) :: getlist ()
@@ -280,36 +279,32 @@ let definition_up_to_body buf =
   let (ID name) = next buf in
   let targs =
     match peek buf with
-    | LEFTB ->
-        let xs =
-          begin
-            match peek2 buf with
-            | TYPE ->
-                next' buf;
-                next' buf;
-                let rec go () =
-                  match next buf with
-                  | POLYID t -> t :: go ()
-                  | RIGHTB -> []
-                  | t ->
-                      print_endline (show_t_TOKEN t);
-                      failwith "parsing type list weird"
-                in
-                Some (go ())
-            | _ -> None
-          end
-        in
-        xs
+    | LEFTC -> begin
+        match peek2 buf with
+        | TYPE ->
+            next' buf;
+            next' buf;
+            let rec go () =
+              match next buf with
+              | POLYID t -> t :: go ()
+              | RIGHTC -> []
+              | t ->
+                  print_endline (show_t_TOKEN t);
+                  failwith "parsing type list weird"
+            in
+            Some (go ())
+        | _ -> None
+      end
     | _ -> None
   in
   let targs = match targs with Some xs -> xs | None -> [] in
   let bounds =
     let rec go () =
       match peek buf with
-      | LEFTB ->
+      | LEFTC ->
           next' buf;
           let b = trait_bound buf in
-          let RIGHTB = next buf in
+          let RIGHTC = next buf in
           b :: go ()
       | _ -> []
     in
@@ -329,7 +324,7 @@ let definition_up_to_body buf =
     in
     go ()
   in
-  let COLON = next buf in
+  expect COLON buf;
   let ret = type' buf in
   {
     data = data' ();
@@ -384,8 +379,6 @@ let rec toplevel' buf =
         in
         go ()
       in
-      print_endline "wuh?";
-      print_endline (show_t_TOKEN (peek buf));
       let rec go () =
         match peek buf with
         | END ->
@@ -449,6 +442,17 @@ let rec toplevel' buf =
 
 let toplevel buf =
   let toks = ref (lexer buf) in
+  (*
   List.iter (fun x -> print_string (show_t_TOKEN x ^ " ")) !toks;
   print_newline ();
-  Ok (toplevel' toks)
+   *)
+  try
+    let t = toplevel' toks in
+    Ok t
+  with exc ->
+    print_endline (Printexc.to_string exc);
+    print_endline "next ten tokens:";
+    for i = 0 to 10 do
+      print_string (show_t_TOKEN (next toks) ^ " ")
+    done;
+    failwith "parser error"

@@ -151,7 +151,8 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
           let assocs' = List.map (twice force) assocs' in
           let get_both_polys (a, b) = get_polys a @ get_polys b in
           let all_metas =
-            List.map fst impl_args
+            ctx.local_polys
+            @ List.map fst impl_args
             @ List.map fst impl_assocs
             @ (List.flatten @@ List.map get_both_polys args')
             @ List.flatten
@@ -293,29 +294,16 @@ let solve_all_bounds_for (ctx : ctx) (uuid : uuid) (e : resolved)
     | _, _ -> failwith "impossible: solver.go no match"
   in
   let polys_to_reals = go real_typ exp_typ in
-  List.iter
-    (fun (a, b) ->
-      print_string (show_resolved a ^ " := ");
-      print_endline (show_typ pp_resolved b))
-    polys_to_reals;
-  print_string "exp:  ";
-  print_endline (show_typ pp_resolved exp_typ);
-  print_string "real: ";
-  print_endline (show_typ pp_resolved real_typ);
   let computed_bounds =
     List.map
       (do_within_trait_bound (subst_polys polys_to_reals))
       bounds
   in
-  List.iter
-    (fun x -> print_endline (show_trait_bound pp_resolved x))
-    computed_bounds;
   let* solutions =
     List.map (search_impls ctx) computed_bounds
     |> collect
     |> Result.map_error (String.concat "\n")
   in
-  List.iter (fun x -> print_endline (show_solved x)) solutions;
   (* add to the allmighty trait information table *)
   Hashtbl.replace trait_information uuid solutions;
   ok ()
@@ -345,7 +333,10 @@ let rec resolve_expr (ctx : ctx) (e : resolved expr) :
       let* _ = resolve_expr ctx a in
       let* _ = resolve_expr ctx b in
       ok ()
-  | Binop (_, op, a, b) -> failwith "TODO: binops"
+  | Binop (_, op, a, b) ->
+      let* _ = resolve_expr ctx a in
+      let* _ = resolve_expr ctx b in
+      ok ()
   | Lambda (_, id, _, e) -> resolve_expr ctx e
   | Tuple (_, es) ->
       List.map (resolve_expr ctx) es
@@ -378,7 +369,13 @@ let resolve_definition (ctx : ctx) (d : (resolved, yes) definition) :
      doing resolution
   *)
   let bounds = d.bounds |> List.map (fun p -> Local p) in
-  let ctx = { ctx with impls = bounds @ ctx.impls } in
+  let ctx =
+    {
+      ctx with
+      impls = bounds @ ctx.impls;
+      local_polys = d.typeargs @ ctx.local_polys;
+    }
+  in
   resolve_expr ctx (get d.body)
 
 let resolve_impl (ctx : ctx) (i : resolved impl) :
@@ -390,8 +387,6 @@ let resolve_impl (ctx : ctx) (i : resolved impl) :
 
 let resolve (top : resolved toplevel list) : (unit, string) result =
   let ctx = build_ctx top in
-  print_endline "ctx:";
-  print_endline (show_ctx ctx);
   let rec go = function
     | Definition d -> resolve_definition ctx d
     | Impl i -> resolve_impl ctx i
