@@ -1,8 +1,6 @@
 open Ast
 
 type t_TOKEN =
-  | LEFTB
-  | RIGHTB
   | LEFTP
   | RIGHTP
   | LEFTC

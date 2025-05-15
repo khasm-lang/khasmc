@@ -182,10 +182,16 @@ let rec subst_polys (map : ('a * 'a typ) list) (x : 'a typ) : 'a typ =
   | TyMeta m -> x
   | _ -> x
 
+type literal =
+  | LBool of bool
+  | LInt of string
+[@@deriving show { with_path = false }]
+
 type 'a case =
   | CaseVar of 'a
   | CaseTuple of 'a case list
   | CaseCtor of 'a * 'a case list
+  | CaseLit of literal
 [@@deriving show { with_path = false }]
 
 type data = {
