@@ -427,7 +427,7 @@ let rec toplevel' buf =
             let def = definition_up_to_body buf in
             expect EQUALS buf;
             let+ body = expr' 0 buf in
-            (UUID (int_of_string i), { def with body = Just body })
+            (UUID (int_of_string i, 0), { def with body = Just body })
             :: go ()
         | END -> []
       in
