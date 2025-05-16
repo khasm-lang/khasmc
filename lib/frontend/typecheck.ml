@@ -175,12 +175,12 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
       | _ -> err "not custom but should be"
     end
 
-let test () = print_endline "nah!"
-
 let rec infer (ctx : ctx) (e : resolved expr) :
     (resolved typ, string) result =
   let* ty =
     match e with
+    | MLocal _ | MGlobal _ ->
+        failwith "monomorphization info in typechecking"
     (* try find that thing *)
     | Var (i, v) ->
         let* found = search ctx v in
@@ -262,6 +262,7 @@ let rec infer (ctx : ctx) (e : resolved expr) :
               (* ocaml ref patterns when *)
               begin
                 match !m with
+                (* shouldn't this return a polymorphic type? *)
                 | Unresolved -> err "meta remained unsolved"
                 | _ -> ok ()
               end
@@ -601,6 +602,7 @@ let typecheck (t : resolved toplevel list) : unit =
   List.map (typecheck_toplevel ctx) t |> collect |> function
   | Ok _ ->
       (* TODO: make sure metas don't escape (iter hashtbl?) *)
+      print_endline "typechecked :D";
       ()
   | Error e ->
       List.iter print_endline e;

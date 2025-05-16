@@ -215,6 +215,12 @@ type binop =
 
 type 'a expr =
   | Var of data * 'a
+  (* For monomorphization
+     Arguably this should warrant another AST but I don't think
+     that's really needed
+   *)
+  | MGlobal of data * int * 'a
+  | MLocal of data * int * 'a
   | Int of data * string
   | String of data * string
   | Char of data * string
@@ -236,24 +242,59 @@ type 'a expr =
 
 let get_uuid (e : 'a expr) : uuid =
   match e with
-  | Var (i, _) -> i.uuid
-  | Int (i, _) -> i.uuid
-  | String (i, _) -> i.uuid
-  | Char (i, _) -> i.uuid
-  | Float (i, _) -> i.uuid
-  | Bool (i, _) -> i.uuid
-  | LetIn (i, _, _, _, _) -> i.uuid
-  | Seq (i, _, _) -> i.uuid
-  | Funccall (i, _, _) -> i.uuid
-  | Binop (i, _, _, _) -> i.uuid
-  | Lambda (i, _, _, _) -> i.uuid
-  | Tuple (i, _) -> i.uuid
-  | Annot (i, _, _) -> i.uuid
-  | Match (i, _, _) -> i.uuid
-  | Project (i, _, _) -> i.uuid
-  | Ref (i, _) -> i.uuid
-  | Modify (i, _, _) -> i.uuid
-  | Record (i, _, _) -> i.uuid
+  | MLocal (i, _, _)
+  | MGlobal (i, _, _)
+  | Var (i, _)
+  | Int (i, _)
+  | String (i, _)
+  | Char (i, _)
+  | Float (i, _)
+  | Bool (i, _)
+  | LetIn (i, _, _, _, _)
+  | Seq (i, _, _)
+  | Funccall (i, _, _)
+  | Binop (i, _, _, _)
+  | Lambda (i, _, _, _)
+  | Tuple (i, _)
+  | Annot (i, _, _)
+  | Match (i, _, _)
+  | Project (i, _, _)
+  | Ref (i, _)
+  | Modify (i, _, _)
+  | Record (i, _, _) ->
+      i.uuid
+
+let data_transform f expr =
+  let rec go e =
+    match e with
+    | MLocal (d, p, s) -> MLocal (f d, p, s)
+    | MGlobal (d, p, s) -> MGlobal (f d, p, s)
+    | Var (i, s) -> Var (f i, s)
+    | Int (i, s) -> Int (f i, s)
+    | String (i, s) -> String (f i, s)
+    | Char (i, s) -> Char (f i, s)
+    | Float (i, s) -> Float (f i, s)
+    | Bool (i, s) -> Bool (f i, s)
+    | LetIn (i, c, ty, e1, e2) -> LetIn (f i, c, ty, go e1, go e2)
+    | Seq (i, a, b) -> Seq (f i, go a, go b)
+    | Funccall (i, a, b) -> Funccall (f i, go a, go b)
+    | Binop (i, b, e1, e2) -> Binop (f i, b, go e1, go e2)
+    | Lambda (i, nm, t, e) -> Lambda (f i, nm, t, go e)
+    | Tuple (i, s) -> Tuple (f i, List.map go s)
+    | Annot (i, e, t) -> Annot (f i, go e, t)
+    | Match (i, e, cs) ->
+        Match (f i, go e, List.map (fun (b, a) -> (b, go a)) cs)
+    | Project (i, e, k) -> Project (f i, go e, k)
+    | Ref (i, e) -> Ref (f i, e)
+    | Modify (i, a, e) -> Modify (f i, a, go e)
+    | Record (i, a, cs) ->
+        Record (i, a, List.map (fun (a, b) -> (a, go b)) cs)
+  in
+  go expr
+
+let expr_incr_uuid_version expr =
+  let f d = { d with uuid = Share.Uuid.uuid_incr_version d.uuid } in
+  data_transform f expr
 
 type 'a typdef_case =
   | Record of 'a field list

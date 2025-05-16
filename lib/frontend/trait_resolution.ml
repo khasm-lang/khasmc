@@ -311,6 +311,8 @@ let solve_all_bounds_for (ctx : ctx) (uuid : uuid) (e : resolved)
 let rec resolve_expr (ctx : ctx) (e : resolved expr) :
     (unit, string) result =
   match e with
+  | MLocal _ | MGlobal _ ->
+      failwith "monomorphization info in trait resolution"
   | Var (d, id) -> begin
       match has_bounds ctx id with
       | Some bounds -> solve_all_bounds_for ctx d.uuid id bounds
@@ -396,3 +398,8 @@ let resolve (top : resolved toplevel list) : (unit, string) result =
   |> collect
   |> Result.map (fun _ -> ())
   |> Result.map_error (String.concat "\n")
+  |> function
+  | Ok () ->
+      print_endline "resolved :D";
+      Ok ()
+  | x -> x
