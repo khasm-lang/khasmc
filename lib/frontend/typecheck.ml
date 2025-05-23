@@ -418,6 +418,8 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
      right now
      TODO: look at that later
    *)
+  print_endline ("checking: " ^ show_expr pp_resolved e);
+  print_endline ("  against: " ^ show_typ pp_resolved t);
   let* ty =
     match e with
     | LetIn (_, case, ty, head, body) ->
@@ -602,6 +604,11 @@ let typecheck (t : resolved toplevel list) : unit =
   List.map (typecheck_toplevel ctx) t |> collect |> function
   | Ok _ ->
       (* TODO: make sure metas don't escape (iter hashtbl?) *)
+      let gen = fresh_resolved in
+      Hashtbl.iter
+        (fun k v ->
+          Hashtbl.replace type_information k (back_to_polys gen v))
+        type_information;
       print_endline "typechecked :D";
       ()
   | Error e ->
