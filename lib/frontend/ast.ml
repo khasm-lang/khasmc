@@ -8,7 +8,7 @@ let fresh_resolved =
   let i = ref (-10) in
   fun () ->
     decr i;
-    string_of_int !i
+    R (string_of_int !i)
 
 type unresolved = U of string
 [@@deriving show { with_path = false }]
@@ -182,6 +182,24 @@ let rec subst_polys (map : ('a * 'a typ) list) (x : 'a typ) : 'a typ =
   | TyMeta m -> x
   | _ -> x
 
+let rec match_polys bef aft : 'a list =
+  match (force bef, force aft) with
+  | a, b when a = b -> []
+  | TyTuple a, TyTuple b -> List.flatten (List.map2 match_polys a b)
+  | TyArrow (a, b), TyArrow (q, w) ->
+      match_polys a q @ match_polys b w
+  | TyCustom (_, xs), TyCustom (_, ys) ->
+      (* we assume it's all correct *)
+      List.flatten (List.map2 match_polys xs ys)
+  | TyAssoc (a, _), TyAssoc (b, _) ->
+      List.flatten (do_within_trait_bound'2 match_polys a b)
+  | TyRef a, TyRef b -> match_polys a b
+  | TyPoly a, b | b, TyPoly a -> [ (a, b) ]
+  | a, b ->
+      print_endline (show_typ pp_resolved a);
+      print_endline (show_typ pp_resolved b);
+      failwith "match_polys bad"
+
 type literal =
   | LBool of bool
   | LInt of string
@@ -196,12 +214,13 @@ type 'a case =
 
 type data = {
   uuid : uuid;
+  mutable counter : int;
   (* file line col *)
   span : (string * int * int) option;
 }
 [@@deriving show { with_path = false }]
 
-let data () = { uuid = Share.Uuid.uuid (); span = None }
+let data () = { uuid = Share.Uuid.uuid (); counter = 0; span = None }
 
 type binop =
   | Add
@@ -219,8 +238,8 @@ type 'a expr =
      Arguably this should warrant another AST but I don't think
      that's really needed
    *)
-  | MGlobal of data * int * 'a
-  | MLocal of data * int * 'a
+  | MGlobal of data * uuid
+  | MLocal of data * 'a
   | Int of data * string
   | String of data * string
   | Char of data * string
@@ -242,8 +261,8 @@ type 'a expr =
 
 let get_uuid (e : 'a expr) : uuid =
   match e with
-  | MLocal (i, _, _)
-  | MGlobal (i, _, _)
+  | MLocal (i, _)
+  | MGlobal (i, _)
   | Var (i, _)
   | Int (i, _)
   | String (i, _)
@@ -267,8 +286,8 @@ let get_uuid (e : 'a expr) : uuid =
 let data_transform f expr =
   let rec go e =
     match e with
-    | MLocal (d, p, s) -> MLocal (f d, p, s)
-    | MGlobal (d, p, s) -> MGlobal (f d, p, s)
+    | MLocal (d, s) -> MLocal (f d, s)
+    | MGlobal (d, p) -> MGlobal (f d, p)
     | Var (i, s) -> Var (f i, s)
     | Int (i, s) -> Int (f i, s)
     | String (i, s) -> String (f i, s)
@@ -292,8 +311,8 @@ let data_transform f expr =
   in
   go expr
 
-let expr_incr_uuid_version expr =
-  let f d = { d with uuid = Share.Uuid.uuid_incr_version d.uuid } in
+let expr_set_uuid_version v expr =
+  let f d = { d with uuid = Share.Uuid.uuid_set_version v d.uuid } in
   data_transform f expr
 
 type 'a typdef_case =

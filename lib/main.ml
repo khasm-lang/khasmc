@@ -52,7 +52,8 @@ let main () =
             ) type_information;
          *)
         let mono'd = Monomorph.Monomorphize.monomorphize e in
-        print_endline "monomorph in progress"
+        print_endline "monomorph in progress";
+        Monomorph.Monomorphize.print_monomorph_info mono'd
     | Error s ->
         print_endline "noooo it failed :despair:";
         print_endline s

@@ -57,7 +57,7 @@ type t_TOKEN =
 
 let digit = [%sedlex.regexp? '0' .. '9']
 let num = [%sedlex.regexp? Plus digit]
-let id = [%sedlex.regexp? Plus ll]
+let id = [%sedlex.regexp? ll, Star (ll | digit)]
 let tid = [%sedlex.regexp? lu, Plus (ll | lu)]
 let polyid = [%sedlex.regexp? '\'', id]
 let space = [%sedlex.regexp? Plus (zs | cc)]

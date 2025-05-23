@@ -1,21 +1,7 @@
-fun main (x : Int): String = show x
+fun main (m : Int): Int = 
+        let foo = id 5 in
+        let bar = id 3.2 in
+        let qux = id 10 in
+        m        
 
-fun fib (x : Int): Int =
-    if x = 0 then 0
-    else if x = 1 then 1
-    else (fib (x - 1)) + (fib (x - 2))
-
-trait Show 'showt =
-      fun show (showarg : 'showt): String
-      fun name (unit : ()): String
-end
-
-impl Show ('showt Int) =
-     fun 9 show (showx : Int): String = magic showx
-     fun 10 name (unit : ()): String = "Int"
-end
-
-impl Show ('showt Char) =
-     fun 11 show (showc : Char): String = magic showc
-     fun 12 name (unit : ()): String = "Char"
-end 
+fun id { type 'a } (y : 'a) : 'a =  id y
