@@ -4,4 +4,4 @@ fun main (m : Int): Int =
         let qux = id 10 in
         m        
 
-fun id { type 'a } (y : 'a) : 'a =  id y
+fun id { type 'a } (y : 'a) : 'a = id y
