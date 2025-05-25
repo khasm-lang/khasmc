@@ -10,16 +10,29 @@ type m_expr = resolved expr
 type monomorph_info = {
   pre_monomorph : (m_name, (m_name, yes) definition) Hashtbl.t;
   monomorph_information :
-    (m_name * m_typ, (m_name, yes) definition) Hashtbl.t;
+    (m_name * m_typ, uuid * (m_name, yes) definition Lazy.t) Hashtbl.t;
 }
+
+let monomorph_fixpoint ctx =
+  let rec go () =
+    let v1 = Hashtbl.to_seq_values ctx.monomorph_information in
+    let _ = Seq.iter (fun (_, x) -> ignore @@ Lazy.force x) v1 in
+    let v2 = Hashtbl.to_seq_values ctx.monomorph_information in
+    if Seq.length v1 = Seq.length v2 then
+      ()
+    else
+      go ()
+  in
+  go ()
 
 let print_monomorph_info ctx =
   print_endline "\n====== MONOMORPH INFO ======\n";
   Hashtbl.iter
-    (fun (nm, ty) def ->
+    (fun (nm, ty) (uuid, def) ->
       print_string (show_resolved nm ^ " : " ^ show_typ pp_resolved ty);
       print_string " =\n ";
-      print_endline (show_definition pp_resolved pp_yes def))
+      print_endline
+        (show_definition pp_resolved pp_yes (Lazy.force def)))
     ctx.monomorph_information
 
 let new_ctx () =
@@ -76,10 +89,13 @@ let rec monomorph_e (ctx : monomorph_info) (map : 'a) (body : m_expr)
   | Record (i, a, cs) ->
       Record (i, a, List.map (fun (a, b) -> (a, go b)) cs)
 
-and monomorph (ctx : monomorph_info) (def : (_, _) definition) monotyp
-    : (_, yes) definition =
-  let body = get def.body in
+and proper_uuid (def : (_, _) definition) : uuid =
   def.data.counter <- def.data.counter + 1;
+  uuid_set_version def.data.counter def.data.uuid
+
+and monomorph (ctx : monomorph_info) (new_uuid : uuid)
+    (def : (_, _) definition) monotyp : (_, yes) definition =
+  let body = get def.body in
   let full_typ =
     typ_list_to_typ (List.map snd def.args @ [ def.return ])
   in
@@ -94,11 +110,7 @@ and monomorph (ctx : monomorph_info) (def : (_, _) definition) monotyp
   let bod = monomorph_e ctx pairwise incr'd_body in
   {
     def with
-    data =
-      {
-        def.data with
-        uuid = uuid_set_version def.data.counter def.data.uuid;
-      };
+    data = { def.data with uuid = new_uuid };
     body = Just bod;
     args =
       List.map (fun (a, b) -> (a, subst_polys pairwise b)) def.args;
@@ -111,12 +123,14 @@ and monomorph_get (ctx : monomorph_info) (def : (_, _) definition) typ
   match
     Hashtbl.find_opt ctx.monomorph_information (def.name, typ)
   with
-  | Some res -> res.data.uuid
+  | Some (uuid, res) -> uuid
   | None -> (
-      let def' = monomorph ctx def typ in
+      let uuid = proper_uuid def in
+      let def' = lazy (monomorph ctx uuid def typ) in
       try
-        Hashtbl.add ctx.monomorph_information (def'.name, typ) def';
-        def'.data.uuid
+        Hashtbl.add ctx.monomorph_information (def.name, typ)
+          (uuid, def');
+        uuid
       with Stack_overflow ->
         failwith
           "you probably tried to recursively monomorphize something")
@@ -132,4 +146,5 @@ let monomorphize (top : resolved toplevel list) : monomorph_info =
     | None -> failwith "main not found >:("
   in
   let _ = monomorph_get ctx main (TyArrow (TyInt, TyInt)) in
+  monomorph_fixpoint ctx;
   ctx
