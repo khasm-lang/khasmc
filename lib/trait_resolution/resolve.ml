@@ -1,9 +1,9 @@
-open Typecheck
-open Ast
+open Frontend.Typecheck
+open Frontend.Ast
 open Share.Uuid
 open Share.Result
 open Share.Maybe
-open Unify
+open Frontend.Unify
 
 let zipby (l1 : ('a * 'b) list) (l2 : ('a * 'c) list) :
     (('b * 'c) list, string) result =
@@ -132,7 +132,11 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
   in
   let rec go xs =
     match xs with
-    | [] -> err "no matching impl found!"
+    | [] ->
+        err
+          ("no matching impl found!"
+          ^ "\nbound: "
+          ^ show_trait_bound pp_resolved want)
     | impl :: xs -> (
         match
           let uuid, impl_args, impl_assocs =
@@ -400,6 +404,7 @@ let resolve (top : resolved toplevel list) : (unit, string) result =
   |> Result.map_error (String.concat "\n")
   |> function
   | Ok () ->
+      print_newline ();
       print_endline "resolved :D";
       Ok ()
   | x -> x
