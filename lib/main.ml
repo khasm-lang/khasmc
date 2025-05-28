@@ -2,7 +2,7 @@ open Share.Uuid
 open Frontend.Ast
 open Frontend.Typecheck
 open Frontend.Parser
-open Frontend.Trait_resolution
+open Trait_resolution.Resolve
 
 let r x = R x
 
@@ -21,7 +21,7 @@ let main () =
           (fun x -> print_endline (show_toplevel pp_resolved x))
           e;
         print_endline "end\n";
-
+        print_newline ();
         typecheck e;
         (*
       print_endline "\ntypes:";
@@ -31,7 +31,9 @@ let main () =
         begin
           match resolve e with
           | Ok () -> ()
-          | Error e -> print_endline e
+          | Error e ->
+              print_endline e;
+              failwith "trait resolution bonked"
         end;
 
         print_endline "\n\ntrait info:\n";
@@ -40,7 +42,7 @@ let main () =
             print_string "uuid: ";
             print_endline (show_uuid uuid);
             List.iter
-              (fun a -> print_endline ("  inst: " ^ show_solved a))
+              (fun a -> print_endline (" inst: " ^ show_solved a))
               t;
             ())
           trait_information;
@@ -53,6 +55,9 @@ let main () =
          *)
         let mono'd = Monomorph.Monomorphize.monomorphize e in
         print_endline "monomorph in progress";
+        Monomorph.Monomorphize.print_monomorph_info mono'd;
+        print_endline "propagate in progress";
+        Monomorph.Propagate_traits.propagate mono'd;
         Monomorph.Monomorphize.print_monomorph_info mono'd
     | Error s ->
         print_endline "noooo it failed :despair:";

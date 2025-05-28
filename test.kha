@@ -2,6 +2,17 @@ fun main (m : Int): Int =
         let foo = id 5 in
         let bar = id 3.2 in
         let qux = id 10 in
-        m        
+        let wuh = do 7 in
+        let hmm = id (do 5) in
+        m
 
-fun id { type 'a } (y : 'a) : 'a = id y
+fun id { type 'a } (y : 'a) : 'a = (id y)
+
+
+trait Id 'id =
+        fun do (x : 'id) : 'id
+end
+
+impl Id ('id Int) =
+        fun 1 do (x : Int) : Int = x
+end        
