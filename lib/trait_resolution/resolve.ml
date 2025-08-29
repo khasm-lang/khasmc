@@ -38,12 +38,19 @@ type ctx = {
   impls : resolved_by list;
   (* any local polys (needed?) *)
   local_polys : resolved list;
-  (* functions with trait bounds *)
-  has_bounds : (resolved * resolved trait_bound list) list;
+  (* functions / their polys with trait bounds *)
+  has_bounds :
+    (resolved * resolved list * resolved trait_bound list) list;
 }
 [@@deriving show { with_path = false }]
 
-let has_bounds ctx id = List.assoc_opt id ctx.has_bounds
+let has_bounds ctx id =
+  let rec go = function
+    | [] -> None
+    | (a, b, c) :: xs when a = id -> Some (b, c)
+    | x :: xs -> go xs
+  in
+  go ctx.has_bounds
 
 type solved =
   (* bound solved, how we solved it, all of the "subproblems" *)
@@ -96,7 +103,7 @@ let build_ctx top =
                      (new_uuid, t.name, f t.args, f t.assocs)
                    in
                    Hashtbl.add has_primary_bound a.name new_uuid;
-                   (a.name, t :: a.bounds))
+                   (a.name, a.typeargs, t :: a.bounds))
                  t.functions
                @ acc.has_bounds);
           }
@@ -107,7 +114,8 @@ let build_ctx top =
           else
             {
               acc with
-              has_bounds = (d.name, d.bounds) :: acc.has_bounds;
+              has_bounds =
+                (d.name, d.typeargs, d.bounds) :: acc.has_bounds;
             })
     {
       traits = [];
@@ -240,6 +248,8 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
             match go xs with
             | Error _ -> ok sol
             | Ok sol2 ->
+                print_endline "trying to solve:";
+                print_endline (show_trait_bound pp_resolved want);
                 print_endline ("SOL 1: " ^ show_solved sol);
                 print_endline ("SOL 2: " ^ show_solved sol2);
                 err "multiple solutions! no bueno :("
@@ -273,26 +283,30 @@ let solve_all_bounds_for (ctx : ctx) (uuid : uuid) (e : resolved)
     and solve for Show String, which then gives us a Solution that
     we link to the uuid of the resolved.
    *)
+  print_endline ("pre solving bounds for " ^ show_resolved e);
+  List.iter
+    (fun x -> print_endline (show_trait_bound pp_resolved x))
+    bounds;
   let* exp_typ =
     match Hashtbl.find_opt raw_type_information e with
     | Some s -> Ok (force s)
-    | None -> Error ("No raw type info found for" ^ show_resolved e)
+    | None -> err ("no raw type for identifier: " ^ show_resolved e)
   in
   let* real_typ =
     match Hashtbl.find_opt type_information uuid with
     | Some s -> Ok (force s)
     | None -> Error ("No type info found for" ^ show_resolved e)
   in
-  let* trait =
-    match List.assoc_opt e ctx.methods with
-    | Some t -> ok t
-    | None -> Error ("No trait for " ^ show_resolved e)
+  let* all_polys =
+    match has_bounds ctx e with
+    | Some (polys, _) -> ok (ctx.local_polys @ polys)
+    | None -> err ("ident: " ^ show_resolved e ^ "has no polys")
   in
-  let all_polys = trait.args @ trait.assocs in
   let rec go real exp =
     match (force real, force exp) with
     | a, b when a = b -> []
-    | a, TyPoly b when List.mem b all_polys -> [ (b, a) ]
+    | a, TyPoly b -> [ (b, a) ]
+    | TyPoly a, b -> failwith "fallback"
     | TyTuple a, TyTuple b -> List.flatten (List.map2 go a b)
     | TyArrow (a, b), TyArrow (q, w) ->
         (* LHS usually smaller than rhs*)
@@ -303,9 +317,20 @@ let solve_all_bounds_for (ctx : ctx) (uuid : uuid) (e : resolved)
         do_within_trait_bound'2 go a b |> List.flatten
     | TyRef a, TyRef b -> go a b
     | TyMeta a, TyMeta b when a = b -> []
-    | _, _ -> failwith "impossible: solver.go no match"
+    | a, b ->
+        print_endline ("a : " ^ show_typ pp_resolved a);
+        print_endline ("b : " ^ show_typ pp_resolved b);
+        print_endline "polys:";
+        List.iter (fun x -> print_endline (show_resolved x)) all_polys;
+        failwith "impossible: solver.go no match"
   in
   let polys_to_reals = go real_typ exp_typ in
+  print_endline "polys to reals:";
+  List.iter
+    (fun (x, y) ->
+      print_endline (show_resolved x ^ " := " ^ show_typ pp_resolved y))
+    polys_to_reals;
+
   let computed_bounds =
     List.map
       (do_within_trait_bound (subst_polys polys_to_reals))
@@ -327,7 +352,7 @@ let rec resolve_expr (ctx : ctx) (e : resolved expr) :
       failwith "monomorphization info in trait resolution"
   | Var (d, id) -> begin
       match has_bounds ctx id with
-      | Some bounds -> solve_all_bounds_for ctx d.uuid id bounds
+      | Some bounds -> solve_all_bounds_for ctx d.uuid id (snd bounds)
       | None -> ok ()
     end
   | Int (_, _) -> ok ()
@@ -381,7 +406,8 @@ let resolve_definition (ctx : ctx) (d : (resolved, yes) definition) :
 
      TODO: handle that trait dependencies should be avaliable when
      doing resolution
-  *)
+   *)
+  print_endline ("resolving whatnots\n" ^ show_resolved d.name);
   let bounds = d.bounds |> List.map (fun p -> Local p) in
   let ctx =
     {

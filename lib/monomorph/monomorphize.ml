@@ -69,26 +69,22 @@ let add_pre_monomorph top ctx =
              (List.map snd imp.impls)
        | _ -> ())
 
-let resolve_possible_trait_element_to_def_uuid (name : resolved)
-    (uuid : uuid) : uuid option =
+let resolve_possible_trait_element_to_impl_uuid (name : resolved)
+    (uuid : uuid) : Trait_resolution.Resolve.solved option =
   let open Trait_resolution.Resolve in
   let maybe_impl =
     match Hashtbl.find_opt has_primary_bound name with
     | None -> None
-    | Some impl_uuid -> (
+    | Some impl_uuid ->
         (* find proper impl uuid *)
         let solutions =
           Hashtbl.find Trait_resolution.Resolve.trait_information
             (uuid_orig uuid)
         in
-        let (Solution (sol_uuid, resolved_by, kids)) =
-          List.find
-            (fun (Solution (u, _, _)) -> u = uuid_orig impl_uuid)
-            solutions
-        in
-        match resolved_by with
-        | Local bound -> None
-        | Global impl -> Some impl.data.uuid)
+        Some
+          (List.find
+             (fun (Solution (u, _, _)) -> u = uuid_orig impl_uuid)
+             solutions)
   in
   maybe_impl
 
@@ -112,7 +108,17 @@ let rec monomorph_e (ctx : monomorph_info) (map : 'a) (body : m_expr)
       (* then see if it's something we need to monomorphize *)
       begin
         let uuid_opt =
-          resolve_possible_trait_element_to_def_uuid a d.uuid
+          match
+            resolve_possible_trait_element_to_impl_uuid a d.uuid
+          with
+          | None -> None
+          | Some (Solution (_, Local l, kids)) ->
+              (* this thing has bounds we need to fulfil *)
+              print_endline "MONOMORPH OF TRAITS INCOMPLETE";
+              None
+          | Some (Solution (_, Global g, kids)) ->
+              print_endline "MONOMORPH OF TRAITS INCOMPLETE";
+              Some g.data.uuid
         in
         match Hashtbl.find_opt ctx.pre_monomorph (a, uuid_opt) with
         | None ->
@@ -120,7 +126,7 @@ let rec monomorph_e (ctx : monomorph_info) (map : 'a) (body : m_expr)
             MLocal (d, a)
         | Some s ->
             let uuid = monomorph_get ctx s new_typ in
-            MGlobal (d, uuid)
+            MGlobal (d, uuid, a)
       end
   | Funccall (d, f, x) -> Funccall (d, go f, go x)
   | LetIn (d, c, ty, e1, e2) -> LetIn (d, c, ty, go e1, go e2)

@@ -130,9 +130,17 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
   | CaseVar v -> ok [ (v, t) ]
   | CaseTuple tu -> begin
       match t with
-      | TyTuple t' ->
-          (* find all subpatterns *)
-          break_and_map tu t'
+      | TyTuple t' -> begin
+          let a = List.length tu in
+          let b = List.length t' in
+          if a <> b then
+            err
+              ("tuple lengths unequal, v vs t is "
+              ^ Printf.sprintf "%d vs %d" a b)
+          else
+            (* find all subpatterns *)
+            break_and_map tu t'
+        end
       | _ -> err "not tuple but should be tuple :("
     end
   | CaseCtor (name, args) -> begin
@@ -461,8 +469,16 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
     | Tuple (_, ts) -> begin
         match t with
         | TyTuple s ->
-            if List.length ts <> List.length s then
-              err "uneq tuple lengths"
+            if List.length ts <> List.length s then begin
+              let a = List.length ts in
+              let b = List.length s in
+              err
+                ("typechecking unequal tuple lengths (v "
+                ^ string_of_int a
+                ^ " ) vs (ty "
+                ^ string_of_int b
+                ^ ")")
+            end
             else
               (* i love fp round 2 *)
               List.map2 (check ctx) ts s
@@ -567,7 +583,9 @@ let typecheck_toplevel (ctx : ctx) (t : resolved toplevel) :
         f.functions;
       ok ()
   | Impl i -> typecheck_impl ctx i
-  | Definition d -> typecheck_definition ctx d
+  | Definition d ->
+      add_raw_type d.name (definition_type d);
+      typecheck_definition ctx d
 
 let gather (t : resolved toplevel list) : ctx =
   let ctx = empty_ctx () in
