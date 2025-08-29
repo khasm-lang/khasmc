@@ -14,12 +14,13 @@ let hashtbl_map f tbl =
   tbl'
 
 let rec propagate_h (name, typ) (uuid, def_l) :
-    uuid * (_, _) definition Lazy.t =
+    (m_name * resolved typ) * (uuid * (_, _) definition) =
   (* all of the definitions should already be forced, so *)
   if not (Lazy.is_val def_l) then
     failwith "propagate_h stuff should def. be a value by now";
   let def = Lazy.force def_l in
-  (uuid, Lazy.from_val def)
+
+  ((name, typ), (uuid, def))
 
 let propagate (ctx : monomorph_info) =
   hashtbl_map propagate_h ctx.monomorph_information
