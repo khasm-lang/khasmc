@@ -46,6 +46,13 @@ let main () =
               t;
             ())
           trait_information;
+        print_endline "primary bounds:";
+        Hashtbl.iter
+          (fun uuid new' ->
+            print_endline
+              (show_resolved uuid ^ " := " ^ show_uuid new'))
+          has_primary_bound;
+
         (*
         print_string "\n\ntype info:\n";
         Hashtbl.iter (fun a b ->

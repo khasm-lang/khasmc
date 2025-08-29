@@ -45,6 +45,18 @@ type ctx = {
 
 let has_bounds ctx id = List.assoc_opt id ctx.has_bounds
 
+type solved =
+  (* bound solved, how we solved it, all of the "subproblems" *)
+  | Solution of uuid * resolved_by * solved list
+[@@deriving show { with_path = false }]
+
+(* the allmighty map of uuid -> solved trait bounds *)
+let trait_information : (uuid, solved list) Hashtbl.t =
+  new_by_uuid 100
+
+let has_primary_bound : (resolved, uuid) Hashtbl.t =
+  Hashtbl.create 100
+
 let impls_by_trait (c : ctx) (i : resolved trait) : resolved_by list =
   List.filter
     (fun t ->
@@ -79,9 +91,11 @@ let build_ctx top =
               (let f = List.map (fun x -> (x, TyPoly x)) in
                List.map
                  (fun (a : ('a, 'b) definition) ->
+                   let new_uuid = uuid () in
                    let t : resolved trait_bound =
-                     (uuid (), t.name, f t.args, f t.assocs)
+                     (new_uuid, t.name, f t.args, f t.assocs)
                    in
+                   Hashtbl.add has_primary_bound a.name new_uuid;
                    (a.name, t :: a.bounds))
                  t.functions
                @ acc.has_bounds);
@@ -103,15 +117,6 @@ let build_ctx top =
       has_bounds = [];
     }
     top
-
-type solved =
-  (* bound solved, how we solved it, all of the "subproblems" *)
-  | Solution of uuid * resolved_by * solved list
-[@@deriving show { with_path = false }]
-
-(* the allmighty map of uuid -> solved trait bounds *)
-let trait_information : (uuid, solved list) Hashtbl.t =
-  new_by_uuid 100
 
 let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
     (solved, string) result =
@@ -234,7 +239,10 @@ let rec search_impls (ctx : ctx) (want : 'a trait_bound) :
         | Ok sol -> begin
             match go xs with
             | Error _ -> ok sol
-            | Ok _ -> err "multiple solutions! no bueno :("
+            | Ok sol2 ->
+                print_endline ("SOL 1: " ^ show_solved sol);
+                print_endline ("SOL 2: " ^ show_solved sol2);
+                err "multiple solutions! no bueno :("
           end
         | Error e -> go xs)
   in
