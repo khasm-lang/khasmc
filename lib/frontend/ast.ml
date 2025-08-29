@@ -238,7 +238,7 @@ type 'a expr =
      Arguably this should warrant another AST but I don't think
      that's really needed
    *)
-  | MGlobal of data * uuid
+  | MGlobal of data * uuid * 'a
   | MLocal of data * 'a
   | Int of data * string
   | String of data * string
@@ -262,7 +262,7 @@ type 'a expr =
 let get_uuid (e : 'a expr) : uuid =
   match e with
   | MLocal (i, _)
-  | MGlobal (i, _)
+  | MGlobal (i, _, _)
   | Var (i, _)
   | Int (i, _)
   | String (i, _)
@@ -287,7 +287,7 @@ let data_transform f expr =
   let rec go e =
     match e with
     | MLocal (d, s) -> MLocal (f d, s)
-    | MGlobal (d, p) -> MGlobal (f d, p)
+    | MGlobal (d, p, s) -> MGlobal (f d, p, s)
     | Var (i, s) -> Var (f i, s)
     | Int (i, s) -> Int (f i, s)
     | String (i, s) -> String (f i, s)

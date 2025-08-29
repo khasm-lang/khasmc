@@ -1,12 +1,13 @@
 fun main (m : Int): Int = 
-        let bar = id 3.2 in
-        let hmm = do "hi" in
-        let also = do 10 in
-        let kek = do 194819 in
-        m
+        let (a, b) = test 10 "hi!" in
+        a
 
-fun id { type 'a } (y : 'a) : 'a = y
+fun chain { type 'c } { Id ( 'id 'c ) ; } (carg : 'c) : 'c = bound carg
 
+fun bound { type 'b } { Id ( 'id 'b ) ; } (barg : 'b) : 'b = do barg
+
+fun test { type 'k 'j } { Id ( 'id 'k ) ; } { Id ( 'id 'j ) ; }
+        (targ : 'k) (jarg : 'j) : ('k , 'j) = (bound targ , chain jarg)
 
 trait Id 'id =
         fun do (x : 'id) : 'id

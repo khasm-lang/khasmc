@@ -7,6 +7,7 @@ open Trait_resolution.Resolve
 let r x = R x
 
 let main () =
+  Printexc.record_backtrace true;
   (* print_endline "hey hey"; *)
   let file = Sys.argv.(1) in
   let s = In_channel.with_open_bin file In_channel.input_all in
@@ -23,11 +24,18 @@ let main () =
         print_endline "end\n";
         print_newline ();
         typecheck e;
-        (*
-      print_endline "\ntypes:";
-      print_by_uuid (show_typ pp_resolved) type_information;
-      print_endline "----------------\n";
-       *)
+
+        (*print_endline "\ntypes:";
+        print_by_uuid (show_typ pp_resolved) type_information;
+        print_endline "----------------\n";
+         *)
+        print_endline "raw type info:";
+        Hashtbl.iter
+          (fun nm ty ->
+            print_endline
+              (show_resolved nm ^ " : " ^ show_typ pp_resolved ty))
+          raw_type_information;
+
         begin
           match resolve e with
           | Ok () -> ()

@@ -83,7 +83,7 @@ let rec type' buf =
                   let rec go () =
                     let s = type' buf in
                     match next buf with
-                    | RIGHTP -> []
+                    | RIGHTP -> [ s ]
                     | COMMA -> s :: go ()
                   in
                   TyTuple (s :: go ())
@@ -138,7 +138,23 @@ let rec case' buf =
       end
   | LEFTP ->
       (* tuple or abbrev *)
-      failwith "tuple"
+      begin
+        match peek buf with
+        | RIGHTP ->
+            next' buf;
+            CaseTuple []
+        | _ ->
+            let e = case' buf in
+            let rec go () =
+              match next buf with
+              | RIGHTP -> []
+              | COMMA ->
+                  let k = case' buf in
+                  let rest = go () in
+                  k :: rest
+            in
+            CaseTuple (e :: go ())
+      end
   | _ -> failwith "huh?"
 
 module Expr = struct
@@ -200,8 +216,24 @@ module Expr = struct
         | LEFTP ->
             next' buf;
             let* e = expr' 0 buf in
-            expect RIGHTP buf;
-            some e
+            (* either parens or tuple *)
+            begin
+              match next buf with
+              | RIGHTP -> some e
+              | COMMA ->
+                  let rec tupler () =
+                    let* s = expr' 0 buf in
+                    begin
+                      match next buf with
+                      | RIGHTP -> some [ s ]
+                      | COMMA ->
+                          let* rest = tupler () in
+                          some (s :: rest)
+                    end
+                  in
+                  let* rest = tupler () in
+                  some @@ Tuple (data' (), e :: rest)
+            end
         | ID i ->
             next' buf;
             some @@ Var (data' (), i)
