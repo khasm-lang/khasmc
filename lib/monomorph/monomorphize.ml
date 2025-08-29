@@ -8,7 +8,8 @@ type m_typ = resolved typ
 type m_expr = resolved expr
 
 type monomorph_info = {
-  pre_monomorph : (m_name, (m_name, yes) definition) Hashtbl.t;
+  pre_monomorph :
+    (m_name * uuid option, (m_name, yes) definition) Hashtbl.t;
   monomorph_information :
     (m_name * m_typ, uuid * (m_name, yes) definition Lazy.t) Hashtbl.t;
 }
@@ -27,6 +28,7 @@ let monomorph_fixpoint ctx =
 
 let print_monomorph_info ctx =
   print_endline "\n====== MONOMORPH INFO ======\n";
+  monomorph_fixpoint ctx;
   Hashtbl.iter
     (fun (nm, ty) (uuid, def) ->
       print_string (show_resolved nm ^ " : " ^ show_typ pp_resolved ty);
@@ -41,11 +43,54 @@ let new_ctx () =
     monomorph_information = Hashtbl.create 100;
   }
 
+let impls_to_defs (top : resolved toplevel list) :
+    (_, yes) definition list =
+  top
+  |> List.map (function
+       | Impl imp ->
+           (* the definitions already have the correct types
+               in them, so no substitution needs to take place
+               this is guaranted by typechecking *)
+           List.map snd imp.impls
+       | _ -> [])
+  |> List.flatten
+
 let add_pre_monomorph top ctx =
   top
   |> List.iter (function
-       | Definition def -> Hashtbl.add ctx.pre_monomorph def.name def
+       | Definition def ->
+           Hashtbl.add ctx.pre_monomorph (def.name, None) def
+       | Impl imp ->
+           List.iter
+             (fun (def : (_, _) definition) ->
+               Hashtbl.add ctx.pre_monomorph
+                 (def.name, Some imp.data.uuid)
+                 def)
+             (List.map snd imp.impls)
        | _ -> ())
+
+let resolve_possible_trait_element_to_def_uuid (name : resolved)
+    (uuid : uuid) : uuid option =
+  let open Trait_resolution.Resolve in
+  let maybe_impl =
+    match Hashtbl.find_opt has_primary_bound name with
+    | None -> None
+    | Some impl_uuid -> (
+        (* find proper impl uuid *)
+        let solutions =
+          Hashtbl.find Trait_resolution.Resolve.trait_information
+            (uuid_orig uuid)
+        in
+        let (Solution (sol_uuid, resolved_by, kids)) =
+          List.find
+            (fun (Solution (u, _, _)) -> u = uuid_orig impl_uuid)
+            solutions
+        in
+        match resolved_by with
+        | Local bound -> None
+        | Global impl -> Some impl.data.uuid)
+  in
+  maybe_impl
 
 let rec monomorph_e (ctx : monomorph_info) (map : 'a) (body : m_expr)
     : m_expr =
@@ -56,15 +101,20 @@ let rec monomorph_e (ctx : monomorph_info) (map : 'a) (body : m_expr)
   in
   let new_typ = subst_polys map typ in
   Hashtbl.add type_information (get_uuid body) new_typ;
+
+  (* TODO: do we also have to handle monomorphing possible bounds,
+     to ensure the right functions exist? or is that automagic *)
   match body with
   | MLocal _ | MGlobal _ ->
-      (* theoretically impossible, but harmless *)
-      failwith "uhh recursion?"
+      failwith "uhh monomorphing something twice?"
   | Int _ | String _ | Char _ | Float _ | Bool _ -> body
   | Var (d, a) ->
       (* then see if it's something we need to monomorphize *)
       begin
-        match Hashtbl.find_opt ctx.pre_monomorph a with
+        let uuid_opt =
+          resolve_possible_trait_element_to_def_uuid a d.uuid
+        in
+        match Hashtbl.find_opt ctx.pre_monomorph (a, uuid_opt) with
         | None ->
             (* does not need it, simply replace type and move on *)
             MLocal (d, a)
@@ -141,10 +191,9 @@ let monomorphize (top : resolved toplevel list) : monomorph_info =
   (* add everything to the queue *)
   (* TODO: Make this more advanced *)
   let main =
-    match Hashtbl.find_opt ctx.pre_monomorph (R "main") with
+    match Hashtbl.find_opt ctx.pre_monomorph (R "main", None) with
     | Some def -> def
     | None -> failwith "main not found >:("
   in
   let _ = monomorph_get ctx main (TyArrow (TyInt, TyInt)) in
-  monomorph_fixpoint ctx;
   ctx

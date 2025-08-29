@@ -1,12 +1,11 @@
 fun main (m : Int): Int = 
-        let foo = id 5 in
         let bar = id 3.2 in
-        let qux = id 10 in
-        let wuh = do 7 in
-        let hmm = id (do 5) in
+        let hmm = do "hi" in
+        let also = do 10 in
+        let kek = do 194819 in
         m
 
-fun id { type 'a } (y : 'a) : 'a = (id y)
+fun id { type 'a } (y : 'a) : 'a = y
 
 
 trait Id 'id =
@@ -14,5 +13,9 @@ trait Id 'id =
 end
 
 impl Id ('id Int) =
-        fun 1 do (x : Int) : Int = x
+        fun 1 do (x : Int) : Int = 5
+end
+
+impl Id ('id String) =
+        fun 2 do (x : String) : String = x
 end        

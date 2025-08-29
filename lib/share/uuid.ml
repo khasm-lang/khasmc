@@ -2,6 +2,7 @@ type uuid = UUID of (int * int)
 [@@deriving show { with_path = false }]
 
 let new_by_uuid n : (uuid, 'a) Hashtbl.t = Hashtbl.create n
+let uuid_orig (UUID (a, b)) = UUID (a, 0)
 
 let uuid_by_orig tbl (UUID (a, b)) =
   Hashtbl.find_opt tbl (UUID (a, 0))
