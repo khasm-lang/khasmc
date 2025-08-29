@@ -55,15 +55,7 @@ let main () =
          *)
         let mono'd = Monomorph.Monomorphize.monomorphize e in
         print_endline "monomorph in progress";
-        Monomorph.Monomorphize.print_monomorph_info mono'd;
-        print_endline "propagate in progress";
-        let prop'd = Monomorph.Propagate_traits.propagate mono'd in
-        Hashtbl.iter
-          (fun a b ->
-            print_string (show_uuid a ^ " : ");
-            print_endline
-              (show_definition pp_resolved Share.Maybe.pp_yes b))
-          prop'd
+        Monomorph.Monomorphize.print_monomorph_info mono'd
     | Error s ->
         print_endline "noooo it failed :despair:";
         print_endline s
