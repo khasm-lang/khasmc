@@ -61,6 +61,11 @@ type solved =
 let trait_information : (uuid, solved list) Hashtbl.t =
   new_by_uuid 100
 
+let all_bounds uuid =
+  match Hashtbl.find_opt trait_information uuid with
+  | Some s -> s
+  | None -> []
+
 let has_primary_bound : (resolved, uuid) Hashtbl.t =
   Hashtbl.create 100
 
