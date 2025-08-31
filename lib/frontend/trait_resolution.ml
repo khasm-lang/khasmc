@@ -1,9 +1,9 @@
-open Frontend.Typecheck
-open Frontend.Ast
+open Typecheck
+open Parsing.Ast
 open Share.Uuid
 open Share.Result
 open Share.Maybe
-open Frontend.Unify
+open Unify
 
 let zipby (l1 : ('a * 'b) list) (l2 : ('a * 'c) list) :
     (('b * 'c) list, string) result =

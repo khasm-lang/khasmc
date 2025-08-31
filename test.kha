@@ -19,4 +19,4 @@ end
 
 impl Id ('id String) =
         fun 2 do (x : String) : String = x
-end        
+end
