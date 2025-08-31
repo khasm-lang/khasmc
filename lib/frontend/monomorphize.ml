@@ -18,10 +18,14 @@ type monomorph_info = {
 
 let monomorph_fixpoint ctx =
   let rec go () =
-    let v1 = Hashtbl.to_seq_values ctx.monomorph_information in
-    let _ = Seq.iter (fun (_, x) -> ignore @@ Lazy.force x) v1 in
-    let v2 = Hashtbl.to_seq_values ctx.monomorph_information in
-    if Seq.length v1 = Seq.length v2 then
+    let v1 =
+      Hashtbl.to_seq_values ctx.monomorph_information |> List.of_seq
+    in
+    let _ = List.iter (fun (_, x) -> ignore @@ Lazy.force x) v1 in
+    let v2 =
+      Hashtbl.to_seq_values ctx.monomorph_information |> List.of_seq
+    in
+    if List.length v1 = List.length v2 then
       ()
     else
       go ()
@@ -30,7 +34,6 @@ let monomorph_fixpoint ctx =
 
 let print_monomorph_info ctx =
   print_endline "\n====== MONOMORPH INFO ======\n";
-  monomorph_fixpoint ctx;
   Hashtbl.iter
     (fun (nm, ty) (uuid, def) ->
       print_string (show_resolved nm ^ " : " ^ show_typ pp_resolved ty);
@@ -72,8 +75,7 @@ let add_pre_monomorph top ctx =
              (List.map snd imp.impls)
        | _ -> ())
 
-(*
-let resolve_possible_trait_element_to_impl_uuid (name : resolved)
+let resolve_possible_trait_element_to_solution (name : resolved)
     (uuid : uuid) : Trait_resolution.solved option =
   let open Trait_resolution in
   let maybe_impl =
@@ -91,7 +93,7 @@ let resolve_possible_trait_element_to_impl_uuid (name : resolved)
              solutions)
   in
   maybe_impl
- *)
+
 let rec monomorph_e (ctx : monomorph_info) (map : 'a) (body : m_expr)
     : m_expr =
   let go = monomorph_e ctx map in
@@ -113,8 +115,16 @@ let rec monomorph_e (ctx : monomorph_info) (map : 'a) (body : m_expr)
       begin
         let uuid_opt =
           let open Trait_resolution in
-          let bounds = failwith "lol" in
-          bounds
+          flush_all ();
+          print_string ("ident " ^ show_resolved a ^ ": ");
+          begin
+            match
+              resolve_possible_trait_element_to_solution a d.uuid
+            with
+            | Some s -> print_endline "some"
+            | None -> print_endline "none"
+          end;
+          None
         in
         match Hashtbl.find_opt ctx.pre_monomorph (a, uuid_opt) with
         | None ->
@@ -198,4 +208,5 @@ let monomorphize (top : resolved toplevel list) : monomorph_info =
     | None -> failwith "main not found >:("
   in
   let _ = monomorph_get ctx main (TyArrow (TyInt, TyInt)) in
+  monomorph_fixpoint ctx;
   ctx

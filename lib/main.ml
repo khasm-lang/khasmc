@@ -69,6 +69,7 @@ let main () =
             ) type_information;
          *)
         let mono'd = Frontend.Monomorphize.monomorphize e in
+        flush_all ();
         print_endline "monomorph in progress";
         Frontend.Monomorphize.print_monomorph_info mono'd
     | Error s ->
