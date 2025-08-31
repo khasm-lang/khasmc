@@ -1,5 +1,5 @@
-open Frontend.Ast
-open Frontend.Typecheck
+open Parsing.Ast
+open Typecheck
 open Share.Maybe
 open Share.Uuid
 
@@ -12,6 +12,8 @@ type monomorph_info = {
     (m_name * uuid option, (m_name, yes) definition) Hashtbl.t;
   monomorph_information :
     (m_name * m_typ, uuid * (m_name, yes) definition Lazy.t) Hashtbl.t;
+  (* trait bound uuid -> current impl uuid map *)
+  instance_lookup : (uuid * uuid) list;
 }
 
 let monomorph_fixpoint ctx =
@@ -41,6 +43,7 @@ let new_ctx () =
   {
     pre_monomorph = Hashtbl.create 100;
     monomorph_information = Hashtbl.create 100;
+    instance_lookup = [];
   }
 
 let impls_to_defs (top : resolved toplevel list) :
@@ -69,16 +72,17 @@ let add_pre_monomorph top ctx =
              (List.map snd imp.impls)
        | _ -> ())
 
+(*
 let resolve_possible_trait_element_to_impl_uuid (name : resolved)
-    (uuid : uuid) : Trait_resolution.Resolve.solved option =
-  let open Trait_resolution.Resolve in
+    (uuid : uuid) : Trait_resolution.solved option =
+  let open Trait_resolution in
   let maybe_impl =
     match Hashtbl.find_opt has_primary_bound name with
     | None -> None
     | Some impl_uuid ->
         (* find proper impl uuid *)
         let solutions =
-          Hashtbl.find Trait_resolution.Resolve.trait_information
+          Hashtbl.find Trait_resolution.trait_information
             (uuid_orig uuid)
         in
         Some
@@ -87,7 +91,7 @@ let resolve_possible_trait_element_to_impl_uuid (name : resolved)
              solutions)
   in
   maybe_impl
-
+ *)
 let rec monomorph_e (ctx : monomorph_info) (map : 'a) (body : m_expr)
     : m_expr =
   let go = monomorph_e ctx map in
@@ -108,17 +112,9 @@ let rec monomorph_e (ctx : monomorph_info) (map : 'a) (body : m_expr)
       (* then see if it's something we need to monomorphize *)
       begin
         let uuid_opt =
-          match
-            resolve_possible_trait_element_to_impl_uuid a d.uuid
-          with
-          | None -> None
-          | Some (Solution (_, Local l, kids)) ->
-              (* this thing has bounds we need to fulfil *)
-              print_endline "MONOMORPH OF TRAITS INCOMPLETE";
-              None
-          | Some (Solution (_, Global g, kids)) ->
-              print_endline "MONOMORPH OF TRAITS INCOMPLETE";
-              Some g.data.uuid
+          let open Trait_resolution in
+          let bounds = failwith "lol" in
+          bounds
         in
         match Hashtbl.find_opt ctx.pre_monomorph (a, uuid_opt) with
         | None ->

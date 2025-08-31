@@ -1,8 +1,8 @@
 open Share.Uuid
-open Frontend.Ast
+open Parsing.Ast
 open Frontend.Typecheck
-open Frontend.Parser
-open Trait_resolution.Resolve
+open Parsing.Parser
+open Frontend.Trait_resolution
 
 let r x = R x
 
@@ -68,9 +68,9 @@ let main () =
             print_endline ("  type: " ^ show_typ pp_resolved b);
             ) type_information;
          *)
-        let mono'd = Monomorph.Monomorphize.monomorphize e in
+        let mono'd = Frontend.Monomorphize.monomorphize e in
         print_endline "monomorph in progress";
-        Monomorph.Monomorphize.print_monomorph_info mono'd
+        Frontend.Monomorphize.print_monomorph_info mono'd
     | Error s ->
         print_endline "noooo it failed :despair:";
         print_endline s

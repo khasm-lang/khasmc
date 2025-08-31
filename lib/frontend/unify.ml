@@ -1,6 +1,6 @@
 open Share.Uuid
 open Share.Result
-open Ast
+open Parsing.Ast
 
 (*
   woooooooooooo unification
