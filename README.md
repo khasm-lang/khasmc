@@ -10,11 +10,7 @@ Consider the below, for the moment, a wishlist for what this language will hopef
 
 ## What is khasm?
 
-Khasm is a functional programming language that aims to be simple, but expressive. Minimalism is *not* the name of the game - making code that's easy to understand is.
-
-### Simple and effective type system
-
-Khasm's type system is based off the likes of Haskell and OCaml, removing global inference. While this may seem odd, the end goal of this is to improve user experience by offering better errors and allowing programmers a more finely grained control over the code they write.
+Khasm is a functional programming language that aims to essentially be a better, and more functional, Go. You may ask - is this not simply Erlang? Indeed, Erlang and Khasm share similar goals. However, Erlang is untyped and runs in the BEAM VM; Khasm is typed and compiles to machine code. This is not to say that Khasm is strictly better than Erlang - this untyped and VM-based nature allows Erlang to do many things Khasm cannot.
 
 ## A few example programs:
 
@@ -44,12 +40,6 @@ fun process (l: List int): List int =
     |> List.filter (fn x -> x % 2 == 0)
     |> List.map (fn x -> gcd x 10)
     |> List.fold_left (fn acc x -> acc + x)
-
-(* 
-    Piping is the most natural way of expressing many problems - and it's always optimized away.
-    In fact, in cases like the above, it's often possible for the entire expression to be compiled down to a single loop!
-*)
-
 ```
 Lazy list/Stream operations
 ```ocaml
@@ -75,10 +65,6 @@ end
 fun two_ints_to_strings (x: Int) (y: Int): (String, String) = 
 	(show x, show y)
 
-(* Trait object, too: *)
-
-fun trait_object (t: dyn Show): String = show t
-fun returns_trait_object (): dyn Show = dyn 10 (* we use dyn in both type position, and to create a trait object *)
 ```
 
 
