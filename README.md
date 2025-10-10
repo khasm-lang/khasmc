@@ -34,12 +34,17 @@ fun fib (n: int): int =
 List operations:
 ```ocaml
 import List
-
-fun process (l: List int): List int =
+(* Sequential *)
+fun process (l: List Int): List Int =
     List.map (fn x -> x + 3) l
     |> List.filter (fn x -> x % 2 == 0)
     |> List.map (fn x -> gcd x 10)
     |> List.fold_left (fn acc x -> acc + x)
+
+(* Concurrent *)
+fun process (l : List Int): List Int =
+	List.map (do fn x -> x + 3)
+	|> ...
 ```
 Lazy list/Stream operations
 ```ocaml
