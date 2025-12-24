@@ -46,11 +46,9 @@ let typ_pp t = print_endline (show_typ pp_resolved t)
 
 type ctx = {
   (* name, parent *)
-  ctors : (resolved * resolved typdef) list;
-  types : resolved typdef list;
-  traits : resolved trait list;
-  traitfuns : (resolved * resolved trait) list;
-  funs : (resolved * (resolved, no) definition) list;
+  ctors : (resolved * (resolved, unit) typdef) list;
+  types : (resolved, unit) typdef list;
+  funs : (resolved * (resolved, unit, no) definition) list;
   locals : (resolved * resolved typ) list;
   local_polys : resolved list;
 }
@@ -60,8 +58,6 @@ let empty_ctx () =
   {
     ctors = [];
     types = [];
-    traits = [];
-    traitfuns = [];
     funs = [];
     (* magic, for testing *)
     locals =
@@ -90,14 +86,6 @@ let search (ctx : ctx) (id : resolved) : (resolved typ, string) result
 
     case' (List.assoc_opt id ctx.funs) (fun d -> definition_type d);
 
-    case' (List.assoc_opt id ctx.traitfuns) (fun t ->
-        let d =
-          List.find
-            (fun (d : ('a, 'b) definition) -> d.name = id)
-            t.functions
-        in
-        definition_type d);
-
     begin
       print_endline "variable not found:";
       print_endline (show_resolved id);
@@ -105,7 +93,7 @@ let search (ctx : ctx) (id : resolved) : (resolved typ, string) result
     end
   with DoneTy s -> ok s
 
-let type_information : (uuid, resolved typ) Hashtbl.t =
+let type_information : (unit uuid, resolved typ) Hashtbl.t =
   new_by_uuid 100
 
 let add_type uuid typ = Hashtbl.replace type_information uuid typ
@@ -156,7 +144,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
           begin
             match
               List.find_opt
-                (fun (x : 'a typdef) -> x.name = head)
+                (fun (x : ('a, 'b) typdef) -> x.name = head)
                 ctx.types
             with
             | None -> err "can't find type"
@@ -183,7 +171,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
       | _ -> err "not custom but should be"
     end
 
-let rec infer (ctx : ctx) (e : resolved expr) :
+let rec infer (ctx : ctx) (e : _ expr) :
     (resolved typ, string) result =
   let* ty =
     match e with
@@ -232,7 +220,7 @@ let rec infer (ctx : ctx) (e : resolved expr) :
         end
     | Binop (_, op, a, b) -> begin
         match op with
-        | Add | Sub | Mul | Div ->
+        | Add | Sub | Mul | Div | Lt | LtEq | Gt | GtEq ->
             let* t =
               match check ctx a TyInt with
               | Ok _ -> ok TyInt
@@ -298,7 +286,7 @@ let rec infer (ctx : ctx) (e : resolved expr) :
           inference case
         *)
         let* scrut_typ = infer ctx scrut in
-        let handle_case (case : 'a case * 'a expr) :
+        let handle_case (case : 'a case * ('a, 'b) expr) :
             ('a typ, string) result =
           let case, expr = case in
           let* vars = break_down_case_pattern ctx case scrut_typ in
@@ -334,7 +322,7 @@ let rec infer (ctx : ctx) (e : resolved expr) :
           | TyCustom (nm, args) ->
               let typ =
                 List.find
-                  (fun (x : 'a typdef) -> x.name = nm)
+                  (fun (x : ('a, 'b) typdef) -> x.name = nm)
                   ctx.types
               in
               begin
@@ -365,7 +353,7 @@ let rec infer (ctx : ctx) (e : resolved expr) :
         *)
         (* a bit TODO *)
         let typ =
-          List.find (fun (x : 'a typdef) -> x.name = nm) ctx.types
+          List.find (fun (x : ('a, 'b) typdef) -> x.name = nm) ctx.types
         in
         begin
           match typ.content with
@@ -415,7 +403,7 @@ let rec infer (ctx : ctx) (e : resolved expr) :
   add_type uuid ty;
   ok (force ty)
 
-and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
+and check (ctx : ctx) (e : (resolved, 'b) expr) (t : resolved typ) :
     (resolved typ, string) result =
   (* here, we only consider the cases where checking something
      would actually benefit typechecking as a whole - therefore,
@@ -499,7 +487,7 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
           works
         *)
         let* scrut_typ = infer ctx scrut in
-        let handle_case (case : 'a case * 'a expr) :
+        let handle_case (case : 'a case * ('a, 'b) expr) :
             ('a typ, string) result =
           let case, expr = case in
           let* vars = break_down_case_pattern ctx case scrut_typ in
@@ -545,7 +533,7 @@ and check (ctx : ctx) (e : resolved expr) (t : resolved typ) :
   add_type uuid ty;
   ok (force ty)
 
-let typecheck_definition (ctx : ctx) (d : (resolved, yes) definition)
+let typecheck_definition (ctx : ctx) (d : (resolved, 'a, yes) definition)
     : (unit, string) result =
   let polys = d.typeargs in
   let args = d.args in
@@ -561,33 +549,15 @@ let typecheck_definition (ctx : ctx) (d : (resolved, yes) definition)
   let* _ = check ctx body d.return in
   ok ()
 
-let typecheck_impl (ctx : ctx) (i : resolved impl) :
-    (unit, string) result =
-  (* TODO: check that args match the trait *)
-  i.impls
-  |> List.map
-       snd (* we don't care about the unique name at the moment *)
-  |> List.map (typecheck_definition ctx)
-  |> collect
-  |> Result.map_error (String.concat " ")
-  |> Result.map (fun _ -> ())
-
-let typecheck_toplevel (ctx : ctx) (t : resolved toplevel) :
+let typecheck_toplevel (ctx : ctx) (t : (resolved, unit) toplevel) :
     (unit, string) result =
   match t with
   | Typdef _ -> ok ()
-  | Trait f ->
-      List.iter
-        (fun (d : ('a, 'b) definition) ->
-          add_raw_type d.name (definition_type d))
-        f.functions;
-      ok ()
-  | Impl i -> typecheck_impl ctx i
   | Definition d ->
       add_raw_type d.name (definition_type d);
       typecheck_definition ctx d
 
-let gather (t : resolved toplevel list) : ctx =
+let gather (t : (resolved, 'a) toplevel list) : ctx =
   let ctx = empty_ctx () in
   List.fold_left
     (fun ctx a ->
@@ -607,19 +577,11 @@ let gather (t : resolved toplevel list) : ctx =
                 { ctx with types = t :: ctx.types }
                 s
         end
-      | Trait t ->
-          List.fold_left
-            (fun acc (a : ('a, 'b) definition) ->
-              { acc with traitfuns = (a.name, t) :: acc.traitfuns })
-            ctx t.functions
-      | Impl _ ->
-          (* we don't do anything here *)
-          ctx
       | Definition d ->
           { ctx with funs = (d.name, forget_body d) :: ctx.funs })
     ctx t
 
-let typecheck (t : resolved toplevel list) : unit =
+let typecheck (t : (resolved, 'a) toplevel list) : unit =
   let ctx = gather t in
   List.map (typecheck_toplevel ctx) t |> collect |> function
   | Ok _ ->

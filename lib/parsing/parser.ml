@@ -5,7 +5,7 @@ open Share.Uuid
 open Share.Maybe
 open Ast
 
-let data' () : data = { uuid = uuid (); counter = 0; span = None }
+let data' () : unit data = { uuid = uuid (); counter = 0; span = None }
 
 let lexer buf =
   let rec go acc =
@@ -287,22 +287,6 @@ end
 
 open Expr
 
-let trait_bound buf : 'a trait_bound =
-  let (TYPEID s) = next buf in
-  let rec getlist () =
-    match peek buf with
-    | LEFTP ->
-        next' buf;
-        let (POLYID main) = next buf in
-        let ty = type' buf in
-        expect RIGHTP buf;
-        (main, ty) :: getlist ()
-    | _ -> []
-  in
-  let a = getlist () in
-  expect SEMICOLON buf;
-  let b = getlist () in
-  (uuid (), s, a, b)
 
 let definition_up_to_body buf =
   begin
@@ -330,18 +314,6 @@ let definition_up_to_body buf =
     | _ -> None
   in
   let targs = match targs with Some xs -> xs | None -> [] in
-  let bounds =
-    let rec go () =
-      match peek buf with
-      | LEFTC ->
-          next' buf;
-          let b = trait_bound buf in
-          let RIGHTC = next buf in
-          b :: go ()
-      | _ -> []
-    in
-    go ()
-  in
   let arg_list =
     let rec go () =
       match peek buf with
@@ -363,7 +335,6 @@ let definition_up_to_body buf =
     name;
     typeargs = targs;
     args = arg_list;
-    bounds;
     return = ret;
     body = Nothing;
   }
@@ -380,93 +351,6 @@ let rec toplevel' buf =
       in
       res :: toplevel' buf
     end
-  | TRAIT ->
-      let (TYPEID name) = next buf in
-      let rec list () =
-        match peek buf with
-        | POLYID p ->
-            next' buf;
-            p :: list ()
-        | _ -> []
-      in
-      let args = list () in
-      let assocs =
-        match next buf with
-        | SEMICOLON ->
-            let a = list () in
-            expect EQUALS buf;
-            a
-        | EQUALS -> []
-        | _ -> failwith "trait what is this"
-      in
-      let requirements =
-        let rec go () =
-          match peek buf with
-          | LEFTP ->
-              next' buf;
-              let req = trait_bound buf in
-              expect RIGHTP buf;
-              req :: go ()
-          | _ -> []
-        in
-        go ()
-      in
-      let rec go () =
-        match peek buf with
-        | END ->
-            next' buf;
-            []
-        | _ ->
-            let def = definition_up_to_body buf in
-            def :: go ()
-      in
-      let defs = go () in
-      Trait
-        {
-          data = data' ();
-          name;
-          args;
-          assocs;
-          requirements;
-          functions = defs;
-        }
-      :: toplevel' buf
-  | IMPL ->
-      let (TYPEID name) = next buf in
-      let rec list () =
-        match peek buf with
-        | LEFTP ->
-            next' buf;
-            let (POLYID p) = next buf in
-            let ty = type' buf in
-            expect RIGHTP buf;
-            (p, ty) :: list ()
-        | _ -> []
-      in
-      let args = list () in
-      let assocs =
-        match next buf with
-        | SEMICOLON ->
-            let s = list () in
-            expect EQUALS buf;
-            s
-        | EQUALS -> []
-      in
-      let rec go () =
-        match next buf with
-        | FUN ->
-            let (INT i) = next buf in
-            let def = definition_up_to_body buf in
-            expect EQUALS buf;
-            let+ body = expr' 0 buf in
-            (UUID (int_of_string i, 0), { def with body = Just body })
-            :: go ()
-        | END -> []
-      in
-      let funs = go () in
-      Impl
-        { data = data' (); parent = name; args; assocs; impls = funs }
-      :: toplevel' buf
   | DONE -> []
   | t ->
       print_endline (show_t_TOKEN t);

@@ -2,21 +2,5 @@ fun main (m : Int): Int =
         let (a, b) = test 10 "hi!" in
         a
 
-fun chain { type 'c } { Id ( 'id 'c ) ; } (carg : 'c) : 'c = bound carg
-
-fun bound { type 'b } { Id ( 'id 'b ) ; } (barg : 'b) : 'b = do barg
-
-fun test { type 'k 'j } { Id ( 'id 'k ) ; } { Id ( 'id 'j ) ; }
-        (targ : 'k) (jarg : 'j) : ('k , 'j) = (bound targ , chain jarg)
-
-trait Id 'id =
-        fun do (x : 'id) : 'id
-end
-
-impl Id ('id Int) =
-        fun 1 do (x : Int) : Int = 5
-end
-
-impl Id ('id String) =
-        fun 2 do (x : String) : String = x
-end
+fun test { type 'k 'j }
+        (targ : 'k) (jarg : 'j) : ('k , 'j) = (targ, jarg)
