@@ -170,6 +170,15 @@ type 'a case =
   | CaseLit of literal
 [@@deriving show { with_path = false }]
 
+let rec case_names (c : 'a case) : 'a list =
+  match c with
+  | CaseVar c -> [c]
+  | CaseTuple t ->
+     List.flatten (List.map case_names t)
+  | CaseCtor (c, t) ->
+     List.flatten (List.map case_names t)
+  | CaseLit _ -> []
+
 type 'a data = {
   uuid : 'a uuid;
   mutable counter : int;
@@ -179,6 +188,11 @@ type 'a data = {
 [@@deriving show { with_path = false }]
 
 let data () = { uuid = Share.Uuid.uuid (); counter = 0; span = None }
+
+let update_data_uuid data nw =
+  { data with
+    uuid = uuid_set_snd nw data.uuid
+  }
 
 type binop =
   | Add
@@ -200,7 +214,7 @@ type ('a, 'b) expr =
      Arguably this should warrant another AST but I don't think
      that's really needed
    *)
-  | MGlobal of 'b  data * ('a typ) uuid * 'a
+  | MGlobal of 'b data * ('a typ) uuid * 'a
   | MLocal of 'b data * 'a
   | Int of 'b data * string
   | String of 'b data * string
@@ -246,7 +260,7 @@ let get_uuid (e : ('a, 'b) expr) : 'b uuid =
   | Record (i, _, _) ->
       i.uuid
 
-let data_transform f expr =
+let data_transform (type a b) (f : a data -> b data) expr =
   let rec go e =
     match e with
     | MLocal (d, s) -> MLocal (f d, s)
@@ -267,15 +281,15 @@ let data_transform f expr =
     | Match (i, e, cs) ->
         Match (f i, go e, List.map (fun (b, a) -> (b, go a)) cs)
     | Project (i, e, k) -> Project (f i, go e, k)
-    | Ref (i, e) -> Ref (f i, e)
+    | Ref (i, e) -> Ref (f i, go e)
     | Modify (i, a, e) -> Modify (f i, a, go e)
     | Record (i, a, cs) ->
-        Record (i, a, List.map (fun (a, b) -> (a, go b)) cs)
+        Record (f i, a, List.map (fun (a, b) -> (a, go b)) cs)
   in
   go expr
 
-let expr_set_uuid_version v expr =
-  let f d = { d with uuid = Share.Uuid.uuid_set_version v d.uuid } in
+let expr_uuid_set_snd v expr =
+  let f d = { d with uuid = Share.Uuid.uuid_set_snd v d.uuid } in
   data_transform f expr
 
 type 'a typdef_case =
@@ -289,16 +303,27 @@ let rec typ_list_to_typ (t : 'a typ list) : 'a typ =
   | [ x ] -> x
   | x :: xs -> TyArrow (x, typ_list_to_typ xs)
 
+let typ_to_args_ret (typ : 'a typ) : ('a typ list * 'a typ) =
+   let rec go ty =
+    match ty with
+    | TyArrow(a,TyArrow(b,c)) ->
+       let (rest, tl) = go (TyArrow(b,c)) in
+       (a :: rest, tl)
+    | TyArrow(a, b) -> ([a], b)
+    | other -> ([], other)
+  in
+  go typ
+
 (* TODO: support GADTs*)
-type ('a, 'b) typdef = {
-  data : 'b data;
+type 'a typdef = {
+  data : unit data;
   name : 'a;
   args : 'a list;
   content : 'a typdef_case;
 }
 [@@deriving show { with_path = false }]
 
-let typdef_and_ctor_to_typ (t : ('a, 'b) typdef) (i : 'a) : 'a typ =
+let typdef_and_ctor_to_typ (t : 'a typdef) (i : 'a) : 'a typ =
   match t.content with
   | Record _ -> failwith "shouldn't be record"
   | Sum s ->
@@ -314,13 +339,15 @@ type ('a, 'b, 'p) definition = {
   typeargs : 'a list;
   args : ('a * 'a typ) list;
   return : 'a typ;
-  (* essentially for cross-compatibility with other structures *)
   body : (('a, 'b) expr, 'p) maybe;
 }
 [@@deriving show { with_path = false }]
 
 let forget_body : ('a, 'b, yes) definition -> ('a, 'b, no) definition =
- fun x -> { x with body = Nothing }
+  fun x -> { x with body = Nothing }
+
+let conjur_body : ('a, 'b, 'd) definition -> ('a, 'b) expr -> ('a, 'b, yes) definition =
+  fun x b -> { x with body = Just b }
 
 let definition_type (type a) (d : ('a, 'b, a) definition) : 'a typ =
   List.fold_right
@@ -328,6 +355,6 @@ let definition_type (type a) (d : ('a, 'b, a) definition) : 'a typ =
     d.args d.return
 
 type ('a, 'b) toplevel =
-  | Typdef of ('a, 'b) typdef
+  | Typdef of 'a typdef
   | Definition of ('a, 'b, yes) definition
 [@@deriving show { with_path = false }]

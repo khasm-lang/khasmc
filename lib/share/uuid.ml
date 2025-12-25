@@ -25,8 +25,7 @@ let uuid_forget (v : 'a uuid) : unit uuid =
   let UUID (a, b) = v in
   UUID (a, ())
 
-
-let uuid_set_version v uuid =
+let uuid_set_snd v uuid =
   let (UUID (a, b)) = uuid in
   UUID (a, v)
 
