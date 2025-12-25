@@ -46,8 +46,8 @@ let typ_pp t = print_endline (show_typ pp_resolved t)
 
 type ctx = {
   (* name, parent *)
-  ctors : (resolved * (resolved, unit) typdef) list;
-  types : (resolved, unit) typdef list;
+  ctors : (resolved * resolved typdef) list;
+  types : resolved typdef list;
   funs : (resolved * (resolved, unit, no) definition) list;
   locals : (resolved * resolved typ) list;
   local_polys : resolved list;
@@ -144,7 +144,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
           begin
             match
               List.find_opt
-                (fun (x : ('a, 'b) typdef) -> x.name = head)
+                (fun (x : 'a typdef) -> x.name = head)
                 ctx.types
             with
             | None -> err "can't find type"
@@ -322,7 +322,7 @@ let rec infer (ctx : ctx) (e : _ expr) :
           | TyCustom (nm, args) ->
               let typ =
                 List.find
-                  (fun (x : ('a, 'b) typdef) -> x.name = nm)
+                  (fun (x : 'a typdef) -> x.name = nm)
                   ctx.types
               in
               begin
@@ -353,7 +353,7 @@ let rec infer (ctx : ctx) (e : _ expr) :
         *)
         (* a bit TODO *)
         let typ =
-          List.find (fun (x : ('a, 'b) typdef) -> x.name = nm) ctx.types
+          List.find (fun (x : 'a typdef) -> x.name = nm) ctx.types
         in
         begin
           match typ.content with

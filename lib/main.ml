@@ -1,7 +1,11 @@
 open Share.Uuid
 open Parsing.Ast
 open Frontend.Typecheck
+open Frontend.Monomorphize
 open Parsing.Parser
+
+
+let pp_unit fmt p = Format.fprintf fmt "()" 
 
 let r x = R x
 
@@ -18,7 +22,7 @@ let main () =
     | Ok e ->
         print_endline "parsed:";
         List.iter
-          (fun x -> print_endline (show_toplevel pp_resolved x))
+          (fun x -> print_endline (show_toplevel pp_resolved pp_unit x))
           e;
         print_endline "end\n";
         print_newline ();
@@ -29,5 +33,11 @@ let main () =
             print_endline
               (show_resolved nm ^ " : " ^ show_typ pp_resolved ty))
           raw_type_information;
+        let (ctx, after_mono) = monomorphize e
+        in
+        print_endline "mono'd:";
+        List.iter
+          (fun x -> print_endline (show_toplevel pp_resolved pp_unit x))
+          after_mono;
   end;
   print_endline "done"
