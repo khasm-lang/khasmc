@@ -152,8 +152,8 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
       | _ -> err "not custom but should be"
     end
 
-let rec infer (ctx : ctx) (e : _ expr) :
-    (resolved typ, string) result =
+let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
+    =
   let* ty =
     match e with
     | MLocal _ | MGlobal _ ->
@@ -300,49 +300,49 @@ let rec infer (ctx : ctx) (e : _ expr) :
         let* t = search ctx old in
         let* _ = check ctx new' t in
         ok @@ TyTuple []
-    | UnaryOp (_, op, expr) ->
-       begin match op with
-       | BNegate -> 
-          let* t = check ctx expr TyBool in
-          ok @@ TyBool
-       | Negate ->
-          let* _ = check ctx expr TyInt in
-          ok @@ TyInt
-       | Ref ->
-          let* t = infer ctx expr in
-          ok @@ TyRef t
-       | GetConstrField s ->
-          failwith "getconstrfield should not be user-writable"
-       | IsConstr s ->
-          failwith "isconstr should not be user-writable"
-       | GetRecField r ->
-          failwith "implement record field access typechecking"
-       | Project i ->
-          let* x'ty = infer ctx expr in
-          begin
-            match x'ty with
-            | TyCustom (nm, args) ->
-               let typ =
-                 List.find
-                   (fun (x : 'a typdef) -> x.name = nm)
-                   ctx.types
-               in
-               begin
-                 match typ.content with
-                 | Record fields ->
-                    (* we have to consider the case in which the record is
+    | UnaryOp (_, op, expr) -> begin
+        match op with
+        | BNegate ->
+            let* t = check ctx expr TyBool in
+            ok @@ TyBool
+        | Negate ->
+            let* _ = check ctx expr TyInt in
+            ok @@ TyInt
+        | Ref ->
+            let* t = infer ctx expr in
+            ok @@ TyRef t
+        | GetConstrField s ->
+            failwith "getconstrfield should not be user-writable"
+        | IsConstr s ->
+            failwith "isconstr should not be user-writable"
+        | GetRecField r ->
+            failwith "implement record field access typechecking"
+        | Project i ->
+            let* x'ty = infer ctx expr in
+            begin
+              match x'ty with
+              | TyCustom (nm, args) ->
+                  let typ =
+                    List.find
+                      (fun (x : 'a typdef) -> x.name = nm)
+                      ctx.types
+                  in
+                  begin
+                    match typ.content with
+                    | Record fields ->
+                        (* we have to consider the case in which the record is
                        parameterized therefore, while we know the field we
                        are working with, we need to up type arguments and
                        perform an instantiation
                      *)
-                    let map = List.combine typ.args args in
-                    let _, typ = List.nth fields i in
-                    ok @@ instantiate map typ
-                 | Sum _ -> err "should be record not sum"
-               end
-            | _ -> err "can't be record and not record"
-          end
-       end
+                        let map = List.combine typ.args args in
+                        let _, typ = List.nth fields i in
+                        ok @@ instantiate map typ
+                    | Sum _ -> err "should be record not sum"
+                  end
+              | _ -> err "can't be record and not record"
+            end
+      end
     | Record (_, nm, fields) ->
         (* this case is mildly annoying, because we have to deal
           with instantiation more explicitly
@@ -524,8 +524,8 @@ and check (ctx : ctx) (e : (resolved, 'b) expr) (t : resolved typ) :
   add_type uuid ty;
   ok (force ty)
 
-let typecheck_definition (ctx : ctx) (d : (resolved, 'a, yes) definition)
-    : (unit, string) result =
+let typecheck_definition (ctx : ctx)
+    (d : (resolved, 'a, yes) definition) : (unit, string) result =
   let polys = d.typeargs in
   let args = d.args in
   ignore (List.map (fun (a, b) -> add_raw_type a b) args);

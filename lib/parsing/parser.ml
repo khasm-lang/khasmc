@@ -5,7 +5,8 @@ open Share.Uuid
 open Share.Maybe
 open Ast
 
-let data' () : unit data = { uuid = uuid (); counter = 0; span = None }
+let data' () : unit data =
+  { uuid = uuid (); counter = 0; span = None }
 
 let lexer buf =
   let rec go acc =
@@ -288,7 +289,6 @@ end
 
 open Expr
 
-
 let definition_up_to_body buf =
   begin
     match peek buf with FUN -> next' buf | _ -> ()
@@ -359,7 +359,7 @@ let rec toplevel' buf =
 
 let toplevel buf =
   let toks = ref (lexer buf) in
-  
+
   List.iter (fun x -> print_string (show_t_TOKEN x ^ " ")) !toks;
   print_newline ();
 

@@ -22,7 +22,7 @@ let uuid : unit -> unit uuid =
     UUID (!x, ())
 
 let uuid_forget (v : 'a uuid) : unit uuid =
-  let UUID (a, b) = v in
+  let (UUID (a, b)) = v in
   UUID (a, ())
 
 let uuid_set_snd v uuid =

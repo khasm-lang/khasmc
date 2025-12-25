@@ -172,11 +172,9 @@ type 'a case =
 
 let rec case_names (c : 'a case) : 'a list =
   match c with
-  | CaseVar c -> [c]
-  | CaseTuple t ->
-     List.flatten (List.map case_names t)
-  | CaseCtor (c, t) ->
-     List.flatten (List.map case_names t)
+  | CaseVar c -> [ c ]
+  | CaseTuple t -> List.flatten (List.map case_names t)
+  | CaseCtor (c, t) -> List.flatten (List.map case_names t)
   | CaseLit _ -> []
 
 type 'a data = {
@@ -190,9 +188,7 @@ type 'a data = {
 let data () = { uuid = Share.Uuid.uuid (); counter = 0; span = None }
 
 let update_data_uuid data nw =
-  { data with
-    uuid = uuid_set_snd nw data.uuid
-  }
+  { data with uuid = uuid_set_snd nw data.uuid }
 
 type binop =
   | Add
@@ -224,15 +220,19 @@ type ('a, 'b) expr =
      Arguably this should warrant another AST but I don't think
      that's really needed
    *)
-  | MGlobal of 'b data * ('a typ) uuid * 'a
+  | MGlobal of 'b data * 'a typ uuid * 'a
   | MLocal of 'b data * 'a
   | Int of 'b data * string
   | String of 'b data * string
   | Char of 'b data * string
   | Float of 'b data * string
   | Bool of 'b data * bool
-  | LetIn of 'b data * 'a case * 'a typ option *
-               ('a, 'b) expr * ('a, 'b) expr
+  | LetIn of
+      'b data
+      * 'a case
+      * 'a typ option
+      * ('a, 'b) expr
+      * ('a, 'b) expr
   | Seq of 'b data * ('a, 'b) expr * ('a, 'b) expr
   | Funccall of 'b data * ('a, 'b) expr * ('a, 'b) expr
   | Binop of 'b data * binop * ('a, 'b) expr * ('a, 'b) expr
@@ -266,7 +266,7 @@ let get_data (e : ('a, 'b) expr) : 'b data =
   | UnaryOp (i, _, _)
   | Modify (i, _, _)
   | Record (i, _, _) ->
-     i
+      i
 
 let get_uuid x = (get_data x).uuid
 
@@ -312,13 +312,13 @@ let rec typ_list_to_typ (t : 'a typ list) : 'a typ =
   | [ x ] -> x
   | x :: xs -> TyArrow (x, typ_list_to_typ xs)
 
-let typ_to_args_ret (typ : 'a typ) : ('a typ list * 'a typ) =
-   let rec go ty =
+let typ_to_args_ret (typ : 'a typ) : 'a typ list * 'a typ =
+  let rec go ty =
     match ty with
-    | TyArrow(a,TyArrow(b,c)) ->
-       let (rest, tl) = go (TyArrow(b,c)) in
-       (a :: rest, tl)
-    | TyArrow(a, b) -> ([a], b)
+    | TyArrow (a, TyArrow (b, c)) ->
+        let rest, tl = go (TyArrow (b, c)) in
+        (a :: rest, tl)
+    | TyArrow (a, b) -> ([ a ], b)
     | other -> ([], other)
   in
   go typ
@@ -352,11 +352,15 @@ type ('a, 'b, 'p) definition = {
 }
 [@@deriving show { with_path = false }]
 
-let forget_body : ('a, 'b, yes) definition -> ('a, 'b, no) definition =
-  fun x -> { x with body = Nothing }
+let forget_body : ('a, 'b, yes) definition -> ('a, 'b, no) definition
+    =
+ fun x -> { x with body = Nothing }
 
-let conjur_body : ('a, 'b, 'd) definition -> ('a, 'b) expr -> ('a, 'b, yes) definition =
-  fun x b -> { x with body = Just b }
+let conjur_body :
+    ('a, 'b, 'd) definition ->
+    ('a, 'b) expr ->
+    ('a, 'b, yes) definition =
+ fun x b -> { x with body = Just b }
 
 let definition_type (type a) (d : ('a, 'b, a) definition) : 'a typ =
   List.fold_right
