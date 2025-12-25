@@ -236,7 +236,7 @@ type ('a, 'b) expr =
   | Record of 'b data * 'a * ('a * ('a, 'b) expr) list
 [@@deriving show { with_path = false }]
 
-let get_uuid (e : ('a, 'b) expr) : 'b uuid =
+let get_data (e : ('a, 'b) expr) : 'b data =
   match e with
   | MLocal (i, _)
   | MGlobal (i, _, _)
@@ -258,7 +258,9 @@ let get_uuid (e : ('a, 'b) expr) : 'b uuid =
   | Ref (i, _)
   | Modify (i, _, _)
   | Record (i, _, _) ->
-      i.uuid
+     i
+
+let get_uuid x = (get_data x).uuid
 
 let data_transform (type a b) (f : a data -> b data) expr =
   let rec go e =

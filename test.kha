@@ -1,6 +1,8 @@
 fun main (m : Int): Int = 
         let (a, b) = test 10 "hi!" in
-        a
+        id a
 
 fun test { type 'k 'j }
         (targ : 'k) (jarg : 'j) : ('k , 'j) = (targ, jarg)
+
+fun id { type 'id } (x : 'id) : 'id = x    

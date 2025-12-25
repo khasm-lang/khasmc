@@ -37,7 +37,9 @@ let main () =
         in
         print_endline "mono'd:";
         List.iter
-          (fun x -> print_endline (show_toplevel pp_resolved pp_unit x))
+          (fun x -> print_endline (show_toplevel pp_resolved (pp_typ pp_resolved) x))
           after_mono;
+        print_endline "\nctx:";
+        print_endline (show_monomorph_ctx ctx)
   end;
   print_endline "done"
