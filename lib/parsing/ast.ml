@@ -208,6 +208,16 @@ type binop =
   | Eq
 [@@deriving show { with_path = false }]
 
+type unaryop =
+  | Negate
+  | BNegate
+  | Ref
+  | IsConstr of string
+  | GetRecField of string
+  | Project of int
+  | GetConstrField of int
+[@@deriving show { with_path = false }]
+
 type ('a, 'b) expr =
   | Var of 'b data * 'a
   (* For monomorphization
@@ -226,12 +236,11 @@ type ('a, 'b) expr =
   | Seq of 'b data * ('a, 'b) expr * ('a, 'b) expr
   | Funccall of 'b data * ('a, 'b) expr * ('a, 'b) expr
   | Binop of 'b data * binop * ('a, 'b) expr * ('a, 'b) expr
+  | UnaryOp of 'b data * unaryop * ('a, 'b) expr
   | Lambda of 'b data * 'a * 'a typ option * ('a, 'b) expr
   | Tuple of 'b data * ('a, 'b) expr list
   | Annot of 'b data * ('a, 'b) expr * 'a typ
   | Match of 'b data * ('a, 'b) expr * ('a case * ('a, 'b) expr) list
-  | Project of 'b data * ('a, 'b) expr * int
-  | Ref of 'b data * ('a, 'b) expr
   | Modify of 'b data * 'a * ('a, 'b) expr
   | Record of 'b data * 'a * ('a * ('a, 'b) expr) list
 [@@deriving show { with_path = false }]
@@ -254,8 +263,7 @@ let get_data (e : ('a, 'b) expr) : 'b data =
   | Tuple (i, _)
   | Annot (i, _, _)
   | Match (i, _, _)
-  | Project (i, _, _)
-  | Ref (i, _)
+  | UnaryOp (i, _, _)
   | Modify (i, _, _)
   | Record (i, _, _) ->
      i
@@ -282,8 +290,7 @@ let data_transform (type a b) (f : a data -> b data) expr =
     | Annot (i, e, t) -> Annot (f i, go e, t)
     | Match (i, e, cs) ->
         Match (f i, go e, List.map (fun (b, a) -> (b, go a)) cs)
-    | Project (i, e, k) -> Project (f i, go e, k)
-    | Ref (i, e) -> Ref (f i, go e)
+    | UnaryOp (i, a, e) -> UnaryOp (f i, a, go e)
     | Modify (i, a, e) -> Modify (f i, a, go e)
     | Record (i, a, cs) ->
         Record (f i, a, List.map (fun (a, b) -> (a, go b)) cs)

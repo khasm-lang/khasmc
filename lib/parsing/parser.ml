@@ -93,6 +93,7 @@ let rec type' buf =
     | TYSTRING -> TyString
     | TYCHAR -> TyChar
     | TYFLOAT -> TyFloat
+    | TYBOOL -> TyBool
     | POLYID s -> TyPoly s
     | REF -> TyRef (type' buf)
     | TYPEID s -> begin
@@ -358,10 +359,10 @@ let rec toplevel' buf =
 
 let toplevel buf =
   let toks = ref (lexer buf) in
-  (*
+  
   List.iter (fun x -> print_string (show_t_TOKEN x ^ " ")) !toks;
   print_newline ();
- *)
+
   try
     let t = toplevel' toks in
     Ok t

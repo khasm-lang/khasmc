@@ -176,12 +176,9 @@ let rec monomorph_expr (ctx : monomorph_ctx)
          |> List.split
        in 
        Match (data', expr', cases'), (List.flatten defs)
-    | Project (_, expr, k) ->
+    | UnaryOp (_, op, expr) ->
        let$$ expr' = go ctx expr in
-       Project (data', expr', k)
-    | Ref (_, expr) ->
-       let$$ expr' = go ctx expr in
-       Ref (data', expr')
+       UnaryOp (data', op, expr')
     | Modify (_, nm, expr) ->
        let$$ expr' = go ctx expr in
        Modify (data', nm, expr')
@@ -220,10 +217,11 @@ and monomorph_def (ctx : monomorph_ctx)
 let monomorphize (top : (resolved, unit) toplevel list)
     : monomorph_ctx * (resolved, resolved typ) toplevel list =
   let ctx = new_monomorph_ctx top in
-  let [@warning "-8"] Definition main = List.find (function
-                            | Definition x -> 
-                               x.name = R "main"
-                            | _ -> false) top
+  let [@warning "-8"] Definition main
+    = List.find (function
+          | Definition x -> 
+             x.name = R "main"
+          | _ -> false) top
   in
   let defs =
     monomorph_def ctx main (TyArrow (TyInt, TyInt))
