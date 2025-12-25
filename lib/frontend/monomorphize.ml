@@ -3,22 +3,27 @@ open Typecheck
 open Share.Maybe
 open Share.Uuid
 
-module TypSet = Set.Make(
-                    struct
-                      type t = resolved typ
-                      let compare = compare
-                    end
-                  )
-
 type monomorph_ctx = {
-    mutable customs_to_be_done : TypSet.t;
+    customs_to_be_done : (resolved typ) list ref;
     poly_map : (resolved * resolved typ) list;
+    definitions : (resolved, unit, yes) definition list
+                    [@opaque];
     locals : resolved list;
   }
+[@@deriving show {with_path = false}]
 
 let add_custom ctx cus =
-  ctx.customs_to_be_done <-
-    TypSet.add cus ctx.customs_to_be_done
+  let rec contains_custom ty =
+    match force ty with 
+    | TyTuple t -> List.exists contains_custom t
+    | TyArrow (a,b) -> contains_custom a || contains_custom b
+    | TyCustom _ -> true
+    | TyRef a -> contains_custom a
+    | _ -> false
+  in
+  if contains_custom cus then
+    ctx.customs_to_be_done :=
+      cus :: !(ctx.customs_to_be_done)
 
 let update_with_uuid (x : ('a, 'b) expr) (nw : resolved typ)
     : ('a, resolved typ) expr =
@@ -28,11 +33,14 @@ let update_with_uuid (x : ('a, 'b) expr) (nw : resolved typ)
   in
   data_transform f x
 
-let new_monomorph_ctx () =
+let new_monomorph_ctx top =
   {
-    customs_to_be_done = TypSet.empty;
+    customs_to_be_done = ref [];
     poly_map = [];
     locals = [];
+    definitions = List.filter_map (function
+                      | Definition d -> Some d
+                      | _ -> None) top;
   }
 
 let rec monomorph_typ
@@ -90,20 +98,33 @@ let rec monomorph_expr (ctx : monomorph_ctx)
           : (resolved, resolved typ) expr
             * _ definition list =
     let mono_expr_ty expr =
-      Hashtbl.find type_information (get_uuid expr)
-      |> mono_ty ctx.poly_map
+      let typ = Hashtbl.find type_information (get_uuid expr)
+                |> mono_ty ctx.poly_map
+      in
+      add_custom ctx typ;
+      typ
     in
-    let mk_data dat =
-      update_data_uuid dat (mono_expr_ty expr)
+    let data' =
+      update_data_uuid (get_data expr) (mono_expr_ty expr)
     in
     match expr with
-    | Var (data, nm) ->
+    | Var (_, nm) ->
        if List.mem nm ctx.locals then
-         (MLocal (mk_data data, nm), [])
+         (MLocal (data', nm), [])
        else begin
-           failwith "mono global"
+           let def = List.find (fun (d : _ definition) ->
+                         d.name = nm) ctx.definitions
+           in
+           let defs =
+             monomorph_def ctx def (mono_expr_ty expr)
+           in
+           (MGlobal (data',
+                     uuid_set_snd
+                       (mono_expr_ty expr) def.data.uuid,
+                     nm)
+           , defs)
          end 
-    | LetIn(data, cases, mbtyp, head, body) ->
+    | LetIn(_, cases, _, head, body) ->
        let ctx' =
          { ctx with
            locals = case_names cases @ ctx.locals
@@ -111,11 +132,71 @@ let rec monomorph_expr (ctx : monomorph_ctx)
        in
        let$ head' = go ctx head in
        let$$ body' = go ctx' body in
-       LetIn(mk_data data, cases, None, head', body')
-    | Funccall (data, f, x) ->
+       LetIn(data', cases, None, head', body')
+    | Seq (_, a, b) ->
+       let$ a' = go ctx a in
+       let$$ b' = go ctx b in
+       Seq (data', a', b')
+    | Funccall (_, f, x) ->
        let$ f' = go ctx f in
        let$$ x' = go ctx x in 
-       Funccall (mk_data data, f', x')
+       Funccall (data', f', x')
+    | Binop (_, bop, l, r) ->
+       let$ l' = go ctx l in
+       let$$ r' = go ctx r in
+       Binop (data', bop, l', r')
+    | Lambda (_, nm, _, body) ->
+       let ctx' = {
+           ctx with
+           locals = nm :: ctx.locals;
+         } in
+       let$$ body' = go ctx' body in
+       Lambda (data', nm, None, body')
+    | Tuple (_, tups) ->
+       let (tups', defs) =
+         List.split (List.map (go ctx) tups)
+       in
+       Tuple (data', tups'), (List.flatten defs)
+    | Annot (_, exp, _) ->
+       (* these don't exist anymore, but no harm *)
+       failwith "annotations in monomorphization"
+    | Match (_, expr, cases) ->
+       let$ expr' = go ctx expr in
+       let (cases', defs) =
+         List.map
+           (fun (case, expr) ->
+             let ctx' =
+               { ctx with
+                 locals = case_names case @ ctx.locals
+               }
+             in
+             let$$ expr' = go ctx' expr in
+             (case, expr')
+           ) cases
+         |> List.split
+       in 
+       Match (data', expr', cases'), (List.flatten defs)
+    | Project (_, expr, k) ->
+       let$$ expr' = go ctx expr in
+       Project (data', expr', k)
+    | Ref (_, expr) ->
+       let$$ expr' = go ctx expr in
+       Ref (data', expr')
+    | Modify (_, nm, expr) ->
+       let$$ expr' = go ctx expr in
+       Modify (data', nm, expr')
+    | Record (_, tynm, cases) ->
+       let (cases', defs) =
+         List.split (List.map (fun (a,b) ->
+                         let (case, defs) =
+                           go ctx b
+                         in
+                         (a, case), defs) cases)
+       in
+       Record (data', tynm,
+               cases')
+       , (List.flatten defs)
+    | _ -> data_transform (fun _ -> data') expr, []
   in
   go ctx exp
 
@@ -138,7 +219,7 @@ and monomorph_def (ctx : monomorph_ctx)
 
 let monomorphize (top : (resolved, unit) toplevel list)
     : monomorph_ctx * (resolved, resolved typ) toplevel list =
-  let ctx = new_monomorph_ctx () in
+  let ctx = new_monomorph_ctx top in
   let [@warning "-8"] Definition main = List.find (function
                             | Definition x -> 
                                x.name = R "main"
