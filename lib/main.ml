@@ -37,9 +37,13 @@ let main () =
         in
         print_endline "mono'd:";
         List.iter
-          (fun x -> print_endline (show_toplevel pp_resolved (pp_typ pp_resolved) x))
+          (fun x -> print_endline (show_toplevel pp_resolved pp_unit x))
           after_mono;
         print_endline "\nctx:";
-        print_endline (show_monomorph_ctx ctx)
+        print_endline (show_monomorph_ctx ctx);
+        let p_compiled = Frontend.Pattern_match_desugar.pattern_match_desugar after_mono in
+        List.iter
+          (fun x -> print_endline (show_toplevel pp_resolved pp_unit x))
+          p_compiled;
   end;
   print_endline "done"

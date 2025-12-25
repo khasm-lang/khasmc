@@ -13,25 +13,6 @@ let typ_pp t = print_endline (show_typ pp_resolved t)
 
   - all pieces of the same information have the same id
   - all pieces of unrelated information have seperate ids
-
-  for example, something like this:
-
-  trait Foo {
-  type b;
-  fun foo : Self -> b
-  }
-
-  fun dothing (type T) {T: Foo} (x: T): T.{Foo}.b = foo x
-
-  must be something like
-
-  trait 0 {
-  type 1;
-  fun 2 : 0 -> 1
-  }
-
-  fun 3 (type 4) {4: 0} (5: 4): 4.{0}.1 = 2 5
-
  *)
 
 (*
@@ -315,38 +296,53 @@ let rec infer (ctx : ctx) (e : _ expr) :
                 x xs
               |> ok
         end
-    | Project (_, x, i) ->
-        let* x'ty = infer ctx x in
-        begin
-          match x'ty with
-          | TyCustom (nm, args) ->
-              let typ =
-                List.find
-                  (fun (x : 'a typdef) -> x.name = nm)
-                  ctx.types
-              in
-              begin
-                match typ.content with
-                | Record fields ->
-                    (* we have to consider the case in which the record is
-                parameterized therefore, while we know the field we
-                are working with, we need to up type arguments and
-                perform an instantiation
-           *)
-                    let map = List.combine typ.args args in
-                    let _, typ = List.nth fields i in
-                    ok @@ instantiate map typ
-                | Sum _ -> err "should be record not sum"
-              end
-          | _ -> err "can't be record and not record"
-        end
-    | Ref (_, f) ->
-        let* t = infer ctx f in
-        ok @@ TyRef t
     | Modify (_, old, new') ->
         let* t = search ctx old in
         let* _ = check ctx new' t in
         ok @@ TyTuple []
+    | UnaryOp (_, op, expr) ->
+       begin match op with
+       | BNegate -> 
+          let* t = check ctx expr TyBool in
+          ok @@ TyBool
+       | Negate ->
+          let* _ = check ctx expr TyInt in
+          ok @@ TyInt
+       | Ref ->
+          let* t = infer ctx expr in
+          ok @@ TyRef t
+       | GetConstrField s ->
+          failwith "getconstrfield should not be user-writable"
+       | IsConstr s ->
+          failwith "isconstr should not be user-writable"
+       | GetRecField r ->
+          failwith "implement record field access typechecking"
+       | Project i ->
+          let* x'ty = infer ctx expr in
+          begin
+            match x'ty with
+            | TyCustom (nm, args) ->
+               let typ =
+                 List.find
+                   (fun (x : 'a typdef) -> x.name = nm)
+                   ctx.types
+               in
+               begin
+                 match typ.content with
+                 | Record fields ->
+                    (* we have to consider the case in which the record is
+                       parameterized therefore, while we know the field we
+                       are working with, we need to up type arguments and
+                       perform an instantiation
+                     *)
+                    let map = List.combine typ.args args in
+                    let _, typ = List.nth fields i in
+                    ok @@ instantiate map typ
+                 | Sum _ -> err "should be record not sum"
+               end
+            | _ -> err "can't be record and not record"
+          end
+       end
     | Record (_, nm, fields) ->
         (* this case is mildly annoying, because we have to deal
           with instantiation more explicitly
@@ -516,11 +512,6 @@ and check (ctx : ctx) (e : (resolved, 'b) expr) (t : resolved typ) :
                 x xs
               |> ok
         end
-    | Ref (_, r) -> begin
-        match t with
-        | TyRef r't -> check ctx r r't
-        | _ -> err "cannot check ref against not ref"
-      end
     | _ ->
         (* in the general case, we defer to infer (hehe) and then
           come back here and "check our work" with unify
