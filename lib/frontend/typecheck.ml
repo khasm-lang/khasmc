@@ -318,10 +318,6 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
         | Ref ->
             let* t = infer ctx expr in
             ok @@ TyRef t
-        | GetConstrField s ->
-            failwith "getconstrfield should not be user-writable"
-        | IsConstr s ->
-            failwith "isconstr should not be user-writable"
         | GetRecField r ->
             failwith "implement record field access typechecking"
         | Project i ->

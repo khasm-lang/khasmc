@@ -211,10 +211,11 @@ type unaryop =
   | Negate
   | BNegate
   | Ref
-  | IsConstr of string
   | GetRecField of string
+  (*  | GetConstrField of int *)
+  (* this is also used for constructor fields,
+   but kinda iffy i admit *)
   | Project of int
-  | GetConstrField of int
 [@@deriving show { with_path = false }]
 
 type ('a, 'b) expr =

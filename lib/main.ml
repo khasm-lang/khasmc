@@ -32,7 +32,16 @@ let main () =
             print_endline
               (show_resolved nm ^ " : " ^ show_typ pp_resolved ty))
           raw_type_information;
-        let ctx, after_mono = monomorphize e in
+        let p_compiled =
+          Frontend.Pattern_match_desugar.pattern_match_desugar
+            e
+        in
+        print_endline "pattern compiled:";
+        List.iter
+          (fun x ->
+            print_endline (show_toplevel pp_resolved pp_unit x))
+          p_compiled;
+        let ctx, after_mono = monomorphize p_compiled in
         print_endline "mono'd:";
         List.iter
           (fun x ->
@@ -40,13 +49,6 @@ let main () =
           after_mono;
         print_endline "\nctx:";
         print_endline (show_monomorph_ctx ctx);
-        let p_compiled =
-          Frontend.Pattern_match_desugar.pattern_match_desugar
-            after_mono
-        in
-        List.iter
-          (fun x ->
-            print_endline (show_toplevel pp_resolved pp_unit x))
-          p_compiled
+       
   end;
   print_endline "done"
