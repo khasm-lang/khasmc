@@ -79,6 +79,12 @@ let type_information : (unit uuid, resolved typ) Hashtbl.t =
 
 let add_type uuid typ = Hashtbl.replace type_information uuid typ
 
+let add_type_with_existing old_uuid =
+  let fresh = uuid () in
+  let typ = Hashtbl.find type_information old_uuid in
+  add_type fresh typ;
+  fresh
+
 let raw_type_information : (resolved, resolved typ) Hashtbl.t =
   Hashtbl.create 100
 
@@ -95,6 +101,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
     |> Result.map_error (String.concat " ")
   in
   match c with
+  | CaseWild -> ok []
   | CaseLit p -> ok []
   | CaseVar v -> ok [ (v, t) ]
   | CaseTuple tu -> begin

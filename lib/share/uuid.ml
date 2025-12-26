@@ -29,4 +29,4 @@ let uuid_set_snd v uuid =
   let (UUID (a, b)) = uuid in
   UUID (a, v)
 
-let uuid_get_version (UUID (a, b)) = b
+let uuid_get_snd (UUID (a, b)) = b

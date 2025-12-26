@@ -5,6 +5,7 @@ open Share.Uuid
 
 type monomorph_ctx = {
   customs_to_be_done : resolved typ list ref;
+  have_done : resolved typ uuid list ref;
   poly_map : (resolved * resolved typ) list;
   definitions : (resolved, unit, yes) definition list; [@opaque]
   locals : resolved list;
@@ -30,6 +31,7 @@ let update_with_uuid (x : ('a, 'b) expr) (nw : resolved typ) :
 
 let new_monomorph_ctx top =
   {
+    have_done = ref [];
     customs_to_be_done = ref [];
     poly_map = [];
     locals = [];
@@ -105,12 +107,18 @@ let rec monomorph_expr (ctx : monomorph_ctx)
               (fun (d : _ definition) -> d.name = nm)
               ctx.definitions
           in
-          let defs = monomorph_def ctx def (mono_expr_ty expr) in
-          ( MGlobal
-              ( data',
-                uuid_set_snd (mono_expr_ty expr) def.data.uuid,
-                nm ),
-            defs )
+          let new_uuid =
+            uuid_set_snd (mono_expr_ty expr) def.data.uuid
+          in
+          let defs =
+            if not (List.mem new_uuid !(ctx.have_done)) then begin
+              ctx.have_done := new_uuid :: !(ctx.have_done);
+              monomorph_def ctx def (mono_expr_ty expr)
+            end
+            else
+              []
+          in
+          (MGlobal (data', new_uuid, nm), defs)
         end
     | LetIn (_, cases, _, head, body) ->
         let ctx' =
