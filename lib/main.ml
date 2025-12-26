@@ -33,8 +33,7 @@ let main () =
               (show_resolved nm ^ " : " ^ show_typ pp_resolved ty))
           raw_type_information;
         let p_compiled =
-          Frontend.Pattern_match_desugar.pattern_match_desugar
-            e
+          Frontend.Pattern_match_desugar.pattern_match_desugar e
         in
         print_endline "pattern compiled:";
         List.iter
@@ -48,7 +47,6 @@ let main () =
             print_endline (show_toplevel pp_resolved pp_unit x))
           after_mono;
         print_endline "\nctx:";
-        print_endline (show_monomorph_ctx ctx);
-       
+        print_endline (show_monomorph_ctx ctx)
   end;
   print_endline "done"
