@@ -164,6 +164,7 @@ type literal =
 [@@deriving show { with_path = false }]
 
 type 'a case =
+  | CaseWild
   | CaseVar of 'a
   | CaseTuple of 'a case list
   | CaseCtor of 'a * 'a case list
@@ -172,6 +173,7 @@ type 'a case =
 
 let rec case_names (c : 'a case) : 'a list =
   match c with
+  | CaseWild -> []
   | CaseVar c -> [ c ]
   | CaseTuple t -> List.flatten (List.map case_names t)
   | CaseCtor (c, t) -> List.flatten (List.map case_names t)
@@ -186,6 +188,7 @@ type 'a data = {
 [@@deriving show { with_path = false }]
 
 let data () = { uuid = Share.Uuid.uuid (); counter = 0; span = None }
+let data_of uuid = { uuid; counter = 0; span = None }
 
 let update_data_uuid data nw =
   { data with uuid = uuid_set_snd nw data.uuid }
