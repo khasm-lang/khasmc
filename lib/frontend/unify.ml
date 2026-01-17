@@ -51,13 +51,12 @@ let rec unify_h (t1 : 'a typ) (t2 : 'a typ) : ('a typ, string) result
   | TyRef a, TyRef b -> unify_h a b
   | TyMeta a, TyMeta b ->
       (* we did a force, so both should be unsolved *)
-      begin
-        match !a with
-        | Unresolved ->
-            (* set one to the other *)
-            a := Resolved t2;
-            ok t2
-        | Resolved _ -> failwith "impossible"
+      begin match !a with
+      | Unresolved ->
+          (* set one to the other *)
+          a := Resolved t2;
+          ok t2
+      | Resolved _ -> failwith "impossible"
       end
   | TyMeta a, t | t, TyMeta a -> begin
       match !a with

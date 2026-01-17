@@ -129,32 +129,30 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
       *)
       | TyCustom (head, targs) ->
           (* find ty*)
-          begin
-            match
-              List.find_opt
-                (fun (x : 'a typdef) -> x.name = head)
-                ctx.types
-            with
-            | None -> err "can't find type"
-            | Some ty -> begin
-                match ty.content with
-                | Record _ -> failwith "shouldn't be a record (fun?)"
-                | Sum s ->
-                    (* find constructor *)
-                    begin
-                      match
-                        List.find_opt (fun x -> fst x = name) s
-                      with
-                      | None -> err "can't find ctor"
-                      | Some ctor ->
-                          let map = List.combine ty.args targs in
-                          (* fill in all the type arguments *)
-                          let inst =
-                            List.map (instantiate map) (snd ctor)
-                          in
-                          break_and_map args inst
-                    end
-              end
+          begin match
+            List.find_opt
+              (fun (x : 'a typdef) -> x.name = head)
+              ctx.types
+          with
+          | None -> err "can't find type"
+          | Some ty -> begin
+              match ty.content with
+              | Record _ -> failwith "shouldn't be a record (fun?)"
+              | Sum s ->
+                  (* find constructor *)
+                  begin match
+                    List.find_opt (fun x -> fst x = name) s
+                  with
+                  | None -> err "can't find ctor"
+                  | Some ctor ->
+                      let map = List.combine ty.args targs in
+                      (* fill in all the type arguments *)
+                      let inst =
+                        List.map (instantiate map) (snd ctor)
+                      in
+                      break_and_map args inst
+                  end
+            end
           end
       | _ -> err "not custom but should be"
     end
@@ -198,13 +196,12 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
         (* unify the calling type and the argument type to make sure
            they're actually compatible
          *)
-        begin
-          match a'ty with
-          | TyArrow (q, w) ->
-              let* b'ty = infer ctx b in
-              let* _ = unify ctx.local_polys b'ty q in
-              ok w
-          | _ -> err "must function call on function type"
+        begin match a'ty with
+        | TyArrow (q, w) ->
+            let* b'ty = infer ctx b in
+            let* _ = unify ctx.local_polys b'ty q in
+            ok w
+        | _ -> err "must function call on function type"
         end
     | Binop (_, op, a, b) -> begin
         match op with
@@ -232,10 +229,9 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
           done though, nonlocal inference is sucky
         *)
         let typ =
-          begin
-            match typ with
-            | Some ty -> ty
-            | None -> TyMeta (ref Unresolved)
+          begin match typ with
+          | Some ty -> ty
+          | None -> TyMeta (ref Unresolved)
           end
         in
         let ctx = add_local ctx v typ in
@@ -244,11 +240,10 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
           match typ with
           | TyMeta m ->
               (* ocaml ref patterns when *)
-              begin
-                match !m with
-                (* shouldn't this return a polymorphic type? *)
-                | Unresolved -> err "meta remained unsolved"
-                | _ -> ok ()
+              begin match !m with
+              (* shouldn't this return a polymorphic type? *)
+              | Unresolved -> err "meta remained unsolved"
+              | _ -> ok ()
               end
           | _ -> ok ()
         in
@@ -288,20 +283,19 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
           |> collect
           |> Result.map_error (String.concat " ")
         in
-        begin
-          match typs with
-          (* an empty match can return anything, because it can never be
+        begin match typs with
+        (* an empty match can return anything, because it can never be
           matched on
         *)
-          | [] -> ok @@ TyMeta (ref Unresolved)
-          | x :: xs ->
-              (* TODO: don't ignore errors here *)
-              List.fold_left
-                (fun a b ->
-                  unify' ctx.local_polys a b;
-                  a)
-                x xs
-              |> ok
+        | [] -> ok @@ TyMeta (ref Unresolved)
+        | x :: xs ->
+            (* TODO: don't ignore errors here *)
+            List.fold_left
+              (fun a b ->
+                unify' ctx.local_polys a b;
+                a)
+              x xs
+            |> ok
         end
     | Modify (_, old, new') ->
         let* t = search ctx old in
@@ -322,28 +316,26 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
             failwith "implement record field access typechecking"
         | Project i ->
             let* x'ty = infer ctx expr in
-            begin
-              match x'ty with
-              | TyCustom (nm, args) ->
-                  let typ =
-                    List.find
-                      (fun (x : 'a typdef) -> x.name = nm)
-                      ctx.types
-                  in
-                  begin
-                    match typ.content with
-                    | Record fields ->
-                        (* we have to consider the case in which the record is
+            begin match x'ty with
+            | TyCustom (nm, args) ->
+                let typ =
+                  List.find
+                    (fun (x : 'a typdef) -> x.name = nm)
+                    ctx.types
+                in
+                begin match typ.content with
+                | Record fields ->
+                    (* we have to consider the case in which the record is
                        parameterized therefore, while we know the field we
                        are working with, we need to up type arguments and
                        perform an instantiation
                      *)
-                        let map = List.combine typ.args args in
-                        let _, typ = List.nth fields i in
-                        ok @@ instantiate map typ
-                    | Sum _ -> err "should be record not sum"
-                  end
-              | _ -> err "can't be record and not record"
+                    let map = List.combine typ.args args in
+                    let _, typ = List.nth fields i in
+                    ok @@ instantiate map typ
+                | Sum _ -> err "should be record not sum"
+                end
+            | _ -> err "can't be record and not record"
             end
       end
     | Record (_, nm, fields) ->
@@ -354,48 +346,47 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
         let typ =
           List.find (fun (x : 'a typdef) -> x.name = nm) ctx.types
         in
-        begin
-          match typ.content with
-          | Record r ->
-              (* make sure that the lists contain each other
+        begin match typ.content with
+        | Record r ->
+            (* make sure that the lists contain each other
              TODO: make more efficient
            *)
-              if
-                not
-                @@ (List.for_all
-                      (fun (name, value) ->
-                        match List.assoc_opt name r with
+            if
+              not
+              @@ (List.for_all
+                    (fun (name, value) ->
+                      match List.assoc_opt name r with
+                      | Some _ -> true
+                      | None -> false)
+                    fields
+                 && List.for_all
+                      (fun (name, typ) ->
+                        match List.assoc_opt name fields with
                         | Some _ -> true
                         | None -> false)
-                      fields
-                   && List.for_all
-                        (fun (name, typ) ->
-                          match List.assoc_opt name fields with
-                          | Some _ -> true
-                          | None -> false)
-                        r)
-              then
-                err "record decl does not match type"
-              else
-                let our_polys = typ.args in
-                let metas =
-                  List.map
-                    (fun poly -> (poly, TyMeta (ref Unresolved)))
-                    our_polys
-                in
-                List.map (fun field -> infer ctx (snd field)) fields
-                |> collect
-                |> Result.map_error (String.concat " ")
-                |> fun results ->
-                let* res = results in
-                let res = List.combine (List.map fst fields) res in
-                List.iter
-                  (fun res ->
-                    let match' = List.assoc (fst res) r in
-                    unify' ctx.local_polys (snd res) match')
-                  res;
-                ok @@ TyCustom (typ.name, List.map snd metas)
-          | _ -> err "can't make a record out of a sum type"
+                      r)
+            then
+              err "record decl does not match type"
+            else
+              let our_polys = typ.args in
+              let metas =
+                List.map
+                  (fun poly -> (poly, TyMeta (ref Unresolved)))
+                  our_polys
+              in
+              List.map (fun field -> infer ctx (snd field)) fields
+              |> collect
+              |> Result.map_error (String.concat " ")
+              |> fun results ->
+              let* res = results in
+              let res = List.combine (List.map fst fields) res in
+              List.iter
+                (fun res ->
+                  let match' = List.assoc (fst res) r in
+                  unify' ctx.local_polys (snd res) match')
+                res;
+              ok @@ TyCustom (typ.name, List.map snd metas)
+        | _ -> err "can't make a record out of a sum type"
         end
   in
   let uuid = get_uuid e in
@@ -436,16 +427,15 @@ and check (ctx : ctx) (e : (resolved, 'b) expr) (t : resolved typ) :
         match t with
         | TyArrow (q, w) ->
             let* ty =
-              begin
-                match ty with
-                (* logically if we're checking
+              begin match ty with
+              (* logically if we're checking
                       (fun (x: t) -> ...)
                       against
                       q -> w
                       then t == q
                     *)
-                | Some t -> unify ctx.local_polys q t
-                | None -> ok q
+              | Some t -> unify ctx.local_polys q t
+              | None -> ok q
               end
             in
             add_raw_type v ty;
@@ -500,20 +490,19 @@ and check (ctx : ctx) (e : (resolved, 'b) expr) (t : resolved typ) :
           |> collect
           |> Result.map_error (String.concat " ")
         in
-        begin
-          match typs with
-          (* an empty match can return anything, because it can never be
+        begin match typs with
+        (* an empty match can return anything, because it can never be
           matched on
         *)
-          | [] -> ok @@ TyMeta (ref Unresolved)
-          | x :: xs ->
-              (* TODO: don't ignore errors here *)
-              List.fold_left
-                (fun a b ->
-                  unify' ctx.local_polys a b;
-                  a)
-                x xs
-              |> ok
+        | [] -> ok @@ TyMeta (ref Unresolved)
+        | x :: xs ->
+            (* TODO: don't ignore errors here *)
+            List.fold_left
+              (fun a b ->
+                unify' ctx.local_polys a b;
+                a)
+              x xs
+            |> ok
         end
     | _ ->
         (* in the general case, we defer to infer (hehe) and then

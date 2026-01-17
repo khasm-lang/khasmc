@@ -49,12 +49,11 @@ let rec regeneralize (nw : unit -> 'a) (ty : 'a typ) =
   | TyMeta m ->
       TyMeta
         (ref
-           begin
-             match !m with
-             | Resolved m -> Resolved m
-             | Unresolved ->
-                 m := Resolved (TyPoly (nw ()));
-                 Resolved (TyMeta m)
+           begin match !m with
+           | Resolved m -> Resolved m
+           | Unresolved ->
+               m := Resolved (TyPoly (nw ()));
+               Resolved (TyMeta m)
            end)
   | _ -> ty
 
