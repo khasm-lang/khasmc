@@ -25,11 +25,18 @@ let test () =
                  ( d,
                    Var (d, R "expr"),
                    [
-                     ( CaseCtor (R "Some", [ CaseLit (LBool true) ]),
-                       Var (d, R "fst") );
-                     ( CaseCtor (R "Some", [ CaseVar (R "x") ]),
-                       Var (d, R "snd") );
-                     (CaseCtor (R "None", []), Var (d, R "third"));
+                     ( CaseTuple
+                         [
+                           CaseTuple
+                             [
+                               CaseTuple
+                                 [
+                                   CaseTuple [ CaseLit (LBool true) ];
+                                 ];
+                             ];
+                         ],
+                       Var (d, R "one") );
+                     (CaseVar (R "otherwise"), Var (d, R "two"));
                    ] ));
         };
     ]
@@ -48,7 +55,7 @@ let test () =
     p_comp
 
 let main () =
-  if true then
+  if false then
     test ()
   else begin
     Printexc.record_backtrace true;

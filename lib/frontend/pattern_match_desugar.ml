@@ -17,15 +17,15 @@ let partition_mapi (map : int -> 'a -> ('b, 'c) Either.t)
   in
   go 0 list
 
-(* accessors, rows
-   match _ with
-   (1, 2) ->
-   (3, 4) ->
+(* accessors, rows, bodies
+   match a, b with
+   1, 2 -> one
+   3, 4 -> two
    end
    ==
+   [a, b]
    [[1,2],[3,4]]
-   ,
-   bodies
+   [one, two]
 *)
 type ('a, 'b) matrix =
   ('a, 'b) expr list * 'a case list list * ('a, 'b) expr list
@@ -47,17 +47,23 @@ let rec is_pat_refutable (pat : 'a case) =
   | CaseCtor (_, _) -> true
   | CaseLit _ -> true
 
+(* we need to work with _columns_ as the pattern matching
+   algorithm should go from top->bottom first, then left->right
+*)
 let is_col_refutable n (matrix : ('a, 'b) matrix) =
   let acc, row, bodys = matrix in
   try
     row
     |> List.map (fun r -> List.nth r n)
     |> List.exists is_pat_refutable
-  with _ ->
+  with exn ->
     print_endline "is_col_refutable BAD";
+    print_endline ("n: " ^ string_of_int n);
     print_endline (show_matrix' matrix);
+    print_endline (Printexc.to_string exn);
     failwith "nth on incompat matrix?"
 
+(* swap a "column" to first position *)
 let swap_to_fst n list =
   if n = 0 then
     list
@@ -75,13 +81,16 @@ let swap_to_fst n list =
     in
     top :: go 1 (List.tl list)
 
+(* make sure to swap accessors too
+   bodies are rowwise, so unaffected
+*)
 let swap_to n (matrix : ('a, 'b) matrix) : ('a, 'b) matrix =
   let accs, rows, bodys = matrix in
   (swap_to_fst n accs, List.map (swap_to_fst n) rows, bodys)
 
 let swap_to_refutable_if_exists (matrix : ('a, 'b) matrix) :
     ('a, 'b) matrix =
-  let len = List.length (snd3 matrix) in
+  let len = List.length (List.hd @@ snd3 matrix) in
   let rec go n =
     if n = len then
       matrix
@@ -92,6 +101,25 @@ let swap_to_refutable_if_exists (matrix : ('a, 'b) matrix) :
   in
   go 0
 
+(*
+   tldr: we need to turn stuff like
+   match x with
+   | (1,2,3) -> one
+   | y -> two
+
+   into
+   match y with
+   | (1,2,3) -> one
+   | (a,b,c) ->
+     let y = (a,b,c) in
+     ...
+
+   in order for the algorithm to work correctly (needs a rectangular
+matrix, because otherwise the columns get screwy)
+
+   TODO: optimize this to use the expr itself instead of
+   reconstructing the tuple
+*)
 let rec normalize_cases (cases : ('a case * ('a, 'b) expr) list) =
   match
     List.find_map
@@ -115,6 +143,7 @@ let rec normalize_cases (cases : ('a case * ('a, 'b) expr) list) =
   | Some len ->
       let rec norm (cs : 'a case) exp =
         match cs with
+        (* be lazy *)
         | CaseWild -> norm (CaseVar (fresh_resolved ())) exp
         | CaseVar v ->
             let freshs = n_fresh_resolved len in
@@ -132,6 +161,7 @@ let rec normalize_cases (cases : ('a case * ('a, 'b) expr) list) =
       in
       List.map (fun (a, b) -> norm a b) cases
 
+(* matrix-foo *)
 let normalize_first_col (matrix : ('a, 'b) matrix) =
   let accs, rows, bodys = matrix in
   if List.length rows = 0 then
@@ -145,6 +175,11 @@ let normalize_first_col (matrix : ('a, 'b) matrix) =
       List.map2 (fun col1 rest -> col1 :: List.tl rest) fsts' rows,
       bodys' )
 
+(* the main compilation function
+   this turns a full pattern match into things of form:
+   1. no Match statements whatsoever (only Lets directly to variables)
+   2. Match, but only of form `if let ... else ...` 
+*)
 let rec compile (matrix : ('a, 'b) matrix) : 'c =
   print_endline "\ncompiling matrix:";
   print_endline (show_matrix' matrix);
@@ -156,17 +191,24 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
   if List.exists (fun inner -> List.length inner = 0) rows then
     List.hd bodys
   else if List.length rows = 0 then
+    (* if we have nothing at all, all cases have been exhausted *)
     Fail (data_bot (), "pattern matching failure")
   else
-    let accs, rows, bodys = swap_to_refutable_if_exists matrix in
     let accs, rows, bodys = normalize_first_col (accs, rows, bodys) in
+    let accs, rows, bodys =
+      swap_to_refutable_if_exists (accs, rows, bodys)
+    in
     (* just in case, one might say *)
     let fst_row = List.hd rows in
     match List.hd fst_row with
     (* impossible *)
     | CaseWild -> failwith "CaseWild"
     | CaseVar nm ->
-        (* whelp we're taking this path *)
+        (* whelp we're taking this path
+         TODO: warn if there is more than one row left, because
+         it'll never be taken
+         currently the design just prunes that branch immediately
+      *)
         let matrix' : ('a, 'b) matrix =
           ( List.tl accs,
             [ List.tl fst_row ],
@@ -179,7 +221,7 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
         in
         compile matrix'
     | CaseTuple tup ->
-        (* ughhhh ok gotta expand out another tuple *)
+        (* expand out the tuple to full matrix rows *)
         let len = List.length tup in
         let added_accs =
           let hd = List.hd accs in
@@ -191,16 +233,24 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
           in
           go 0
         in
-        let matrix' =
-          ( added_accs @ List.tl accs,
-            List.map
-              (function
-                | CaseTuple tup -> tup
-                | _ -> failwith "pattern compile tuple")
-              fst_row
-            @ List.tl rows,
-            bodys )
+        (* normalize them so we ensure everything is properly
+           tuple-d
+        *)
+        let accs' = added_accs @ List.tl accs in
+        let accs', rows, bodys =
+          normalize_first_col (accs', rows, bodys)
         in
+        let rows =
+          List.map
+            (fun row ->
+              match List.hd row with
+              | CaseTuple tup -> tup @ List.tl row
+              | _ ->
+                  failwith
+                    "pattern compile tuple, normalization failed")
+            rows
+        in
+        let matrix' = (accs', rows, bodys) in
         compile matrix'
     | CaseCtor (ctorname, ctorbody) ->
         (* alrighty. we must:
@@ -222,6 +272,9 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
         in
         let yesrow, yesbody = List.split yes in
         let norow, nobody = List.split no in
+        (* add in all the accessors for the subpatterns of
+           the constructor
+        *)
         let added_accessors =
           List.mapi
             (fun idx elm -> add_get_contr idx (List.hd accs))
@@ -230,9 +283,10 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
         let yesmat : ('a, 'b) matrix =
           (added_accessors @ List.tl accs, yesrow, yesbody)
         in
+        (* no matrix retains the same accessors *)
         let nomat : ('a, 'b) matrix = (accs, norow, nobody) in
         if List.length yesbody = 0 && List.length nobody = 0 then
-          failwith "body are empty ctor?"
+          failwith "bodys are empty ctor?"
         else
           let yes = compile yesmat in
           let no = compile nomat in
@@ -243,6 +297,7 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
               [ (CaseCtor (ctorname, []), yes); (CaseVar dummy, no) ]
             )
     | CaseLit lit ->
+        (* very similar to the constructor case *)
         let yes, no =
           partition_mapi
             (fun idx elm ->
@@ -261,7 +316,7 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
         in
         let nomat : ('a, 'b) matrix = (accs, norow, nobody) in
         if List.length yesbody = 0 && List.length nobody = 0 then
-          failwith "both are empty?"
+          failwith "both are empty literal?"
         else begin
           print_endline "\ncompile yes:";
           let yes = compile yesmat in
@@ -286,10 +341,14 @@ and compile_pre head (cases : ('a case * ('a, 'b) expr) list) : 'c =
      typechecking should guarantee this. 
      . *)
   if List.length cases = 0 then
-    (* TODO: don't do this *)
-    Fail (data_bot (), "Pattern match failure")
+    (* TODO: is this correct? *)
+    Fail (data_bot (), "empty pattern body")
   else
     let rows, bodys = normalize_cases cases |> List.split in
+    (*
+       IMPORTANT: remember to compile the bodies also
+*)
+    let bodys = List.map pattern_comp bodys in
     let fresh = fresh_resolved () in
     let matrix =
       ( [ Var (data_bot (), fresh) ],
@@ -300,8 +359,8 @@ and compile_pre head (cases : ('a case * ('a, 'b) expr) list) : 'c =
     print_endline (show_matrix' matrix);
     LetIn (data_bot (), CaseVar fresh, None, head, compile matrix)
 
-let rec pattern_comp (expr : ('a, resolved typ) expr) : ('a, 'b) expr
-    =
+(* main workhorse *)
+and pattern_comp (expr : ('a, resolved typ) expr) : ('a, 'b) expr =
   let go = pattern_comp in
   match expr with
   | LetIn (data, case, ty, head, body) -> (
