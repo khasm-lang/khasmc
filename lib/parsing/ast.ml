@@ -2,13 +2,14 @@ open Share.Uuid
 open Share.Maybe
 
 (* ideally these would be newtypes, but ocaml doesn't have those *)
-type resolved = R of string [@@deriving show { with_path = false }]
+type resolved = R of string * string
+[@@deriving show { with_path = false }]
 
 let fresh_resolved =
   let i = ref (-10) in
   fun () ->
     decr i;
-    R (string_of_int !i)
+    R (string_of_int !i, "(GEN)")
 
 let rec n_fresh_resolved n =
   if n <= 0 then
@@ -16,6 +17,12 @@ let rec n_fresh_resolved n =
   else
     let f = fresh_resolved () in
     f :: n_fresh_resolved (n - 1)
+
+let resolved_using =
+  let i = ref 10 in
+  fun nm ->
+    incr i;
+    R (nm ^ "@" ^ string_of_int !i, nm)
 
 type unresolved = U of string
 [@@deriving show { with_path = false }]
@@ -377,6 +384,7 @@ let definition_type (type a) (d : ('a, 'b, a) definition) : 'a typ =
     d.args d.return
 
 type ('a, 'b) toplevel =
+  | Module of 'a * ('a, 'b) toplevel list
   | Typdef of 'a typdef
   | Definition of ('a, 'b, yes) definition
 [@@deriving show { with_path = false }]

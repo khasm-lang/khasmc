@@ -5,7 +5,7 @@ open Frontend.Monomorphize
 open Parsing.Parser
 
 let pp_unit fmt p = Format.fprintf fmt "()"
-let r x = R x
+let r x = R (x, "(GEN)")
 
 let test () =
   let d = { uuid = uuid_using TyBottom; counter = 0; span = None } in
@@ -15,7 +15,7 @@ let test () =
       Definition
         {
           data = d;
-          name = R "p";
+          name = r "p";
           typeargs = [];
           args = [];
           return = TyBottom;
@@ -23,7 +23,7 @@ let test () =
             Just
               (Match
                  ( d,
-                   Var (d, R "expr"),
+                   Var (d, r "expr"),
                    [
                      ( CaseTuple
                          [
@@ -35,8 +35,8 @@ let test () =
                                  ];
                              ];
                          ],
-                       Var (d, R "one") );
-                     (CaseVar (R "otherwise"), Var (d, R "two"));
+                       Var (d, r "one") );
+                     (CaseVar (r "otherwise"), Var (d, r "two"));
                    ] ));
         };
     ]
@@ -70,18 +70,22 @@ let main () =
         print_endline "parsed:";
         List.iter
           (fun x ->
-            print_endline (show_toplevel pp_resolved pp_unit x))
+            print_endline
+              (show_toplevel Format.pp_print_string pp_unit x))
           e;
         print_endline "end\n";
         print_newline ();
-        typecheck e;
+
+        let resolved = Parsing.Name_resolve.name_resolve e in
+
+        typecheck resolved;
         print_endline "raw type info:";
         Hashtbl.iter
           (fun nm ty ->
             print_endline
               (show_resolved nm ^ " : " ^ show_typ pp_resolved ty))
           raw_type_information;
-        let ctx, after_mono = monomorphize e in
+        let ctx, after_mono = monomorphize resolved in
         print_endline "mono'd:";
         List.iter
           (fun x ->

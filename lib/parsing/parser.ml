@@ -350,7 +350,7 @@ let rec toplevel' buf =
       print_endline (show_t_TOKEN t);
       failwith "anything other than definition"
 
-let toplevel buf =
+let toplevel buf : ((string, unit) toplevel list, 'a) Result.t =
   let toks = ref (lexer buf) in
 
   List.iter (fun x -> print_string (show_t_TOKEN x ^ " ")) !toks;

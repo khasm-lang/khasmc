@@ -42,7 +42,11 @@ let empty_ctx () =
     funs = [];
     (* magic, for testing *)
     locals =
-      [ (R "magic", TyArrow (TyPoly (R "-1"), TyPoly (R "-2"))) ];
+      [
+        ( R ("magic", "(magic)"),
+          TyArrow (TyPoly (R ("-1", "-1")), TyPoly (R ("-2", "-2")))
+        );
+      ];
     local_polys = [];
   }
 
@@ -541,6 +545,7 @@ let typecheck_toplevel (ctx : ctx) (t : (resolved, unit) toplevel) :
   | Definition d ->
       add_raw_type d.name (definition_type d);
       typecheck_definition ctx d
+  | Module _ -> failwith "Module after name resolution"
 
 let gather (t : (resolved, 'a) toplevel list) : ctx =
   let ctx = empty_ctx () in
@@ -563,7 +568,8 @@ let gather (t : (resolved, 'a) toplevel list) : ctx =
                 s
         end
       | Definition d ->
-          { ctx with funs = (d.name, forget_body d) :: ctx.funs })
+          { ctx with funs = (d.name, forget_body d) :: ctx.funs }
+      | Module _ -> failwith "Module after name resolution")
     ctx t
 
 let typecheck (t : (resolved, 'a) toplevel list) : unit =

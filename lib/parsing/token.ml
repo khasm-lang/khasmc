@@ -46,9 +46,9 @@ type t_TOKEN =
   | ELSE
   | BOOL of bool
   | STRING of string
-  | ID of resolved
-  | TYPEID of resolved
-  | POLYID of resolved
+  | ID of string
+  | TYPEID of string
+  | POLYID of string
   | INT of string
   | FLOAT of string
   | DONE
@@ -119,9 +119,9 @@ let rec lexer_ buf : (t_TOKEN, exn) Result.t =
         let str = Sedlexing.Utf8.lexeme buf in
         let str' = String.sub str 1 (String.length str - 2) in
         STRING str'
-    | id -> ID (R (Sedlexing.Utf8.lexeme buf))
-    | tid -> TYPEID (R (Sedlexing.Utf8.lexeme buf))
-    | polyid -> POLYID (R (Sedlexing.Utf8.lexeme buf))
+    | id -> ID (Sedlexing.Utf8.lexeme buf)
+    | tid -> TYPEID (Sedlexing.Utf8.lexeme buf)
+    | polyid -> POLYID (Sedlexing.Utf8.lexeme buf)
     | num -> INT (Sedlexing.Utf8.lexeme buf)
     | float -> FLOAT (Sedlexing.Utf8.lexeme buf)
     | eof -> DONE

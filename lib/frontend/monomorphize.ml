@@ -203,7 +203,11 @@ let monomorphize (top : (resolved, unit) toplevel list) :
   let ctx = new_monomorph_ctx top in
   let[@warning "-8"] (Definition main) =
     List.find
-      (function Definition x -> x.name = R "main" | _ -> false)
+      (function
+        | Definition x ->
+            let (R (a, b)) = x.name in
+            a = "main"
+        | _ -> false)
       top
   in
   let defs = monomorph_def ctx main (TyArrow (TyInt, TyInt)) in
@@ -211,6 +215,7 @@ let monomorphize (top : (resolved, unit) toplevel list) :
     let go = function
       | Typdef t -> [ Typdef t ]
       | Definition _ -> []
+      | Module (_, _) -> failwith "Module after name resolution"
     in
     List.flatten @@ List.map go top
   in
