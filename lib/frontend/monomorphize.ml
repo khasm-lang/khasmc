@@ -75,10 +75,13 @@ let ( let$ ) v cont =
   let exp', defs' = cont exp in
   (exp', defs @ defs')
 
-let ( let$$ ) v cont =
+let ( let$$ ) v cont = (cont @@ fst v, snd v)
+
+(*
   let exp, defs = v in
   let exp' = cont exp in
   (exp', defs)
+*)
 
 let rec monomorph_expr (ctx : monomorph_ctx)
     (exp : (resolved, unit) expr) :
@@ -100,7 +103,7 @@ let rec monomorph_expr (ctx : monomorph_ctx)
     match expr with
     | Var (_, nm) ->
         if List.mem nm ctx.locals then
-          (MLocal (data', nm), [])
+          (Var (data', nm), [])
         else begin
           let def =
             List.find

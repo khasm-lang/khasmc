@@ -10,6 +10,13 @@ let fresh_resolved =
     decr i;
     R (string_of_int !i)
 
+let rec n_fresh_resolved n =
+  if n <= 0 then
+    []
+  else
+    let f = fresh_resolved () in
+    f :: n_fresh_resolved (n - 1)
+
 type unresolved = U of string
 [@@deriving show { with_path = false }]
 
@@ -24,6 +31,7 @@ type 'a meta =
 [@@deriving show { with_path = false }]
 
 and 'a typ =
+  | TyBottom
   | TyInt
   | TyString
   | TyChar
@@ -211,20 +219,18 @@ type unaryop =
   | BNegate
   | Ref
   | GetRecField of string
-  (*  | GetConstrField of int *)
-  (* this is also used for constructor fields,
-   but kinda iffy i admit *)
+  | GetConstrField of int
   | Project of int
 [@@deriving show { with_path = false }]
 
 type ('a, 'b) expr =
+  | Fail of 'b data * string
   | Var of 'b data * 'a
   (* For monomorphization
      Arguably this should warrant another AST but I don't think
      that's really needed
    *)
   | MGlobal of 'b data * 'a typ uuid * 'a
-  | MLocal of 'b data * 'a
   | Int of 'b data * string
   | String of 'b data * string
   | Char of 'b data * string
@@ -250,7 +256,7 @@ type ('a, 'b) expr =
 
 let get_data (e : ('a, 'b) expr) : 'b data =
   match e with
-  | MLocal (i, _)
+  | Fail (i, _)
   | MGlobal (i, _, _)
   | Var (i, _)
   | Int (i, _)
@@ -276,7 +282,7 @@ let get_uuid x = (get_data x).uuid
 let data_transform (type a b) (f : a data -> b data) expr =
   let rec go e =
     match e with
-    | MLocal (d, s) -> MLocal (f d, s)
+    | Fail (d, s) -> Fail (f d, s)
     | MGlobal (d, p, s) -> MGlobal (f d, p, s)
     | Var (i, s) -> Var (f i, s)
     | Int (i, s) -> Int (f i, s)

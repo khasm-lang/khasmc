@@ -161,8 +161,8 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
     =
   let* ty =
     match e with
-    | MLocal _ | MGlobal _ ->
-        failwith "monomorphization info in typechecking"
+    | Fail _ -> failwith "fail node in typechecking"
+    | MGlobal _ -> failwith "monomorphization info in typechecking"
     (* try find that thing *)
     | Var (i, v) ->
         let* found = search ctx v in
@@ -314,6 +314,8 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
             ok @@ TyRef t
         | GetRecField r ->
             failwith "implement record field access typechecking"
+        | GetConstrField i ->
+            failwith "get constr field in typechecking"
         | Project i ->
             let* x'ty = infer ctx expr in
             begin match x'ty with

@@ -15,11 +15,24 @@ let print_by_uuid show showsnd p =
   |> String.concat "\n"
   |> print_endline
 
-let uuid : unit -> unit uuid =
-  let x = ref 1000 in
-  fun () ->
-    incr x;
-    UUID (!x, ())
+module Priv : sig
+  val uuid : unit -> unit uuid
+  val uuid_using : 'a -> 'a uuid
+end = struct
+  let uuid_counter = ref 1000
+
+  let uuid : unit -> unit uuid =
+   fun () ->
+    incr uuid_counter;
+    UUID (!uuid_counter, ())
+
+  let uuid_using : 'a -> 'a uuid =
+   fun p ->
+    incr uuid_counter;
+    UUID (!uuid_counter, p)
+end
+
+include Priv
 
 let uuid_forget (v : 'a uuid) : unit uuid =
   let (UUID (a, b)) = v in
