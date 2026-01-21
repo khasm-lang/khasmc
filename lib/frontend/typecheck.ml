@@ -2,6 +2,7 @@ open Share.Uuid
 open Parsing.Ast
 open Share.Result
 open Share.Maybe
+open Share.Types
 open Unify
 
 let typ_pp t = print_endline (show_typ pp_resolved t)
@@ -538,19 +539,18 @@ let typecheck_definition (ctx : ctx)
   let* _ = check ctx body d.return in
   ok ()
 
-let typecheck_toplevel (ctx : ctx) (t : (resolved, unit) toplevel) :
-    (unit, string) result =
+let typecheck_toplevel (ctx : ctx)
+    (t : (resolved, unit, void) toplevel) : (unit, string) result =
   match t with
   | Typdef _ -> ok ()
   | Definition d ->
       add_raw_type d.name (definition_type d);
       typecheck_definition ctx d
-  | Module _ -> failwith "Module after name resolution"
 
-let gather (t : (resolved, 'a) toplevel list) : ctx =
+let gather (t : (resolved, 'a, void) toplevel list) : ctx =
   let ctx = empty_ctx () in
   List.fold_left
-    (fun ctx a ->
+    (fun ctx (a : ('b, 'a, void) toplevel) ->
       match a with
       | Typdef t -> begin
           match t.content with
@@ -568,11 +568,10 @@ let gather (t : (resolved, 'a) toplevel list) : ctx =
                 s
         end
       | Definition d ->
-          { ctx with funs = (d.name, forget_body d) :: ctx.funs }
-      | Module _ -> failwith "Module after name resolution")
+          { ctx with funs = (d.name, forget_body d) :: ctx.funs })
     ctx t
 
-let typecheck (t : (resolved, 'a) toplevel list) : unit =
+let typecheck (t : (resolved, 'a, void) toplevel list) : unit =
   let ctx = gather t in
   List.map (typecheck_toplevel ctx) t |> collect |> function
   | Ok _ ->

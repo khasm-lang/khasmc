@@ -1,6 +1,7 @@
 open Parsing.Ast
 open Typecheck
 open Share.Maybe
+open Share.Types
 open Share.Uuid
 
 type monomorph_ctx = {
@@ -198,8 +199,8 @@ and monomorph_def (ctx : monomorph_ctx)
   let me = def_with_new_body_typ def exp against in
   me :: rest
 
-let monomorphize (top : (resolved, unit) toplevel list) :
-    monomorph_ctx * (resolved, resolved typ) toplevel list =
+let monomorphize (top : (resolved, unit, void) toplevel list) :
+    monomorph_ctx * (resolved, resolved typ, void) toplevel list =
   let ctx = new_monomorph_ctx top in
   let[@warning "-8"] (Definition main) =
     List.find
@@ -212,10 +213,9 @@ let monomorphize (top : (resolved, unit) toplevel list) :
   in
   let defs = monomorph_def ctx main (TyArrow (TyInt, TyInt)) in
   let rest =
-    let go = function
+    let go : ('a, 'b, void) toplevel -> 'c = function
       | Typdef t -> [ Typdef t ]
       | Definition _ -> []
-      | Module (_, _) -> failwith "Module after name resolution"
     in
     List.flatten @@ List.map go top
   in

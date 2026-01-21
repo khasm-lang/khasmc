@@ -11,12 +11,12 @@ let fresh_resolved =
     decr i;
     R (string_of_int !i, "(GEN)")
 
-let rec n_fresh_resolved n =
+let rec fresh_resolved_n n =
   if n <= 0 then
     []
   else
     let f = fresh_resolved () in
-    f :: n_fresh_resolved (n - 1)
+    f :: fresh_resolved_n (n - 1)
 
 let resolved_using =
   let i = ref 10 in
@@ -383,8 +383,106 @@ let definition_type (type a) (d : ('a, 'b, a) definition) : 'a typ =
     (fun (_, ty) acc -> TyArrow (ty, acc))
     d.args d.return
 
-type ('a, 'b) toplevel =
-  | Module of 'a * ('a, 'b) toplevel list
-  | Typdef of 'a typdef
-  | Definition of ('a, 'b, yes) definition
-[@@deriving show { with_path = false }]
+type ('a, 'b, 'c) toplevel =
+  | Module :
+      'a * ('a, 'b, unit) toplevel list
+      -> ('a, 'b, unit) toplevel
+  | Typdef : 'a typdef -> ('a, 'b, 'c) toplevel
+  | Definition : ('a, 'b, yes) definition -> ('a, 'b, 'c) toplevel
+  | Open : 'a -> ('a, 'b, unit) toplevel
+
+module PrintToplevel = struct
+  let pp_unit fmt () = Format.fprintf fmt "()"
+
+  let rec pp_toplevel : type a b c.
+      (Ppx_deriving_runtime.Format.formatter ->
+      a ->
+      Ppx_deriving_runtime.unit) ->
+      (Ppx_deriving_runtime.Format.formatter ->
+      b ->
+      Ppx_deriving_runtime.unit) ->
+      (Ppx_deriving_runtime.Format.formatter ->
+      c ->
+      Ppx_deriving_runtime.unit) ->
+      Ppx_deriving_runtime.Format.formatter ->
+      (a, b, c) toplevel ->
+      Ppx_deriving_runtime.unit =
+    (let __3 = pp_definition
+     and __2 = pp_yes
+     and __1 = pp_typdef
+     and __0 = pp_toplevel in
+     ((let open! Ppx_deriving_runtime [@ocaml.warning "-A"] in
+       fun poly_a ->
+         fun poly_b ->
+          fun poly_c ->
+           fun fmt -> function
+             | Module (a0, a1) ->
+                 Ppx_deriving_runtime.Format.fprintf fmt
+                   "(@[<2>Module (@,";
+                 (poly_a fmt) a0;
+                 Ppx_deriving_runtime.Format.fprintf fmt ",@ ";
+                 (fun x ->
+                   Ppx_deriving_runtime.Format.fprintf fmt "@[<2>[";
+                   ignore
+                     (List.fold_left
+                        (fun sep x ->
+                          if sep then
+                            Ppx_deriving_runtime.Format.fprintf fmt
+                              ";@ ";
+                          (__0
+                             (fun fmt -> poly_a fmt)
+                             (fun fmt -> poly_b fmt)
+                             (fun fmt -> pp_unit fmt)
+                             fmt)
+                            x;
+                          true)
+                        false x);
+                   Ppx_deriving_runtime.Format.fprintf fmt "@,]@]")
+                   a1;
+                 Ppx_deriving_runtime.Format.fprintf fmt "@,))@]"
+             | Typdef a0 ->
+                 Ppx_deriving_runtime.Format.fprintf fmt
+                   "(@[<2>Typdef@ ";
+                 (__1 (fun fmt -> poly_a fmt) fmt) a0;
+                 Ppx_deriving_runtime.Format.fprintf fmt "@])"
+             | Definition a0 ->
+                 Ppx_deriving_runtime.Format.fprintf fmt
+                   "(@[<2>Definition@ ";
+                 (__3
+                    (fun fmt -> poly_a fmt)
+                    (fun fmt -> poly_b fmt)
+                    (fun fmt -> __2 fmt)
+                    fmt)
+                   a0;
+                 Ppx_deriving_runtime.Format.fprintf fmt "@])"
+             | Open a0 ->
+                 Ppx_deriving_runtime.Format.fprintf fmt
+                   "(@[<2>Open@ ";
+                 (poly_a fmt) a0;
+                 Ppx_deriving_runtime.Format.fprintf fmt "@])")
+     [@ocaml.warning "-A"]))
+    [@ocaml.warning "-39"]
+
+  and show_toplevel : type a b c.
+      (Ppx_deriving_runtime.Format.formatter ->
+      a ->
+      Ppx_deriving_runtime.unit) ->
+      (Ppx_deriving_runtime.Format.formatter ->
+      b ->
+      Ppx_deriving_runtime.unit) ->
+      (Ppx_deriving_runtime.Format.formatter ->
+      c ->
+      Ppx_deriving_runtime.unit) ->
+      (a, b, c) toplevel ->
+      Ppx_deriving_runtime.string =
+   fun poly_a ->
+    fun poly_b ->
+     fun poly_c ->
+      fun x ->
+       Ppx_deriving_runtime.Format.asprintf "%a"
+         (((pp_toplevel poly_a) poly_b) poly_c)
+         x
+  [@@ocaml.warning "-32"]
+end
+
+include PrintToplevel

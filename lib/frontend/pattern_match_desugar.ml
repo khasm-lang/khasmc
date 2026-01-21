@@ -1,6 +1,7 @@
 open Parsing.Ast
 open Typecheck
 open Share.Maybe
+open Share.Types
 open Share.Uuid
 
 let partition_mapi (map : int -> 'a -> ('b, 'c) Either.t)
@@ -146,7 +147,7 @@ let rec normalize_cases (cases : ('a case * ('a, 'b) expr) list) =
         (* be lazy *)
         | CaseWild -> norm (CaseVar (fresh_resolved ())) exp
         | CaseVar v ->
-            let freshs = n_fresh_resolved len in
+            let freshs = fresh_resolved_n len in
             ( CaseTuple (List.map (fun x -> CaseVar x) freshs),
               LetIn
                 ( data_bot (),
@@ -181,9 +182,6 @@ let normalize_first_col (matrix : ('a, 'b) matrix) =
    2. Match, but only of form `if let ... else ...` 
 *)
 let rec compile (matrix : ('a, 'b) matrix) : 'c =
-  print_endline "\ncompiling matrix:";
-  print_endline (show_matrix' matrix);
-  print_endline "godspeed\n";
   let accs, rows, bodys = matrix in
   (* default out if patterns are empty
      TODO: add warning for when not everything is empty
@@ -318,9 +316,7 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
         if List.length yesbody = 0 && List.length nobody = 0 then
           failwith "both are empty literal?"
         else begin
-          print_endline "\ncompile yes:";
           let yes = compile yesmat in
-          print_endline "\ncompile no:";
           let no = compile nomat in
           let dummy = fresh_resolved () in
           Match
@@ -330,13 +326,6 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
         end
 
 and compile_pre head (cases : ('a case * ('a, 'b) expr) list) : 'c =
-  print_endline "compile pre:";
-  List.iter
-    (fun (a, b) ->
-      print_endline "case:";
-      print_endline (show_case pp_resolved a);
-      print_endline "expr:;")
-    cases;
   (* We assume that all the cases are of the same form -
      typechecking should guarantee this. 
      . *)
@@ -355,8 +344,6 @@ and compile_pre head (cases : ('a case * ('a, 'b) expr) list) : 'c =
         List.map (fun x -> [ x ]) rows,
         bodys )
     in
-    print_endline "pre matrix:";
-    print_endline (show_matrix' matrix);
     LetIn (data_bot (), CaseVar fresh, None, head, compile matrix)
 
 (* main workhorse *)
@@ -385,8 +372,8 @@ and pattern_comp (expr : ('a, resolved typ) expr) : ('a, 'b) expr =
       Record (data, nm, List.map (fun (a, b) -> (a, go b)) cases)
   | otherwise -> expr
 
-let pattern_match_desugar (top : ('a, 'b) toplevel list) :
-    ('a, 'b) toplevel list =
+let pattern_match_desugar (top : ('a, 'b, void) toplevel list) :
+    ('a, 'b, void) toplevel list =
   List.map
     (function
       | Definition def ->
