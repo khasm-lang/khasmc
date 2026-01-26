@@ -6,3 +6,4 @@ a.out*
 gmon*
 *.svg
 massif*
+test/big.kha
