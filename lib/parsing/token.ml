@@ -31,6 +31,7 @@ type t_TOKEN =
   | IN
   | AS
   | ARROW
+  | FATARROW
   | TYINT
   | TYSTRING
   | TYCHAR
@@ -40,10 +41,12 @@ type t_TOKEN =
   | MODULE
   | END
   | MATCH
+  | WITH
   | FUN
   | IF
   | THEN
   | ELSE
+  | OF
   | BOOL of bool
   | STRING of string
   | ID of string
@@ -56,10 +59,12 @@ type t_TOKEN =
 [@@deriving show { with_path = false }]
 
 let digit = [%sedlex.regexp? '0' .. '9']
+let idchar = [%sedlex.regexp? Star (ll | lu | digit)]
+let path = [%sedlex.regexp? Star ((lu, idchar), '.')]
+let id = [%sedlex.regexp? path, ll, idchar]
+let type_id = [%sedlex.regexp? path, lu, idchar]
+let poly_id = [%sedlex.regexp? '\'', ll, idchar]
 let num = [%sedlex.regexp? Plus digit]
-let id = [%sedlex.regexp? ll, Star (ll | digit)]
-let tid = [%sedlex.regexp? lu, Plus (ll | lu)]
-let polyid = [%sedlex.regexp? '\'', id]
 let space = [%sedlex.regexp? Plus (zs | cc)]
 let char = [%sedlex.regexp? Compl '"']
 let string = [%sedlex.regexp? '"', Star char, '"']
@@ -100,6 +105,7 @@ let rec lexer_ buf : (t_TOKEN, exn) Result.t =
     | "in" -> IN
     | "as" -> AS
     | "->" -> ARROW
+    | "=>" -> FATARROW
     | "Int" -> TYINT
     | "String" -> TYSTRING
     | "Char" -> TYCHAR
@@ -109,10 +115,12 @@ let rec lexer_ buf : (t_TOKEN, exn) Result.t =
     | "module" -> MODULE
     | "end" -> END
     | "match" -> MATCH
+    | "with" -> WITH
     | "fun" -> FUN
     | "if" -> IF
     | "then" -> THEN
     | "else" -> ELSE
+    | "of" -> OF
     | "true" -> BOOL true
     | "false" -> BOOL false
     | string ->
@@ -120,8 +128,8 @@ let rec lexer_ buf : (t_TOKEN, exn) Result.t =
         let str' = String.sub str 1 (String.length str - 2) in
         STRING str'
     | id -> ID (Sedlexing.Utf8.lexeme buf)
-    | tid -> TYPEID (Sedlexing.Utf8.lexeme buf)
-    | polyid -> POLYID (Sedlexing.Utf8.lexeme buf)
+    | type_id -> TYPEID (Sedlexing.Utf8.lexeme buf)
+    | poly_id -> POLYID (Sedlexing.Utf8.lexeme buf)
     | num -> INT (Sedlexing.Utf8.lexeme buf)
     | float -> FLOAT (Sedlexing.Utf8.lexeme buf)
     | eof -> DONE

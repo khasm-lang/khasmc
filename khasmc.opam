@@ -7,6 +7,7 @@ license: "MPL-2.0"
 tags: ["compiler" "khasm" "programming language"]
 depends: [
   "ocaml"
+  "sedlex"
   "angstrom"
   "dune" {>= "3.10"}
   "fmt"

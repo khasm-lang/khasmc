@@ -139,10 +139,10 @@ let rec monomorph_expr (ctx : monomorph_ctx)
         let$ f' = go ctx f in
         let$$ x' = go ctx x in
         Funccall (data', f', x')
-    | Binop (_, bop, l, r) ->
+    | BinOp (_, bop, l, r) ->
         let$ l' = go ctx l in
         let$$ r' = go ctx r in
-        Binop (data', bop, l', r')
+        BinOp (data', bop, l', r')
     | Lambda (_, nm, _, body) ->
         let ctx' = { ctx with locals = nm :: ctx.locals } in
         let$$ body' = go ctx' body in

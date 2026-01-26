@@ -51,7 +51,6 @@ let prec x =
   match x with
   | PLUS | MINUS -> 20
   | STAR | FSLASH -> 30
-  | AND | PIPE -> 10
   | EQUALS -> 0
   | _ -> -1
 
@@ -97,11 +96,16 @@ let rec type' buf =
     | POLYID s -> TyPoly s
     | REF -> TyRef (type' buf)
     | TYPEID s -> begin
-        match peek buf with
-        | TYPEID _ | POLYID _ | LEFTP _ ->
-            (* custom with args *)
-            failwith "args"
-        | _ -> failwith "no args"
+        let rec go () =
+          match peek buf with
+          | TYPEID _ | POLYID _ | LEFTP | TYINT | TYSTRING | TYCHAR
+          | TYFLOAT | TYBOOL ->
+              let next = type' buf in
+              next :: go ()
+          | _ -> []
+        in
+        let total = go () in
+        TyCustom (s, total)
       end
     | _ -> failwith "other type weirdness"
   in
@@ -114,8 +118,9 @@ let rec type' buf =
 
 let rec case' buf =
   match next buf with
-  | ID s ->
-      (* maybe custom, maybe not *)
+  | BOOL b -> CaseLit (LBool b)
+  | INT i -> CaseLit (LInt i)
+  | TYPEID s ->
       let rec handle () =
         begin match peek buf with
         | LEFTP ->
@@ -128,15 +133,16 @@ let rec case' buf =
             (* subvar *)
             next' buf;
             CaseVar s :: handle ()
+        | TYPEID s ->
+            next' buf;
+            CaseCtor (s, []) :: handle ()
         | _ ->
             (* not any of that *)
             []
         end
       in
-      begin match handle () with
-      | [] -> CaseVar s
-      | xs -> CaseCtor (s, xs)
-      end
+      CaseCtor (s, handle ())
+  | ID s -> CaseVar s
   | LEFTP ->
       (* tuple or abbrev *)
       begin match peek buf with
@@ -199,7 +205,7 @@ module Expr = struct
         else begin
           next' buf;
           let* rhs = expr' prec buf in
-          let c = Binop (data' (), to_binop t, curr, rhs) in
+          let c = BinOp (data' (), to_binop t, curr, rhs) in
           expr c curr_prec buf
         end
 
@@ -233,6 +239,24 @@ module Expr = struct
       | ID i ->
           next' buf;
           some @@ Var (data' (), i)
+      | TYPEID i ->
+          next' buf;
+          begin match peek buf with
+          | LEFTC ->
+              next' buf;
+              let rec go () =
+                match next buf with
+                | RIGHTC -> []
+                | ID s ->
+                    expect EQUALS buf;
+                    let (Some e) = expr' 0 buf in
+                    expect SEMICOLON buf;
+                    (s, e) :: go ()
+              in
+              let inner = go () in
+              some @@ (Record (data' (), i, inner) : ('a, 'b) expr)
+          | _ -> some @@ Constructor (data' (), i)
+          end
       | INT i ->
           next' buf;
           some @@ Int (data' (), i)
@@ -276,7 +300,24 @@ module Expr = struct
           in
           some @@ Match (data' (), c, cases)
         end
-      | _ -> raise NoValid
+      | MATCH -> begin
+          next' buf;
+          let+ main = expr' 0 buf in
+          expect WITH buf;
+          let rec go () =
+            match next buf with
+            | END -> []
+            | PIPE ->
+                let case = case' buf in
+                expect FATARROW buf;
+                let (Some exp) = expr' 0 buf in
+                (case, exp) :: go ()
+            | x -> failwith ("got x instead: " ^ show_t_TOKEN x)
+          in
+          let total = go () in
+          some @@ Match (data' (), main, total)
+        end
+      | xs -> raise NoValid
       end
     with NoValid -> None
 end
@@ -333,6 +374,56 @@ let definition_up_to_body buf =
     body = Nothing;
   }
 
+let rec typdef buf =
+  let (TYPEID name) = next buf in
+  let rec polys () =
+    match peek buf with
+    | POLYID s ->
+        next' buf;
+        s :: polys ()
+    | _ -> []
+  in
+  let poly = polys () in
+  expect EQUALS buf;
+  let inner =
+    match peek buf with
+    | PIPE ->
+        (* sum *)
+        let rec go () =
+          match next buf with
+          | END -> []
+          | PIPE -> (
+              let (TYPEID ctor) = next buf in
+              match next buf with
+              | COLON -> failwith "GADTs"
+              | OF ->
+                  let rec types () =
+                    match peek buf with
+                    | END -> []
+                    | PIPE -> []
+                    | _ ->
+                        let next = type' buf in
+                        next :: types ()
+                  in
+                  let t = types () in
+                  (ctor, t) :: go ())
+        in
+        Sum (go ())
+    | LEFTC ->
+        next' buf;
+        let rec go () =
+          match next buf with
+          | RIGHTC -> []
+          | ID s ->
+              expect COLON buf;
+              let t = type' buf in
+              expect SEMICOLON buf;
+              (s, t) :: go ()
+        in
+        Record (go ())
+  in
+  { data = data' (); name; args = poly; content = inner }
+
 let rec toplevel' buf =
   match next buf with
   | FUN -> begin
@@ -346,16 +437,19 @@ let rec toplevel' buf =
       res :: toplevel' buf
     end
   | DONE -> []
+  | TYPE ->
+      let curr = typdef buf in
+      Typdef curr :: toplevel' buf
   | t ->
       print_endline (show_t_TOKEN t);
       failwith "anything other than definition"
 
 let toplevel buf : ((string, unit, unit) toplevel list, 'a) Result.t =
   let toks = ref (lexer buf) in
-
+  (*
   List.iter (fun x -> print_string (show_t_TOKEN x ^ " ")) !toks;
   print_newline ();
-
+  *)
   try
     let t = toplevel' toks in
     Ok t

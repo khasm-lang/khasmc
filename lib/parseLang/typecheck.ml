@@ -28,19 +28,21 @@ let typ_pp t = print_endline (show_typ pp_resolved t)
 
 type ctx = {
   (* name, parent *)
-  ctors : (resolved * resolved typdef) list;
+  ctors : (resolved, resolved typdef) Hashtbl.t;
   types : resolved typdef list;
-  funs : (resolved * (resolved, unit, no) definition) list;
+  funs : (resolved, (resolved, unit, no) definition) Hashtbl.t;
   locals : (resolved * resolved typ) list;
   local_polys : resolved list;
 }
-[@@deriving show { with_path = false }]
 
+(*
+[@@deriving show { with_path = false }]
+*)
 let empty_ctx () =
   {
-    ctors = [];
+    ctors = Hashtbl.create 100;
     types = [];
-    funs = [];
+    funs = Hashtbl.create 100;
     (* magic, for testing *)
     locals =
       [
@@ -65,12 +67,12 @@ let search (ctx : ctx) (id : resolved) : (resolved typ, string) result
   try
     case' (List.assoc_opt id ctx.locals) (fun t -> t);
 
-    case' (List.assoc_opt id ctx.ctors) (fun t ->
+    case' (Hashtbl.find_opt ctx.ctors id) (fun t ->
         match t.content with
         | Record _ -> failwith "shouldn't be variable-ing a record"
         | Sum s -> typdef_and_ctor_to_typ t id);
 
-    case' (List.assoc_opt id ctx.funs) (fun d -> definition_type d);
+    case' (Hashtbl.find_opt ctx.funs id) (fun d -> definition_type d);
 
     begin
       print_endline "variable not found:";
@@ -173,6 +175,9 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
         let* found = search ctx v in
         (* instantiate stuff now, to assist meta propogation *)
         to_metas ctx.local_polys found |> ok
+    | Constructor (i, v) ->
+        let* found = search ctx v in
+        to_metas ctx.local_polys found |> ok
     | Int (_, _) -> ok TyInt
     | String (_, _) -> ok TyString
     | Char (_, _) -> ok TyChar
@@ -208,7 +213,7 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
             ok w
         | _ -> err "must function call on function type"
         end
-    | Binop (_, op, a, b) -> begin
+    | BinOp (_, op, a, b) -> begin
         match op with
         | Add | Sub | Mul | Div | Lt | LtEq | Gt | GtEq ->
             let* t =
@@ -555,34 +560,33 @@ let gather (t : (resolved, 'a, void) toplevel list) : ctx =
       | Typdef t -> begin
           match t.content with
           | Record r ->
-              {
-                ctx with
-                ctors = (t.name, t) :: ctx.ctors;
-                types = t :: ctx.types;
-              }
+              Hashtbl.add ctx.ctors t.name t;
+              { ctx with types = t :: ctx.types }
           | Sum s ->
               List.fold_left
                 (fun acc a ->
-                  { acc with ctors = (fst a, t) :: acc.ctors })
+                  Hashtbl.add acc.ctors (fst a) t;
+                  acc)
                 { ctx with types = t :: ctx.types }
                 s
         end
       | Definition d ->
-          { ctx with funs = (d.name, forget_body d) :: ctx.funs })
+          Hashtbl.add ctx.funs d.name (forget_body d);
+          ctx)
     ctx t
 
 let typecheck (t : (resolved, 'a, void) toplevel list) : unit =
   let ctx = gather t in
   List.map (typecheck_toplevel ctx) t |> collect |> function
   | Ok _ ->
-      (* TODO: make sure metas don't escape (iter hashtbl?) *)
+      (*
+       TODO: is this needed?
+make sure metas don't escape (iter hashtbl?) *)
       let gen = fresh_resolved in
       Hashtbl.iter
         (fun k v ->
           Hashtbl.replace type_information k (back_to_polys gen v))
         type_information;
-      print_newline ();
-      print_endline "typechecked :D";
       ()
   | Error e ->
       List.iter print_endline e;

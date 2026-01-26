@@ -238,6 +238,7 @@ type ('a, 'b) expr =
      that's really needed
    *)
   | MGlobal of 'b data * 'a typ uuid * 'a
+  | Constructor of 'b data * 'a
   | Int of 'b data * string
   | String of 'b data * string
   | Char of 'b data * string
@@ -251,7 +252,7 @@ type ('a, 'b) expr =
       * ('a, 'b) expr
   | Seq of 'b data * ('a, 'b) expr * ('a, 'b) expr
   | Funccall of 'b data * ('a, 'b) expr * ('a, 'b) expr
-  | Binop of 'b data * binop * ('a, 'b) expr * ('a, 'b) expr
+  | BinOp of 'b data * binop * ('a, 'b) expr * ('a, 'b) expr
   | UnaryOp of 'b data * unaryop * ('a, 'b) expr
   | Lambda of 'b data * 'a * 'a typ option * ('a, 'b) expr
   | Tuple of 'b data * ('a, 'b) expr list
@@ -266,6 +267,7 @@ let get_data (e : ('a, 'b) expr) : 'b data =
   | Fail (i, _)
   | MGlobal (i, _, _)
   | Var (i, _)
+  | Constructor (i, _)
   | Int (i, _)
   | String (i, _)
   | Char (i, _)
@@ -274,7 +276,7 @@ let get_data (e : ('a, 'b) expr) : 'b data =
   | LetIn (i, _, _, _, _)
   | Seq (i, _, _)
   | Funccall (i, _, _)
-  | Binop (i, _, _, _)
+  | BinOp (i, _, _, _)
   | Lambda (i, _, _, _)
   | Tuple (i, _)
   | Annot (i, _, _)
@@ -292,6 +294,7 @@ let data_transform (type a b) (f : a data -> b data) expr =
     | Fail (d, s) -> Fail (f d, s)
     | MGlobal (d, p, s) -> MGlobal (f d, p, s)
     | Var (i, s) -> Var (f i, s)
+    | Constructor (i, s) -> Constructor (f i, s)
     | Int (i, s) -> Int (f i, s)
     | String (i, s) -> String (f i, s)
     | Char (i, s) -> Char (f i, s)
@@ -300,7 +303,7 @@ let data_transform (type a b) (f : a data -> b data) expr =
     | LetIn (i, c, ty, e1, e2) -> LetIn (f i, c, ty, go e1, go e2)
     | Seq (i, a, b) -> Seq (f i, go a, go b)
     | Funccall (i, a, b) -> Funccall (f i, go a, go b)
-    | Binop (i, b, e1, e2) -> Binop (f i, b, go e1, go e2)
+    | BinOp (i, b, e1, e2) -> BinOp (f i, b, go e1, go e2)
     | Lambda (i, nm, t, e) -> Lambda (f i, nm, t, go e)
     | Tuple (i, s) -> Tuple (f i, List.map go s)
     | Annot (i, e, t) -> Annot (f i, go e, t)
@@ -411,56 +414,54 @@ module PrintToplevel = struct
      and __2 = pp_yes
      and __1 = pp_typdef
      and __0 = pp_toplevel in
-     ((let open! Ppx_deriving_runtime [@ocaml.warning "-A"] in
-       fun poly_a ->
-         fun poly_b ->
-          fun poly_c ->
-           fun fmt -> function
-             | Module (a0, a1) ->
-                 Ppx_deriving_runtime.Format.fprintf fmt
-                   "(@[<2>Module (@,";
-                 (poly_a fmt) a0;
-                 Ppx_deriving_runtime.Format.fprintf fmt ",@ ";
-                 (fun x ->
-                   Ppx_deriving_runtime.Format.fprintf fmt "@[<2>[";
-                   ignore
-                     (List.fold_left
-                        (fun sep x ->
-                          if sep then
-                            Ppx_deriving_runtime.Format.fprintf fmt
-                              ";@ ";
-                          (__0
-                             (fun fmt -> poly_a fmt)
-                             (fun fmt -> poly_b fmt)
-                             (fun fmt -> pp_unit fmt)
-                             fmt)
-                            x;
-                          true)
-                        false x);
-                   Ppx_deriving_runtime.Format.fprintf fmt "@,]@]")
-                   a1;
-                 Ppx_deriving_runtime.Format.fprintf fmt "@,))@]"
-             | Typdef a0 ->
-                 Ppx_deriving_runtime.Format.fprintf fmt
-                   "(@[<2>Typdef@ ";
-                 (__1 (fun fmt -> poly_a fmt) fmt) a0;
-                 Ppx_deriving_runtime.Format.fprintf fmt "@])"
-             | Definition a0 ->
-                 Ppx_deriving_runtime.Format.fprintf fmt
-                   "(@[<2>Definition@ ";
-                 (__3
-                    (fun fmt -> poly_a fmt)
-                    (fun fmt -> poly_b fmt)
-                    (fun fmt -> __2 fmt)
-                    fmt)
-                   a0;
-                 Ppx_deriving_runtime.Format.fprintf fmt "@])"
-             | Open a0 ->
-                 Ppx_deriving_runtime.Format.fprintf fmt
-                   "(@[<2>Open@ ";
-                 (poly_a fmt) a0;
-                 Ppx_deriving_runtime.Format.fprintf fmt "@])")
-     [@ocaml.warning "-A"]))
+     let open! Ppx_deriving_runtime in
+     fun poly_a ->
+       fun poly_b ->
+        fun poly_c ->
+         fun fmt -> function
+           | Module (a0, a1) ->
+               Ppx_deriving_runtime.Format.fprintf fmt
+                 "(@[<2>Module (@,";
+               (poly_a fmt) a0;
+               Ppx_deriving_runtime.Format.fprintf fmt ",@ ";
+               (fun x ->
+                 Ppx_deriving_runtime.Format.fprintf fmt "@[<2>[";
+                 ignore
+                   (List.fold_left
+                      (fun sep x ->
+                        if sep then
+                          Ppx_deriving_runtime.Format.fprintf fmt
+                            ";@ ";
+                        (__0
+                           (fun fmt -> poly_a fmt)
+                           (fun fmt -> poly_b fmt)
+                           (fun fmt -> pp_unit fmt)
+                           fmt)
+                          x;
+                        true)
+                      false x);
+                 Ppx_deriving_runtime.Format.fprintf fmt "@,]@]")
+                 a1;
+               Ppx_deriving_runtime.Format.fprintf fmt "@,))@]"
+           | Typdef a0 ->
+               Ppx_deriving_runtime.Format.fprintf fmt
+                 "(@[<2>Typdef@ ";
+               (__1 (fun fmt -> poly_a fmt) fmt) a0;
+               Ppx_deriving_runtime.Format.fprintf fmt "@])"
+           | Definition a0 ->
+               Ppx_deriving_runtime.Format.fprintf fmt
+                 "(@[<2>Definition@ ";
+               (__3
+                  (fun fmt -> poly_a fmt)
+                  (fun fmt -> poly_b fmt)
+                  (fun fmt -> __2 fmt)
+                  fmt)
+                 a0;
+               Ppx_deriving_runtime.Format.fprintf fmt "@])"
+           | Open a0 ->
+               Ppx_deriving_runtime.Format.fprintf fmt "(@[<2>Open@ ";
+               (poly_a fmt) a0;
+               Ppx_deriving_runtime.Format.fprintf fmt "@])")
     [@ocaml.warning "-39"]
 
   and show_toplevel : type a b c.

@@ -361,7 +361,7 @@ and pattern_comp (expr : ('a, resolved typ) expr) : ('a, 'b) expr =
           go @@ Match (data, head, [ (case, body) ]))
   | Seq (data, l, r) -> Seq (data, go l, go r)
   | Funccall (data, f, x) -> Funccall (data, go f, go x)
-  | Binop (data, op, l, r) -> Binop (data, op, go l, go r)
+  | BinOp (data, op, l, r) -> BinOp (data, op, go l, go r)
   | UnaryOp (data, op, x) -> UnaryOp (data, op, go x)
   | Lambda (data, nm, ty, body) -> Lambda (data, nm, ty, go body)
   | Tuple (data, ts) -> Tuple (data, List.map go ts)
@@ -378,9 +378,11 @@ let pattern_match_desugar (top : ('a, 'b, void) toplevel list) :
     (function
       | Definition def ->
           let comp'd = pattern_comp (get def.body) in
+          (*
           print_endline "\ncompiled to:";
           print_endline
             (show_expr pp_resolved (pp_typ pp_resolved) comp'd);
+*)
           Definition { def with body = Just comp'd }
       | x -> x)
     top

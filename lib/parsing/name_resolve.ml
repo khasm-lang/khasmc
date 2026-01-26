@@ -74,9 +74,6 @@ let add_tbl_no_duplicates tbl name =
 *)
 let resolve_to_ctx (ctx : global_ctx) (name : string) is_module :
     global_ctx * string =
-  print_endline ("resolve to ctx: " ^ name);
-  print_endline (show_global_ctx ctx);
-
   let split = split_on_dot name in
   match (split, is_module) with
   | [], _ -> failwith "empty name"
@@ -105,9 +102,6 @@ let resolve_to_ctx (ctx : global_ctx) (name : string) is_module :
       end
   | path, _ ->
       let rec go ctx path =
-        print_endline "go";
-        print_endline (show_global_ctx ctx);
-        print_endline (String.concat " . " path);
         match (path, is_module) with
         | [], true -> (ctx, name)
         | [], false -> failwith ("couldn't find path " ^ name)
@@ -149,9 +143,6 @@ let get_record_field ctx nm =
 
 let rec construct_global_ctx ctx
     (tops : (string, 'b, unit) toplevel list) : global_ctx =
-  print_endline "curr: ";
-  print_endline (show_global_ctx ctx);
-  print_endline "processing\n";
   let add = add_tbl_no_duplicates in
   let ctx =
     List.fold_left
@@ -210,10 +201,10 @@ let rec resolve_type ctx l_ctx (typ : string typ) : resolved typ =
   | TyPoly p ->
       let[@warning "-8"] (Some p') = get_typevar l_ctx p in
       TyPoly p'
-  | TyCustom (ctor, args) ->
-      let[@warning "-8"] (Some ctor') = get_constructor ctx ctor in
+  | TyCustom (typ, args) ->
+      let[@warning "-8"] (Some typ') = get_type ctx typ in
       let args = List.map go args in
-      TyCustom (ctor', args)
+      TyCustom (typ', args)
   | TyRef r -> TyRef (go r)
   | TyMeta m -> (
       match !m with
@@ -302,6 +293,9 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
           | None -> failwith ("unknown variable: " ^ nm))
       end
   | MGlobal (_, _, _) -> failwith "monomorph info in name resolution"
+  | Constructor (d, nm) ->
+      let[@warning "-8"] (Some nm) = get_constructor ctx nm in
+      Constructor (d, nm)
   | Int (d, s) -> Int (d, s)
   | String (d, s) -> String (d, s)
   | Char (d, s) -> Char (d, s)
@@ -315,7 +309,7 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
       LetIn (d, case', ty', head', body')
   | Seq (d, a, b) -> Seq (d, go a, go b)
   | Funccall (d, f, x) -> Funccall (d, go f, go x)
-  | Binop (d, op, a, b) -> Binop (d, op, go a, go b)
+  | BinOp (d, op, a, b) -> BinOp (d, op, go a, go b)
   | UnaryOp (d, op, a) -> UnaryOp (d, op, go a)
   | Lambda (d, nm, ty, body) ->
       let nm' = resolved_using nm in
@@ -337,7 +331,17 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
       in
       Match (d, head', bodies')
   | Modify (_, _, _) -> failwith "modify"
-  | Record (_, _, _) -> failwith "record"
+  | Record (dat, name, fields) ->
+      let[@warning "-8"] (Some tname) = get_type ctx name in
+      let fields =
+        List.map
+          (fun (nm, exp) ->
+            let[@warning "-8"] (Some nm) = get_record_field ctx nm in
+            let exp = go exp in
+            (nm, exp))
+          fields
+      in
+      Record (dat, tname, fields)
 
 let resolve_definition ctx (def : ('a, 'b, yes) definition) =
   let[@warning "-8"] (Some name) = get_global ctx def.name in
@@ -387,10 +391,6 @@ let name_resolve (tops : (string, 'b, unit) toplevel list) :
     (resolved, 'b, void) toplevel list =
   let top_ctx = new_global_ctx "TOP" in
   let top_ctx = construct_global_ctx top_ctx tops in
-  print_endline (show_global_ctx top_ctx);
-  print_endline "\nRESOLVE OPENS";
   resolve_opens top_ctx tops;
-  print_endline "\nFINAL:\n\n";
-  print_endline (show_global_ctx top_ctx);
   let fin = List.map (resolve_top top_ctx) tops in
   List.flatten fin
