@@ -21,9 +21,9 @@ fun interesting{n} {{type \'a}} (x : Int) : Either{n} Int \'a = Left{n} x
     '''
 
 
-for i in range(0,10000):
+for i in range(0,100000):
     print(string(i))
 print("fun main (m : Int) : Int =")
-for j in range(0,10000):
+for j in range(0,100000):
     print(f"let ret{j} = main{j} {j} in")
 print("0")

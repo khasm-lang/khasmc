@@ -102,6 +102,7 @@ let rec monomorph_expr (ctx : monomorph_ctx)
   let rec go (ctx : monomorph_ctx) (expr : (_, unit) expr) :
       (resolved, resolved typ) expr * _ definition list =
     let mono_expr_ty expr =
+      (* possible perf problem spot? loooots of hashtbl lookups *)
       let typ =
         Hashtbl.find type_information (get_uuid expr)
         |> mono_ty ctx.poly_map
