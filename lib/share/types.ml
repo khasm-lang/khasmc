@@ -16,3 +16,10 @@ module Hashtbl_p = struct
       values;
     Format.fprintf ppf " }"
 end
+
+module Hashtbl = struct
+  include Hashtbl
+
+  let add_list : ('a, 'b) Hashtbl.t -> 'a list -> 'b list -> unit =
+   fun tbl xs ys -> List.iter2 (Hashtbl.add tbl) xs ys
+end

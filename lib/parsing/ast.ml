@@ -5,6 +5,14 @@ open Share.Maybe
 type resolved = R of string * string
 [@@deriving show { with_path = false }]
 
+module CompareResolved = struct
+  type t = resolved
+
+  let compare (R (a, b)) (R (x, y)) = compare a x
+end
+
+module ResolvedSet = Set.Make (CompareResolved)
+
 let fresh_resolved =
   let i = ref (-10) in
   fun () ->

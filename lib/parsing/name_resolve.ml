@@ -25,16 +25,25 @@ let new_global_ctx nm =
     record_fields = Hashtbl.create 10;
   }
 
+module StrMap = Map.Make (String)
+
 type local_ctx = {
-  typevars : (string * resolved) list;
-  locals : (string * resolved) list;
+  typevars : resolved StrMap.t;
+  locals : resolved StrMap.t;
 }
 
-let get_typevar ctx var = List.assoc_opt var ctx.typevars
-let get_local ctx var = List.assoc_opt var ctx.locals
-let add_typevar ctx var = { ctx with typevars = var :: ctx.typevars }
-let add_local ctx var = { ctx with locals = var :: ctx.locals }
-let new_local_ctx () = { typevars = []; locals = [] }
+let get_typevar ctx var = StrMap.find_opt var ctx.typevars
+let get_local ctx var = StrMap.find_opt var ctx.locals
+
+let add_typevar ctx a b =
+  { ctx with typevars = StrMap.add a b ctx.typevars }
+
+let add_local ctx a b =
+  { ctx with locals = StrMap.add a b ctx.locals }
+
+let new_local_ctx () =
+  { typevars = StrMap.empty; locals = StrMap.empty }
+
 let new_local_ctx' typevars locals = { typevars; locals }
 
 let rec top_ctx ctx =
@@ -223,7 +232,11 @@ let rec resolve_type ctx l_ctx (typ : string typ) : resolved typ =
 let resolve_typdef ctx (typdef : 'a typdef) =
   let[@warning "-8"] (Some new_name) = get_type ctx typdef.name in
   let freshs = List.map resolved_using typdef.args in
-  let l_ctx = new_local_ctx' (List.combine typdef.args freshs) [] in
+  let l_ctx =
+    new_local_ctx'
+      (StrMap.of_list @@ List.combine typdef.args freshs)
+      StrMap.empty
+  in
   let content =
     match typdef.content with
     | Sum cases ->
@@ -255,7 +268,7 @@ let rec resolve_case ctx l_ctx (case : 'a case) :
   | CaseWild -> (l_ctx, CaseWild)
   | CaseVar x ->
       let res = resolved_using x in
-      let ctx' = add_local l_ctx (x, res) in
+      let ctx' = add_local l_ctx x res in
       (ctx', CaseVar res)
   | CaseTuple ts ->
       let ctx', ts' =
@@ -314,7 +327,7 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
   | Lambda (d, nm, ty, body) ->
       let nm' = resolved_using nm in
       let ty' = Option.map (resolve_type ctx l_ctx) ty in
-      let l_ctx' = add_local l_ctx (nm, nm') in
+      let l_ctx' = add_local l_ctx nm nm' in
       let body' = resolve_expr ctx l_ctx' body in
       Lambda (d, nm', ty', body')
   | Tuple (d, t) -> Tuple (d, List.map go t)
@@ -351,8 +364,9 @@ let resolve_definition ctx (def : ('a, 'b, yes) definition) =
   in
   let l_ctx =
     new_local_ctx'
-      (List.combine def.typeargs new_typeargs)
-      (List.combine (List.map fst def.args) new_arg_vars)
+      (StrMap.of_list @@ List.combine def.typeargs new_typeargs)
+      (StrMap.of_list
+      @@ List.combine (List.map fst def.args) new_arg_vars)
   in
   let new_typs =
     List.map (fun x -> resolve_type ctx l_ctx (snd x)) def.args

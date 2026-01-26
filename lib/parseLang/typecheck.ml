@@ -26,12 +26,18 @@ let typ_pp t = print_endline (show_typ pp_resolved t)
   f : int -> ?
  *)
 
+module Locals = Map.Make (CompareResolved)
+
 type ctx = {
   (* name, parent *)
   ctors : (resolved, resolved typdef) Hashtbl.t;
-  types : resolved typdef list;
+  types : (resolved, resolved typdef) Hashtbl.t;
   funs : (resolved, (resolved, unit, no) definition) Hashtbl.t;
-  locals : (resolved * resolved typ) list;
+  (* mesurable perf bonus *)
+  locals : resolved typ Locals.t;
+  (* if someone ever has enough polyvars in scope to make this an issue,
+     i will be very scared
+  *)
   local_polys : resolved list;
 }
 
@@ -41,20 +47,28 @@ type ctx = {
 let empty_ctx () =
   {
     ctors = Hashtbl.create 100;
-    types = [];
+    types = Hashtbl.create 100;
     funs = Hashtbl.create 100;
     (* magic, for testing *)
     locals =
-      [
-        ( R ("magic", "(magic)"),
-          TyArrow (TyPoly (R ("-1", "-1")), TyPoly (R ("-2", "-2")))
-        );
-      ];
+      Locals.of_list
+        [
+          ( R ("magic", "(magic)"),
+            TyArrow (TyPoly (R ("-1", "-1")), TyPoly (R ("-2", "-2")))
+          );
+        ];
     local_polys = [];
   }
 
-let add_local ctx a t = { ctx with locals = (a, t) :: ctx.locals }
-let add_locals ctx t = { ctx with locals = t @ ctx.locals }
+let add_local ctx a t =
+  { ctx with locals = Locals.add a t ctx.locals }
+
+let add_locals ctx t =
+  {
+    ctx with
+    locals =
+      Locals.union (fun _ a _ -> Some a) (Locals.of_list t) ctx.locals;
+  }
 
 exception Case
 exception DoneTy of resolved typ
@@ -65,7 +79,7 @@ let case' (type t) v f =
 let search (ctx : ctx) (id : resolved) : (resolved typ, string) result
     =
   try
-    case' (List.assoc_opt id ctx.locals) (fun t -> t);
+    case' (Locals.find_opt id ctx.locals) (fun t -> t);
 
     case' (Hashtbl.find_opt ctx.ctors id) (fun t ->
         match t.content with
@@ -136,11 +150,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
       *)
       | TyCustom (head, targs) ->
           (* find ty*)
-          begin match
-            List.find_opt
-              (fun (x : 'a typdef) -> x.name = head)
-              ctx.types
-          with
+          begin match Hashtbl.find_opt ctx.types head with
           | None -> err "can't find type"
           | Some ty -> begin
               match ty.content with
@@ -330,11 +340,7 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
             let* x'ty = infer ctx expr in
             begin match x'ty with
             | TyCustom (nm, args) ->
-                let typ =
-                  List.find
-                    (fun (x : 'a typdef) -> x.name = nm)
-                    ctx.types
-                in
+                let typ = Hashtbl.find ctx.types nm in
                 begin match typ.content with
                 | Record fields ->
                     (* we have to consider the case in which the record is
@@ -355,9 +361,7 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
           with instantiation more explicitly
         *)
         (* a bit TODO *)
-        let typ =
-          List.find (fun (x : 'a typdef) -> x.name = nm) ctx.types
-        in
+        let typ = Hashtbl.find ctx.types nm in
         begin match typ.content with
         | Record r ->
             (* make sure that the lists contain each other
@@ -536,7 +540,10 @@ let typecheck_definition (ctx : ctx)
   let ctx =
     {
       ctx with
-      locals = ctx.locals @ args;
+      locals =
+        Locals.union
+          (fun _ a _ -> Some a)
+          ctx.locals (Locals.of_list args);
       local_polys = ctx.local_polys @ polys;
     }
   in
@@ -561,14 +568,12 @@ let gather (t : (resolved, 'a, void) toplevel list) : ctx =
           match t.content with
           | Record r ->
               Hashtbl.add ctx.ctors t.name t;
-              { ctx with types = t :: ctx.types }
+              Hashtbl.add ctx.types t.name t;
+              ctx
           | Sum s ->
-              List.fold_left
-                (fun acc a ->
-                  Hashtbl.add acc.ctors (fst a) t;
-                  acc)
-                { ctx with types = t :: ctx.types }
-                s
+              List.iter (fun a -> Hashtbl.add ctx.ctors (fst a) t) s;
+              Hashtbl.add ctx.types t.name t;
+              ctx
         end
       | Definition d ->
           Hashtbl.add ctx.funs d.name (forget_body d);

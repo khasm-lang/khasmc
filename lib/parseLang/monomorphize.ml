@@ -4,12 +4,20 @@ open Share.Maybe
 open Share.Types
 open Share.Uuid
 
+module ResSet = Set.Make (struct
+  type t = resolved
+
+  let compare (R (a, b)) (R (x, y)) = compare a x
+end)
+
 type monomorph_ctx = {
-  customs_to_be_done : resolved typ list ref;
-  have_done : resolved typ uuid list ref;
+  customs_to_be_done : (resolved typ, unit) Hashtbl.t; [@opaque]
+  have_done : (resolved typ uuid, unit) Hashtbl.t; [@opaque]
   poly_map : (resolved * resolved typ) list;
-  definitions : (resolved, unit, yes) definition list; [@opaque]
-  locals : resolved list;
+  definitions :
+    (resolved, (resolved, unit, yes) definition) Hashtbl.t;
+      [@opaque]
+  locals : ResSet.t; [@opaque]
 }
 [@@deriving show { with_path = false }]
 
@@ -23,7 +31,7 @@ let add_custom ctx cus =
     | _ -> false
   in
   if contains_custom cus then
-    ctx.customs_to_be_done := cus :: !(ctx.customs_to_be_done)
+    Hashtbl.add ctx.customs_to_be_done cus ()
 
 let update_with_uuid (x : ('a, 'b) expr) (nw : resolved typ) :
     ('a, resolved typ) expr =
@@ -32,14 +40,17 @@ let update_with_uuid (x : ('a, 'b) expr) (nw : resolved typ) :
 
 let new_monomorph_ctx top =
   {
-    have_done = ref [];
-    customs_to_be_done = ref [];
+    have_done = Hashtbl.create 100;
+    customs_to_be_done = Hashtbl.create 100;
     poly_map = [];
-    locals = [];
+    locals = ResSet.empty;
     definitions =
-      List.filter_map
-        (function Definition d -> Some d | _ -> None)
-        top;
+      (let tbl = Hashtbl.create 100 in
+       List.iter
+         (function
+           | Definition d -> Hashtbl.add tbl d.name d | _ -> ())
+         top;
+       tbl);
   }
 
 let rec monomorph_typ (map : (resolved * resolved typ) list)
@@ -103,20 +114,16 @@ let rec monomorph_expr (ctx : monomorph_ctx)
     in
     match expr with
     | Var (_, nm) ->
-        if List.mem nm ctx.locals then
+        if ResSet.mem nm ctx.locals then
           (Var (data', nm), [])
         else begin
-          let def =
-            List.find
-              (fun (d : _ definition) -> d.name = nm)
-              ctx.definitions
-          in
+          let def = Hashtbl.find ctx.definitions nm in
           let new_uuid =
             uuid_set_snd (mono_expr_ty expr) def.data.uuid
           in
           let defs =
-            if not (List.mem new_uuid !(ctx.have_done)) then begin
-              ctx.have_done := new_uuid :: !(ctx.have_done);
+            if not (Hashtbl.mem ctx.have_done new_uuid) then begin
+              Hashtbl.add ctx.have_done new_uuid ();
               monomorph_def ctx def (mono_expr_ty expr)
             end
             else
@@ -126,7 +133,13 @@ let rec monomorph_expr (ctx : monomorph_ctx)
         end
     | LetIn (_, cases, _, head, body) ->
         let ctx' =
-          { ctx with locals = case_names cases @ ctx.locals }
+          {
+            ctx with
+            locals =
+              ResSet.union
+                (ResSet.of_list @@ case_names cases)
+                ctx.locals;
+          }
         in
         let$ head' = go ctx head in
         let$$ body' = go ctx' body in
@@ -144,7 +157,7 @@ let rec monomorph_expr (ctx : monomorph_ctx)
         let$$ r' = go ctx r in
         BinOp (data', bop, l', r')
     | Lambda (_, nm, _, body) ->
-        let ctx' = { ctx with locals = nm :: ctx.locals } in
+        let ctx' = { ctx with locals = ResSet.add nm ctx.locals } in
         let$$ body' = go ctx' body in
         Lambda (data', nm, None, body')
     | Tuple (_, tups) ->
@@ -159,7 +172,13 @@ let rec monomorph_expr (ctx : monomorph_ctx)
           List.map
             (fun (case, expr) ->
               let ctx' =
-                { ctx with locals = case_names case @ ctx.locals }
+                {
+                  ctx with
+                  locals =
+                    ResSet.union
+                      (ResSet.of_list @@ case_names case)
+                      ctx.locals;
+                }
               in
               let$$ expr' = go ctx' expr in
               (case, expr'))
@@ -193,7 +212,11 @@ and monomorph_def (ctx : monomorph_ctx)
   let combined_typ = definition_type def in
   let mapping = match_polys against combined_typ in
   let ctx' =
-    { ctx with poly_map = mapping; locals = List.map fst def.args }
+    {
+      ctx with
+      poly_map = mapping;
+      locals = ResSet.of_list @@ List.map fst def.args;
+    }
   in
   let exp, rest = monomorph_expr ctx' (get def.body) in
   let me = def_with_new_body_typ def exp against in
