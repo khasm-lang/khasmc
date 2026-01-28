@@ -106,11 +106,11 @@ let add_type_with_existing old_uuid =
   add_type fresh typ;
   fresh
 
-let raw_type_information : (resolved, resolved typ) Hashtbl.t =
+let ident_type_info : (resolved, resolved typ) Hashtbl.t =
   Hashtbl.create 100
 
 let add_raw_type id typ =
-  Hashtbl.replace raw_type_information id (force typ)
+  Hashtbl.replace ident_type_info id (force typ)
 
 let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
     (t : resolved typ) :

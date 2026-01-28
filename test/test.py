@@ -18,6 +18,14 @@ type Record{n} 'a = {{
 
 
 fun interesting{n} {{type \'a}} (x : Int) : Either{n} Int \'a = Left{n} x
+
+fun swap{n} {{type 'a 'b 'c}} (e : Either{n} 'a (Either{n} 'b 'c)) : Either{n} (Either{n} 'a 'b) 'c =
+        match e with
+        | Left{n} x => Left{n} (Left{n} x)
+        | Right{n} (Left{n} x) => Left{n} (Right{n} x)
+        | Right{n} (Right{n} x) => Right{n} x
+        end     
+
     '''
 
 

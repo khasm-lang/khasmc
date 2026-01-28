@@ -11,7 +11,6 @@ module ResSet = Set.Make (struct
 end)
 
 type monomorph_ctx = {
-  customs_to_be_done : (resolved typ, unit) Hashtbl.t; [@opaque]
   have_done : (resolved typ uuid, unit) Hashtbl.t; [@opaque]
   poly_map : (resolved * resolved typ) list;
   definitions :
@@ -21,18 +20,6 @@ type monomorph_ctx = {
 }
 [@@deriving show { with_path = false }]
 
-let add_custom ctx cus =
-  let rec contains_custom ty =
-    match force ty with
-    | TyTuple t -> List.exists contains_custom t
-    | TyArrow (a, b) -> contains_custom a || contains_custom b
-    | TyCustom _ -> true
-    | TyRef a -> contains_custom a
-    | _ -> false
-  in
-  if contains_custom cus then
-    Hashtbl.add ctx.customs_to_be_done cus ()
-
 let update_with_uuid (x : ('a, 'b) expr) (nw : resolved typ) :
     ('a, resolved typ) expr =
   let f d = { d with uuid = uuid_set_snd nw d.uuid } in
@@ -41,7 +28,6 @@ let update_with_uuid (x : ('a, 'b) expr) (nw : resolved typ) :
 let new_monomorph_ctx top =
   {
     have_done = Hashtbl.create 100;
-    customs_to_be_done = Hashtbl.create 100;
     poly_map = [];
     locals = ResSet.empty;
     definitions =
@@ -103,12 +89,8 @@ let rec monomorph_expr (ctx : monomorph_ctx)
       (resolved, resolved typ) expr * _ definition list =
     let mono_expr_ty expr =
       (* possible perf problem spot? loooots of hashtbl lookups *)
-      let typ =
-        Hashtbl.find type_information (get_uuid expr)
-        |> mono_ty ctx.poly_map
-      in
-      add_custom ctx typ;
-      typ
+      Hashtbl.find type_information (get_uuid expr)
+      |> mono_ty ctx.poly_map
     in
     let data' =
       update_data_uuid (get_data expr) (mono_expr_ty expr)

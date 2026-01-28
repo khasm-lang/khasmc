@@ -1,5 +1,5 @@
 fun main (m : Int): Int =
-        let Left x = interesting 10 in
+        let Right x = swap (interesting 10) in
         let y = Record {
                 name = "ho";
         } in
@@ -16,3 +16,10 @@ type Record 'a = {
 
 
 fun interesting {type 'a} (x : Int) : Either Int 'a = Left x
+
+fun swap {type 'a 'b 'c} (e : Either 'a (Either 'b 'c)) : Either (Either 'a 'b) 'c =
+        match e with
+        | Left x => Left (Left x)
+        | Right (Left x) => Left (Right x)
+        | Right (Right x) => Right x
+        end 
