@@ -17,9 +17,7 @@ type typ =
   | TyRef of typ
 
 type data = name Parsing.Ast.data
-
 type binop = Parsing.Ast.binop
-
 type unaryop = name Parsing.Ast.unaryop
 
 (* Type param is "has lambdas "*)
@@ -65,6 +63,6 @@ type 'a definition = {
 
 type 'a program = {
   toplevel : 'a definition list;
-  records  : record list;
+  records : record list;
   constructors : constructor list;
 }

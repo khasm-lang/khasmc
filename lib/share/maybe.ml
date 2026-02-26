@@ -1,13 +1,13 @@
 type no = No [@@deriving show { with_path = false }]
 type yes = Yes [@@deriving show { with_path = false }]
 
-type (_,_,_) yesno_and =
+type (_, _, _) yesno_and =
   | AndB : (yes, yes, yes) yesno_and
   | AndL : (yes, no, no) yesno_and
   | AndR : (no, yes, no) yesno_and
   | AndN : (no, no, no) yesno_and
 
-type (_,_,_) yesno_or =
+type (_, _, _) yesno_or =
   | OrB : (yes, yes, yes) yesno_or
   | OrL : (yes, no, yes) yesno_or
   | OrR : (no, yes, yes) yesno_or

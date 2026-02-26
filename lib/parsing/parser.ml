@@ -5,8 +5,7 @@ open Share.Uuid
 open Share.Maybe
 open Ast
 
-let data' () : unit data =
-  { uuid = uuid (); span = None }
+let data' () : unit data = { uuid = uuid (); span = None }
 
 let lexer buf =
   let rec go acc =

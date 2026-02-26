@@ -324,16 +324,18 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
   | Funccall (d, f, x) -> Funccall (d, go f, go x)
   | BinOp (d, op, a, b) -> BinOp (d, op, go a, go b)
   | UnaryOp (d, op, a) ->
-    let op' = match op with
-      | Negate -> Negate
-      | BNegate -> BNegate
-      | Ref -> Ref
-      | GetRecField nm ->
-        let[@warning "-8"] Some nm' = get_record_field ctx nm in
-        GetRecField nm'
-      | GetConstrField i -> GetConstrField i
-      | Project i -> Project i in
-    UnaryOp (d, op', go a)
+      let op' =
+        match op with
+        | Negate -> Negate
+        | BNegate -> BNegate
+        | Ref -> Ref
+        | GetRecField nm ->
+            let[@warning "-8"] (Some nm') = get_record_field ctx nm in
+            GetRecField nm'
+        | GetConstrField i -> GetConstrField i
+        | Project i -> Project i
+      in
+      UnaryOp (d, op', go a)
   | Lambda (d, nm, ty, body) ->
       let nm' = resolved_using nm in
       let ty' = Option.map (resolve_type ctx l_ctx) ty in

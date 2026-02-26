@@ -2,8 +2,7 @@ open Share.Uuid
 open Share.Maybe
 
 (* ideally these would be newtypes, but ocaml doesn't have those *)
-type resolved = R of int
-[@@deriving show { with_path = false }]
+type resolved = R of int [@@deriving show { with_path = false }]
 
 module CompareResolved = struct
   type t = resolved
@@ -14,13 +13,12 @@ end
 module ResolvedMap = Map.Make (CompareResolved)
 
 let resolved_to_name : string ResolvedMap.t ref =
-  ref (ResolvedMap.empty)
+  ref ResolvedMap.empty
 
 let resolved_to_name_add (res : resolved) (str : string) : unit =
   resolved_to_name := ResolvedMap.add res str !resolved_to_name
 
-let resolved_to_name_get res =
-  ResolvedMap.find res !resolved_to_name
+let resolved_to_name_get res = ResolvedMap.find res !resolved_to_name
 
 module ResolvedSet = Set.Make (CompareResolved)
 
@@ -28,7 +26,7 @@ let fresh_resolved =
   let i = ref (-10) in
   fun () ->
     decr i;
-    let res = R !i in 
+    let res = R !i in
     resolved_to_name_add res "(GEN)";
     res
 
@@ -74,7 +72,6 @@ and 'a typ =
   | TyRef of 'a typ (* mutability shock horror *)
   | TyMeta of 'a meta ref
 [@@deriving show { with_path = false }]
-
 
 let rec regeneralize (nw : unit -> 'a) (ty : 'a typ) =
   let f = regeneralize nw in

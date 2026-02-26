@@ -135,10 +135,11 @@ let main () =
           end;
 
           let ir1 =
-            with_timer "to flatlang"
-              (fun () -> FlatLang.Parse_to_flat.convert_to_flat p_comp) in
+            with_timer "to flatlang" (fun () ->
+                FlatLang.Parse_to_flat.convert_to_flat p_comp)
+          in
           ()
-      end;
+      end
     end;
   if debug_gc then begin
     let stat = Gc.stat () in
