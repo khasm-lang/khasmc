@@ -33,7 +33,7 @@ type ctx = {
   ctors : (resolved, resolved typdef) Hashtbl.t;
   types : (resolved, resolved typdef) Hashtbl.t;
   funs : (resolved, (resolved, unit, no) definition) Hashtbl.t;
-  (* mesurable perf bonus *)
+  (* measurable perf bonus *)
   locals : resolved typ Locals.t;
   (* if someone ever has enough polyvars in scope to make this an issue,
      i will be very scared
@@ -50,13 +50,7 @@ let empty_ctx () =
     types = Hashtbl.create 100;
     funs = Hashtbl.create 100;
     (* magic, for testing *)
-    locals =
-      Locals.of_list
-        [
-          ( R ("magic", "(magic)"),
-            TyArrow (TyPoly (R ("-1", "-1")), TyPoly (R ("-2", "-2")))
-          );
-        ];
+    locals = Locals.empty;
     local_polys = [];
   }
 
@@ -171,7 +165,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
                   end
             end
           end
-      | _ -> err "not custom but should be"
+      | _ -> err "Tried to pattern match on non-pattern matchable"
     end
 
 let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result

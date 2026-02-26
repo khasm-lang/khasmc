@@ -7,7 +7,7 @@ open Share.Uuid
 module ResSet = Set.Make (struct
   type t = resolved
 
-  let compare (R (a, b)) (R (x, y)) = compare a x
+  let compare = compare
 end)
 
 type monomorph_ctx = {
@@ -212,8 +212,8 @@ let monomorphize (top : (resolved, unit, void) toplevel list) :
     List.find
       (function
         | Definition x ->
-            let (R (a, b)) = x.name in
-            a = "main"
+            let (R a) = x.name in
+            a = 0
         | _ -> false)
       top
   in

@@ -70,7 +70,7 @@ let add_tbl_no_duplicates tbl name =
   match Hashtbl.find_opt tbl name with
   | None ->
       if name = "main" then
-        Hashtbl.add tbl "main" (R ("main", "main"))
+        Hashtbl.add tbl "main" (R 0)
       else
         let resolved = resolved_using name in
         Hashtbl.add tbl name resolved
@@ -323,7 +323,17 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
   | Seq (d, a, b) -> Seq (d, go a, go b)
   | Funccall (d, f, x) -> Funccall (d, go f, go x)
   | BinOp (d, op, a, b) -> BinOp (d, op, go a, go b)
-  | UnaryOp (d, op, a) -> UnaryOp (d, op, go a)
+  | UnaryOp (d, op, a) ->
+    let op' = match op with
+      | Negate -> Negate
+      | BNegate -> BNegate
+      | Ref -> Ref
+      | GetRecField nm ->
+        let[@warning "-8"] Some nm' = get_record_field ctx nm in
+        GetRecField nm'
+      | GetConstrField i -> GetConstrField i
+      | Project i -> Project i in
+    UnaryOp (d, op', go a)
   | Lambda (d, nm, ty, body) ->
       let nm' = resolved_using nm in
       let ty' = Option.map (resolve_type ctx l_ctx) ty in

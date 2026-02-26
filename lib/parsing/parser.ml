@@ -6,7 +6,7 @@ open Share.Maybe
 open Ast
 
 let data' () : unit data =
-  { uuid = uuid (); counter = 0; span = None }
+  { uuid = uuid (); span = None }
 
 let lexer buf =
   let rec go acc =

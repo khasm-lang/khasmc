@@ -2,14 +2,25 @@ open Share.Uuid
 open Share.Maybe
 
 (* ideally these would be newtypes, but ocaml doesn't have those *)
-type resolved = R of string * string
+type resolved = R of int
 [@@deriving show { with_path = false }]
 
 module CompareResolved = struct
   type t = resolved
 
-  let compare (R (a, b)) (R (x, y)) = compare a x
+  let compare (R a) (R b) = a - b
 end
+
+module ResolvedMap = Map.Make (CompareResolved)
+
+let resolved_to_name : string ResolvedMap.t ref =
+  ref (ResolvedMap.empty)
+
+let resolved_to_name_add (res : resolved) (str : string) : unit =
+  resolved_to_name := ResolvedMap.add res str !resolved_to_name
+
+let resolved_to_name_get res =
+  ResolvedMap.find res !resolved_to_name
 
 module ResolvedSet = Set.Make (CompareResolved)
 
@@ -17,7 +28,9 @@ let fresh_resolved =
   let i = ref (-10) in
   fun () ->
     decr i;
-    R (string_of_int !i, "(GEN)")
+    let res = R !i in 
+    resolved_to_name_add res "(GEN)";
+    res
 
 let rec fresh_resolved_n n =
   if n <= 0 then
@@ -30,7 +43,9 @@ let resolved_using =
   let i = ref 10 in
   fun nm ->
     incr i;
-    R (nm ^ "@" ^ string_of_int !i, nm)
+    let res = R !i in
+    resolved_to_name_add res nm;
+    res
 
 type unresolved = U of string
 [@@deriving show { with_path = false }]
@@ -60,7 +75,6 @@ and 'a typ =
   | TyMeta of 'a meta ref
 [@@deriving show { with_path = false }]
 
-and 'a field = 'a * 'a typ [@@deriving show { with_path = false }]
 
 let rec regeneralize (nw : unit -> 'a) (ty : 'a typ) =
   let f = regeneralize nw in
@@ -203,14 +217,13 @@ let rec case_names (c : 'a case) : 'a list =
 
 type 'a data = {
   uuid : 'a uuid;
-  mutable counter : int;
   (* file line col *)
   span : (string * int * int) option;
 }
 [@@deriving show { with_path = false }]
 
-let data () = { uuid = Share.Uuid.uuid (); counter = 0; span = None }
-let data_of uuid = { uuid; counter = 0; span = None }
+let data () = { uuid = Share.Uuid.uuid (); span = None }
+let data_of uuid = { uuid; span = None }
 
 let update_data_uuid data nw =
   { data with uuid = uuid_set_snd nw data.uuid }
@@ -229,11 +242,11 @@ type binop =
   | Eq
 [@@deriving show { with_path = false }]
 
-type unaryop =
+type 'a unaryop =
   | Negate
   | BNegate
   | Ref
-  | GetRecField of string
+  | GetRecField of 'a
   | GetConstrField of int
   | Project of int
 [@@deriving show { with_path = false }]
@@ -261,7 +274,7 @@ type ('a, 'b) expr =
   | Seq of 'b data * ('a, 'b) expr * ('a, 'b) expr
   | Funccall of 'b data * ('a, 'b) expr * ('a, 'b) expr
   | BinOp of 'b data * binop * ('a, 'b) expr * ('a, 'b) expr
-  | UnaryOp of 'b data * unaryop * ('a, 'b) expr
+  | UnaryOp of 'b data * 'a unaryop * ('a, 'b) expr
   | Lambda of 'b data * 'a * 'a typ option * ('a, 'b) expr
   | Tuple of 'b data * ('a, 'b) expr list
   | Annot of 'b data * ('a, 'b) expr * 'a typ
@@ -329,7 +342,7 @@ let expr_uuid_set_snd v expr =
   data_transform f expr
 
 type 'a typdef_case =
-  | Record of 'a field list
+  | Record of ('a * 'a typ) list
   | Sum of ('a * 'a typ list) list
 [@@deriving show { with_path = false }]
 

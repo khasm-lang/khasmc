@@ -6,7 +6,7 @@ open ParseLang.Monomorphize
 open Parsing.Parser
 
 let pp_unit fmt p = Format.fprintf fmt "()"
-let r x = R (x, "(GEN)")
+let r x = R x
 let data = data' ()
 
 let contr =
@@ -30,9 +30,9 @@ let contr =
       ] )
   :: []
 
-let debug = false
-let time = false
-let debug_gc = true
+let debug = true
+let time = true
+let debug_gc = false
 
 let with_timer name thunk =
   if time then
@@ -132,9 +132,13 @@ let main () =
                 print_endline
                   (show_toplevel pp_resolved pp_unit pp_void x))
               p_comp
-          end
+          end;
+
+          let ir1 =
+            with_timer "to flatlang"
+              (fun () -> FlatLang.Parse_to_flat.convert_to_flat p_comp) in
+          ()
       end;
-      print_endline "done"
     end;
   if debug_gc then begin
     let stat = Gc.stat () in

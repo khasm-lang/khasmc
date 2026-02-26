@@ -1,0 +1,9 @@
+type Many 'a 'b 'c =
+     | Many of 'a 'b 'c
+end
+
+fun main (x : Int) : Int =
+        let y = Many 1 2 (Many 3 4 (Many 5 3 5)) in
+        match y with
+        | Many a b (Many q w (Many r t c)) => c
+        end
