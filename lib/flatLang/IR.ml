@@ -2,9 +2,15 @@ open Share.Uuid
 open Share.Maybe
 
 type name = Parsing.Ast.resolved
+[@@deriving show { with_path = false }]
 
 (* No more polymorphism. *)
 type typ =
+  (* for type unconstrained at any point; can be
+     reduced to a ZST
+     TODO: look into instance merging?
+  *)
+  | TyIrrelevant
   | TyBottom
   | TyInt
   | TyString
@@ -15,13 +21,18 @@ type typ =
   | TyArrow of typ * typ
   | TyCustom of name * typ list
   | TyRef of typ
+[@@deriving show { with_path = false }]
 
-type data = name Parsing.Ast.typ Parsing.Ast.data
-type binop = Parsing.Ast.binop
+type data = (name Parsing.Ast.typ Parsing.Ast.data[@opaque])
+[@@deriving show { with_path = false }]
+
+type binop = Parsing.Ast.binop [@@deriving show { with_path = false }]
+
 type unaryop = name Parsing.Ast.unaryop
+[@@deriving show { with_path = false }]
 
 (* Type param is "has lambdas "*)
-type 'a expr =
+type expr =
   | Fail of data * string
   | Local of data * name
   | Global of data * name
@@ -31,39 +42,45 @@ type 'a expr =
   | Char of data * string
   | Float of data * string
   | Bool of data * bool
-  | Tuple of data * 'a expr list
-  | BinOp of data * binop * 'a expr * 'a expr
-  | UnaryOp of data * unaryop * 'a expr
+  | Tuple of data * expr list
+  | BinOp of data * binop * expr * expr
+  | UnaryOp of data * unaryop * expr
   (* The interesting case. *)
-  | Lambda : data * name * 'a expr -> yes expr
-  | Funccall of data * 'a expr * 'a expr list
-  | Record of data * name * (name * 'a expr) list
-  | Let of data * name * 'a expr * 'a expr
-  | IfLet of data * name * 'a expr * 'a expr * 'a expr
-  | If of data * name * 'a expr * 'a expr * 'a expr
-  | Seq of data * 'a expr * 'a expr
-  | Modify of data * name * 'a expr
+  | Lambda of data * name * expr
+  | Funccall of data * expr * expr list
+  | Record of data * name * (name * expr) list
+  | Let of data * name * expr * expr
+  | IfLet of data * name * expr * expr * expr
+  | If of data * name * expr * expr * expr
+  | Seq of data * expr * expr
+  | Modify of data * name * expr
+[@@deriving show { with_path = false }]
 
 type record = {
   name : name;
   constructs : typ;
   fields : (name * typ) list;
 }
+[@@deriving show { with_path = false }]
 
 type constructor = {
   name : name;
   constructs : typ;
   fields : (name * typ) list;
 }
+[@@deriving show { with_path = false }]
 
 type 'a definition = {
   name : name;
   args : (name * typ) list;
-  body : 'a expr;
+  body : expr;
+  has_lambdas : (unit, 'a) Share.Maybe.maybe; [@opaque]
 }
+[@@deriving show { with_path = false }]
 
 type 'a program = {
   defs : 'a definition list;
   records : record list;
   constructors : constructor list;
 }
+[@@deriving show { with_path = false }]

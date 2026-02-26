@@ -28,13 +28,13 @@ let rec convert_type (poly_ctx : poly_ctx) (ctx : ctx) (t : _ P.typ) :
   | P.TyBool -> IR.TyBool
   | P.TyTuple t -> IR.TyTuple (List.map go t)
   | P.TyArrow (a, b) -> IR.TyArrow (go a, go b)
-  | P.TyPoly _ -> failwith "polymorphic type in IR"
+  | P.TyPoly _ -> IR.TyIrrelevant
   | P.TyCustom (name, args) -> IR.TyCustom (name, List.map go args)
   | P.TyRef r -> IR.TyRef (go r)
   | P.TyMeta _ -> failwith "meta in IR"
 
 let rec convert_expr (poly_ctx : poly_ctx) (ctx : ctx)
-    (expr : (P.resolved, _ P.typ) P.expr) : yes IR.expr =
+    (expr : (P.resolved, _ P.typ) P.expr) : IR.expr =
   let go = convert_expr poly_ctx ctx in
   (* TODO: why ignore this?
      we need to make sure we collect all the constructors that
@@ -50,7 +50,9 @@ let rec convert_expr (poly_ctx : poly_ctx) (ctx : ctx)
   match expr with
   | P.Fail (d, fail) -> IR.Fail (d, fail)
   | P.Var (d, nm) -> IR.Local (d, nm)
-  | P.MGlobal (d, uuid, nm) -> IR.Global (d, nm)
+  | P.MGlobal (d, uuid, nm) ->
+      (* TODO: check for ctor and mono properly *)
+      IR.Global (d, nm)
   | P.Constructor (d, nm) -> IR.Constructor (d, nm)
   | P.Int (d, i) -> IR.Int (d, i)
   | P.String (d, i) -> IR.String (d, i)
@@ -95,7 +97,7 @@ let convert_def (poly_ctx : poly_ctx) (ctx : ctx)
     List.map (Pair.map_snd (convert_type poly_ctx ctx)) def.args
   in
   let body = convert_expr poly_ctx ctx (get def.body) in
-  { IR.name; IR.args; IR.body }
+  { IR.name; IR.args; IR.body; has_lambdas = Just () }
 
 let convert_to_flat (tops : (P.resolved, 'b, void) P.toplevel list) :
     yes IR.program =
@@ -141,4 +143,6 @@ let convert_to_flat (tops : (P.resolved, 'b, void) P.toplevel list) :
             })
       prog tops
   in
-  failwith "generate concrete records/constructors"
+  print_endline "generated:";
+  print_endline (IR.show_program (fun _ _ -> ()) with_defs);
+  failwith "mono ctors properly?"
