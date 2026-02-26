@@ -16,17 +16,18 @@ type typ =
   | TyCustom of name * typ list
   | TyRef of typ
 
-type data = name Parsing.Ast.data
+type data = name Parsing.Ast.typ Parsing.Ast.data
 type binop = Parsing.Ast.binop
 type unaryop = name Parsing.Ast.unaryop
 
 (* Type param is "has lambdas "*)
 type 'a expr =
   | Fail of data * string
-  | Local of data * string
-  | Global of data * string
-  | Constructor of data * string
+  | Local of data * name
+  | Global of data * name
+  | Constructor of data * name
   | Int of data * string
+  | String of data * string
   | Char of data * string
   | Float of data * string
   | Bool of data * bool
@@ -57,12 +58,12 @@ type constructor = {
 
 type 'a definition = {
   name : name;
-  args : name list;
+  args : (name * typ) list;
   body : 'a expr;
 }
 
 type 'a program = {
-  toplevel : 'a definition list;
+  defs : 'a definition list;
   records : record list;
   constructors : constructor list;
 }

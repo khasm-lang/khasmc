@@ -360,7 +360,6 @@ let typ_to_args_ret (typ : 'a typ) : 'a typ list * 'a typ =
   in
   go typ
 
-(* TODO: support GADTs*)
 type 'a typdef = {
   data : unit data;
   name : 'a;

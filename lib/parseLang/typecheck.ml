@@ -278,9 +278,6 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
           a pain, because you want to keep all of those possible
           erroring unifies, but you also don't want the whole thing
           to be a mess
-
-          TODO: note that GADT "helping" cannot be done in the
-          inference case
         *)
         let* scrut_typ = infer ctx scrut in
         let handle_case (case : 'a case * ('a, 'b) expr) :
