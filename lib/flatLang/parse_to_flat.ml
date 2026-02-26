@@ -52,7 +52,15 @@ let rec convert_expr (poly_ctx : poly_ctx) (ctx : ctx)
   | P.Var (d, nm) -> IR.Local (d, nm)
   | P.MGlobal (d, uuid, nm) ->
       (* TODO: check for ctor and mono properly *)
-      IR.Global (d, nm)
+      begin match Hashtbl.find_opt poly_ctx.poly_constructors nm with
+      | Some ctor ->
+          (* mono *)
+          failwith "mono ctor"
+      | None -> (
+          match Hashtbl.find_opt poly_ctx.poly_records nm with
+          | Some record -> failwith "mono record"
+          | None -> IR.Global (d, nm))
+      end
   | P.Constructor (d, nm) -> IR.Constructor (d, nm)
   | P.Int (d, i) -> IR.Int (d, i)
   | P.String (d, i) -> IR.String (d, i)
