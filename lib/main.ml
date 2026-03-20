@@ -1,8 +1,8 @@
 open Share.Types
 open Share.Uuid
 open Parsing.Ast
-open ParseLang.Typecheck
-open ParseLang.Monomorphize
+open Parselang.Typecheck
+open Parselang.Monomorphize
 open Parsing.Parser
 
 let pp_unit fmt p = Format.fprintf fmt "()"
@@ -30,7 +30,7 @@ let contr =
       ] )
   :: []
 
-let debug = true
+let debug = false
 let time = true
 let debug_gc = false
 
@@ -121,7 +121,7 @@ let main () =
 
           let p_comp =
             with_timer "pattern compilation" (fun () ->
-                ParseLang.Pattern_match_desugar.pattern_match_desugar
+                Parselang.Pattern_match_desugar.pattern_match_desugar
                   after_mono)
           in
 
@@ -136,7 +136,7 @@ let main () =
 
           let ir1 =
             with_timer "to flatlang" (fun () ->
-                FlatLang.Parse_to_flat.convert_to_flat p_comp)
+                Flatlang.Parse_to_flat.convert_to_flat p_comp)
           in
           ()
       end

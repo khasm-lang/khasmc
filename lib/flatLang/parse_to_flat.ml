@@ -11,9 +11,44 @@ type poly_ctx = {
   poly_records : (name, name P.typdef) Hashtbl.t;
 }
 
+
+(*
+   consider things equal if they's a subtype under
+   the a <: 'b lattice for concrete a, poly b
+*)
+module PolySubtypeCompare : Map.OrderedType = struct
+  type t = name P.typ
+
+  let rec compare a b =
+    if a = b then 0
+    else
+      match a, b with
+      | _, P.TyPoly _ -> 0
+      | P.TyPoly _, _ -> 0
+      | TyTuple a, TyTuple b ->
+        List.map2 compare a b
+        |> begin function
+          | [] -> 0
+          | x :: _ -> x
+        end
+      | TyArrow (a,b), TyArrow (q,w) ->
+        compare a q
+        |> fun x -> if x = 0 then compare b w else x
+      | TyCustom (n1, a), TyCustom (n2, b) when n1 = n2 ->
+        List.map2 compare a b
+        |> begin function
+          | [] -> 0
+          | x :: _ -> x
+        end
+      | TyRef a, TyRef b -> compare a b
+      | _, _ -> -1
+end
+
+module ConstructorMap = Map.Make(PolySubtypeCompare)
+
 type ctx = {
-  constructor_map : (name * IR.typ, name) Hashtbl.t;
-  record_map : (name * IR.typ, name) Hashtbl.t;
+  constructor_map : (name * IR.typ, IR.constructor) Hashtbl.t;
+  record_map : (name * IR.typ, IR.constructor) Hashtbl.t;
 }
 
 let rec convert_type (poly_ctx : poly_ctx) (ctx : ctx) (t : _ P.typ) :
@@ -40,13 +75,6 @@ let rec convert_expr (poly_ctx : poly_ctx) (ctx : ctx)
      we need to make sure we collect all the constructors that
      are monomorphized
   *)
-  begin match
-    Hashtbl.find_opt ParseLang.Typecheck.type_information
-      (Share.Uuid.uuid_forget @@ P.get_uuid expr)
-  with
-  | Some typ -> ignore @@ convert_type poly_ctx ctx typ
-  | None -> ()
-  end;
   match expr with
   | P.Fail (d, fail) -> IR.Fail (d, fail)
   | P.Var (d, nm) -> IR.Local (d, nm)
@@ -54,12 +82,9 @@ let rec convert_expr (poly_ctx : poly_ctx) (ctx : ctx)
       (* TODO: check for ctor and mono properly *)
       begin match Hashtbl.find_opt poly_ctx.poly_constructors nm with
       | Some ctor ->
-          (* mono *)
-          failwith "mono ctor"
+        Constructor (d, nm)
       | None -> (
-          match Hashtbl.find_opt poly_ctx.poly_records nm with
-          | Some record -> failwith "mono record"
-          | None -> IR.Global (d, nm))
+          IR.Global (d, nm))
       end
   | P.Constructor (d, nm) -> IR.Constructor (d, nm)
   | P.Int (d, i) -> IR.Int (d, i)
@@ -96,13 +121,13 @@ let rec convert_expr (poly_ctx : poly_ctx) (ctx : ctx)
   | P.Match _ -> failwith "malformed let IR"
   | P.Modify (d, nm, expr) -> IR.Modify (d, nm, go expr)
   | P.Record (d, nm, fields) ->
-      IR.Record (d, nm, List.map (Pair.map_snd go) fields)
+      IR.Record (d, nm, List.map (fun (a,b) -> a, go b) fields)
 
 let convert_def (poly_ctx : poly_ctx) (ctx : ctx)
     (def : (_, _, yes) P.definition) : _ IR.definition =
   let name = def.name in
   let args =
-    List.map (Pair.map_snd (convert_type poly_ctx ctx)) def.args
+    List.map (fun (a,b) -> a, (convert_type poly_ctx ctx b)) def.args
   in
   let body = convert_expr poly_ctx ctx (get def.body) in
   { IR.name; IR.args; IR.body; has_lambdas = Just () }
