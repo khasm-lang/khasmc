@@ -72,69 +72,71 @@ let float = [%sedlex.regexp? num, '.', num]
 
 let rec lexer_ buf : (t_TOKEN, exn) Result.t =
   match
-    begin match%sedlex buf with space -> () | _ -> ()
+    begin
+      match%sedlex buf with space -> () | _ -> ()
     end;
-    begin match%sedlex buf with
-    | '(' -> LEFTP
-    | ')' -> RIGHTP
-    | '{' -> LEFTC
-    | '}' -> RIGHTC
-    | '>' -> GT
-    | '<' -> LT
-    | '$' -> DOLLAR
-    | '#' -> HASH
-    | '@' -> AT
-    | '!' -> BANG
-    | '*' -> STAR
-    | '%' -> PERCENT
-    | '+' -> PLUS
-    | '-' -> MINUS
-    | '&' -> AND
-    | '|' -> PIPE
-    | ',' -> COMMA
-    | ';' -> SEMICOLON
-    | ':' -> COLON
-    | '/' -> FSLASH
-    | '\\' -> BSLASH
-    | '=' -> EQUALS
-    | "type" -> TYPE
-    | "trait" -> TRAIT
-    | "ref" -> REF
-    | "where" -> WHERE
-    | "let" -> LET
-    | "in" -> IN
-    | "as" -> AS
-    | "->" -> ARROW
-    | "=>" -> FATARROW
-    | "Int" -> TYINT
-    | "String" -> TYSTRING
-    | "Char" -> TYCHAR
-    | "Float64" -> TYFLOAT
-    | "Bool" -> TYBOOL
-    | "impl" -> IMPL
-    | "module" -> MODULE
-    | "end" -> END
-    | "match" -> MATCH
-    | "with" -> WITH
-    | "fun" -> FUN
-    | "if" -> IF
-    | "then" -> THEN
-    | "else" -> ELSE
-    | "of" -> OF
-    | "true" -> BOOL true
-    | "false" -> BOOL false
-    | string ->
-        let str = Sedlexing.Utf8.lexeme buf in
-        let str' = String.sub str 1 (String.length str - 2) in
-        STRING str'
-    | id -> ID (Sedlexing.Utf8.lexeme buf)
-    | type_id -> TYPEID (Sedlexing.Utf8.lexeme buf)
-    | poly_id -> POLYID (Sedlexing.Utf8.lexeme buf)
-    | num -> INT (Sedlexing.Utf8.lexeme buf)
-    | float -> FLOAT (Sedlexing.Utf8.lexeme buf)
-    | eof -> DONE
-    | any -> failwith (Sedlexing.Utf8.lexeme buf)
-    | _ -> failwith "IMPOSSIBLE"
+    begin
+      match%sedlex buf with
+      | '(' -> LEFTP
+      | ')' -> RIGHTP
+      | '{' -> LEFTC
+      | '}' -> RIGHTC
+      | '>' -> GT
+      | '<' -> LT
+      | '$' -> DOLLAR
+      | '#' -> HASH
+      | '@' -> AT
+      | '!' -> BANG
+      | '*' -> STAR
+      | '%' -> PERCENT
+      | '+' -> PLUS
+      | '-' -> MINUS
+      | '&' -> AND
+      | '|' -> PIPE
+      | ',' -> COMMA
+      | ';' -> SEMICOLON
+      | ':' -> COLON
+      | '/' -> FSLASH
+      | '\\' -> BSLASH
+      | '=' -> EQUALS
+      | "type" -> TYPE
+      | "trait" -> TRAIT
+      | "ref" -> REF
+      | "where" -> WHERE
+      | "let" -> LET
+      | "in" -> IN
+      | "as" -> AS
+      | "->" -> ARROW
+      | "=>" -> FATARROW
+      | "Int" -> TYINT
+      | "String" -> TYSTRING
+      | "Char" -> TYCHAR
+      | "Float64" -> TYFLOAT
+      | "Bool" -> TYBOOL
+      | "impl" -> IMPL
+      | "module" -> MODULE
+      | "end" -> END
+      | "match" -> MATCH
+      | "with" -> WITH
+      | "fun" -> FUN
+      | "if" -> IF
+      | "then" -> THEN
+      | "else" -> ELSE
+      | "of" -> OF
+      | "true" -> BOOL true
+      | "false" -> BOOL false
+      | string ->
+          let str = Sedlexing.Utf8.lexeme buf in
+          let str' = String.sub str 1 (String.length str - 2) in
+          STRING str'
+      | id -> ID (Sedlexing.Utf8.lexeme buf)
+      | type_id -> TYPEID (Sedlexing.Utf8.lexeme buf)
+      | poly_id -> POLYID (Sedlexing.Utf8.lexeme buf)
+      | num -> INT (Sedlexing.Utf8.lexeme buf)
+      | float -> FLOAT (Sedlexing.Utf8.lexeme buf)
+      | eof -> DONE
+      | any -> failwith (Sedlexing.Utf8.lexeme buf)
+      | _ -> failwith "IMPOSSIBLE"
     end
   with
   | s -> Ok s

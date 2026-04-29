@@ -92,9 +92,7 @@ let resolve_to_ctx (ctx : global_ctx) (name : string) is_module :
       if top.module_name = nm then
         (top, name)
       else begin
-        match
-          ctx.parent
-        with
+        match ctx.parent with
         | None -> failwith "resolve_to_ctx same level no parent"
         | Some parent -> (
             match
@@ -162,11 +160,14 @@ let rec construct_global_ctx ctx
             acc
         | Typdef t ->
             add ctx.types t.name;
-            begin match t.content with
-            | Record r ->
-                List.iter (fun (nm, _) -> add ctx.record_fields nm) r
-            | Sum s ->
-                List.iter (fun (nm, _) -> add ctx.constructors nm) s
+            begin
+              match t.content with
+              | Record r ->
+                  List.iter
+                    (fun (nm, _) -> add ctx.record_fields nm)
+                    r
+              | Sum s ->
+                  List.iter (fun (nm, _) -> add ctx.constructors nm) s
             end;
             acc
         | Open name ->
@@ -298,12 +299,13 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
   | Fail (d, s) -> Fail (d, s)
   | Var (d, nm) ->
       (* try locals first *)
-      begin match get_local l_ctx nm with
-      | Some res -> Var (d, res)
-      | None -> (
-          match get_global ctx nm with
-          | Some res -> Var (d, res)
-          | None -> failwith ("unknown variable: " ^ nm))
+      begin
+        match get_local l_ctx nm with
+        | Some res -> Var (d, res)
+        | None -> (
+            match get_global ctx nm with
+            | Some res -> Var (d, res)
+            | None -> failwith ("unknown variable: " ^ nm))
       end
   | MGlobal (_, _, _) -> failwith "monomorph info in name resolution"
   | Constructor (d, nm) ->
@@ -400,12 +402,13 @@ let rec resolve_top ctx (top : (string, 'b, unit) toplevel) :
     match top with
     | Module (nm, inners) ->
         (* find child ctx *)
-        begin match
-          List.find_opt (fun x -> x.module_name = nm) ctx.children
-        with
-        | None -> failwith "impossible: no module child"
-        | Some child ->
-            List.map (resolve_top child) inners |> List.flatten
+        begin
+          match
+            List.find_opt (fun x -> x.module_name = nm) ctx.children
+          with
+          | None -> failwith "impossible: no module child"
+          | Some child ->
+              List.map (resolve_top child) inners |> List.flatten
         end
     | Typdef t -> Typdef (resolve_typdef ctx t) :: []
     | Definition d -> Definition (resolve_definition ctx d) :: []

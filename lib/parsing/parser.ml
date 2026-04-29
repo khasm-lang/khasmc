@@ -74,17 +74,18 @@ let rec type' buf =
             TyTuple []
         | _ ->
             let s = type' buf in
-            begin match next buf with
-            | RIGHTP -> s
-            | COMMA ->
-                (* tuple *)
-                let rec go () =
-                  let s = type' buf in
-                  match next buf with
-                  | RIGHTP -> [ s ]
-                  | COMMA -> s :: go ()
-                in
-                TyTuple (s :: go ())
+            begin
+              match next buf with
+              | RIGHTP -> s
+              | COMMA ->
+                  (* tuple *)
+                  let rec go () =
+                    let s = type' buf in
+                    match next buf with
+                    | RIGHTP -> [ s ]
+                    | COMMA -> s :: go ()
+                  in
+                  TyTuple (s :: go ())
             end
       end
     | TYINT -> TyInt
@@ -121,44 +122,46 @@ let rec case' buf =
   | INT i -> CaseLit (LInt i)
   | TYPEID s ->
       let rec handle () =
-        begin match peek buf with
-        | LEFTP ->
-            (* subexpr *)
-            next' buf;
-            let sub = case' buf in
-            expect RIGHTP buf;
-            sub :: handle ()
-        | ID s ->
-            (* subvar *)
-            next' buf;
-            CaseVar s :: handle ()
-        | TYPEID s ->
-            next' buf;
-            CaseCtor (s, []) :: handle ()
-        | _ ->
-            (* not any of that *)
-            []
+        begin
+          match peek buf with
+          | LEFTP ->
+              (* subexpr *)
+              next' buf;
+              let sub = case' buf in
+              expect RIGHTP buf;
+              sub :: handle ()
+          | ID s ->
+              (* subvar *)
+              next' buf;
+              CaseVar s :: handle ()
+          | TYPEID s ->
+              next' buf;
+              CaseCtor (s, []) :: handle ()
+          | _ ->
+              (* not any of that *)
+              []
         end
       in
       CaseCtor (s, handle ())
   | ID s -> CaseVar s
   | LEFTP ->
       (* tuple or abbrev *)
-      begin match peek buf with
-      | RIGHTP ->
-          next' buf;
-          CaseTuple []
-      | _ ->
-          let e = case' buf in
-          let rec go () =
-            match next buf with
-            | RIGHTP -> []
-            | COMMA ->
-                let k = case' buf in
-                let rest = go () in
-                k :: rest
-          in
-          CaseTuple (e :: go ())
+      begin
+        match peek buf with
+        | RIGHTP ->
+            next' buf;
+            CaseTuple []
+        | _ ->
+            let e = case' buf in
+            let rec go () =
+              match next buf with
+              | RIGHTP -> []
+              | COMMA ->
+                  let k = case' buf in
+                  let rest = go () in
+                  k :: rest
+            in
+            CaseTuple (e :: go ())
       end
   | _ -> failwith "huh?"
 
@@ -180,23 +183,24 @@ module Expr = struct
     | -1 ->
         (* no valid operator char - maybe application? *)
         (* must be a current for this to be true *)
-        begin match expr_small buf with
-        | None ->
-            (* not application *)
-            some curr
-        | Some s ->
-            (* yes application *)
-            let rec do_app () =
-              match expr_small buf with
-              | None -> []
-              | Some s -> s :: do_app ()
-            in
-            let rest = do_app () |> List.rev in
-            let orig = Funccall (data' (), curr, s) in
-            some
-              (List.fold_right
-                 (fun acc x -> Funccall (data' (), x, acc))
-                 rest orig)
+        begin
+          match expr_small buf with
+          | None ->
+              (* not application *)
+              some curr
+          | Some s ->
+              (* yes application *)
+              let rec do_app () =
+                match expr_small buf with
+                | None -> []
+                | Some s -> s :: do_app ()
+              in
+              let rest = do_app () |> List.rev in
+              let orig = Funccall (data' (), curr, s) in
+              some
+                (List.fold_right
+                   (fun acc x -> Funccall (data' (), x, acc))
+                   rest orig)
         end
     | prec ->
         if prec < curr_prec then
@@ -215,108 +219,113 @@ module Expr = struct
   and expr_small buf =
     let exception NoValid in
     try
-      begin match peek buf with
-      | LEFTP ->
-          next' buf;
-          let* e = expr' 0 buf in
-          (* either parens or tuple *)
-          begin match next buf with
-          | RIGHTP -> some e
-          | COMMA ->
-              let rec tupler () =
-                let* s = expr' 0 buf in
-                begin match next buf with
-                | RIGHTP -> some [ s ]
-                | COMMA ->
-                    let* rest = tupler () in
-                    some (s :: rest)
-                end
-              in
-              let* rest = tupler () in
-              some @@ Tuple (data' (), e :: rest)
+      begin
+        match peek buf with
+        | LEFTP ->
+            next' buf;
+            let* e = expr' 0 buf in
+            (* either parens or tuple *)
+            begin
+              match next buf with
+              | RIGHTP -> some e
+              | COMMA ->
+                  let rec tupler () =
+                    let* s = expr' 0 buf in
+                    begin
+                      match next buf with
+                      | RIGHTP -> some [ s ]
+                      | COMMA ->
+                          let* rest = tupler () in
+                          some (s :: rest)
+                    end
+                  in
+                  let* rest = tupler () in
+                  some @@ Tuple (data' (), e :: rest)
+            end
+        | ID i ->
+            next' buf;
+            some @@ Var (data' (), i)
+        | TYPEID i ->
+            next' buf;
+            begin
+              match peek buf with
+              | LEFTC ->
+                  next' buf;
+                  let rec go () =
+                    match next buf with
+                    | RIGHTC -> []
+                    | ID s ->
+                        expect EQUALS buf;
+                        let (Some e) = expr' 0 buf in
+                        expect SEMICOLON buf;
+                        (s, e) :: go ()
+                  in
+                  let inner = go () in
+                  some
+                  @@ (Record (data' (), i, inner) : ('a, 'b) expr)
+              | _ -> some @@ Constructor (data' (), i)
+            end
+        | INT i ->
+            next' buf;
+            some @@ Int (data' (), i)
+        | FLOAT i ->
+            next' buf;
+            some @@ Float (data' (), i)
+        | STRING i ->
+            next' buf;
+            some @@ String (data' (), i)
+        | BOOL b ->
+            next' buf;
+            some @@ Bool (data' (), b)
+        | LET -> begin
+            next' buf;
+            let case = case' buf in
+            let ty =
+              match next buf with
+              | COLON ->
+                  let ty = type' buf in
+                  expect EQUALS buf;
+                  Some ty
+              | EQUALS -> None
+            in
+            let+ expr'' = expr' 0 buf in
+            expect IN buf;
+            let+ body = expr' 0 buf in
+            some @@ LetIn (data' (), case, ty, expr'', body)
           end
-      | ID i ->
-          next' buf;
-          some @@ Var (data' (), i)
-      | TYPEID i ->
-          next' buf;
-          begin match peek buf with
-          | LEFTC ->
-              next' buf;
-              let rec go () =
-                match next buf with
-                | RIGHTC -> []
-                | ID s ->
-                    expect EQUALS buf;
-                    let (Some e) = expr' 0 buf in
-                    expect SEMICOLON buf;
-                    (s, e) :: go ()
-              in
-              let inner = go () in
-              some @@ (Record (data' (), i, inner) : ('a, 'b) expr)
-          | _ -> some @@ Constructor (data' (), i)
+        | IF -> begin
+            next' buf;
+            let+ c = expr' 0 buf in
+            expect THEN buf;
+            let+ true' = expr' 0 buf in
+            expect ELSE buf;
+            let+ false' = expr' 0 buf in
+            let cases =
+              [
+                (CaseLit (LBool true), true');
+                (CaseLit (LBool false), false');
+              ]
+            in
+            some @@ Match (data' (), c, cases)
           end
-      | INT i ->
-          next' buf;
-          some @@ Int (data' (), i)
-      | FLOAT i ->
-          next' buf;
-          some @@ Float (data' (), i)
-      | STRING i ->
-          next' buf;
-          some @@ String (data' (), i)
-      | BOOL b ->
-          next' buf;
-          some @@ Bool (data' (), b)
-      | LET -> begin
-          next' buf;
-          let case = case' buf in
-          let ty =
-            match next buf with
-            | COLON ->
-                let ty = type' buf in
-                expect EQUALS buf;
-                Some ty
-            | EQUALS -> None
-          in
-          let+ expr'' = expr' 0 buf in
-          expect IN buf;
-          let+ body = expr' 0 buf in
-          some @@ LetIn (data' (), case, ty, expr'', body)
-        end
-      | IF -> begin
-          next' buf;
-          let+ c = expr' 0 buf in
-          expect THEN buf;
-          let+ true' = expr' 0 buf in
-          expect ELSE buf;
-          let+ false' = expr' 0 buf in
-          let cases =
-            [
-              (CaseLit (LBool true), true');
-              (CaseLit (LBool false), false');
-            ]
-          in
-          some @@ Match (data' (), c, cases)
-        end
-      | MATCH -> begin
-          next' buf;
-          let+ main = expr' 0 buf in
-          expect WITH buf;
-          let rec go () =
-            match next buf with
-            | END -> []
-            | PIPE ->
-                let case = case' buf in
-                expect FATARROW buf;
-                let (Some exp) = expr' 0 buf in
-                (case, exp) :: go ()
-            | x -> failwith ("got x instead: " ^ show_t_TOKEN x)
-          in
-          let total = go () in
-          some @@ Match (data' (), main, total)
-        end
-      | xs -> raise NoValid
+        | MATCH -> begin
+            next' buf;
+            let+ main = expr' 0 buf in
+            expect WITH buf;
+            let rec go () =
+              match next buf with
+              | END -> []
+              | PIPE ->
+                  let case = case' buf in
+                  expect FATARROW buf;
+                  let (Some exp) = expr' 0 buf in
+                  (case, exp) :: go ()
+              | x -> failwith ("got x instead: " ^ show_t_TOKEN x)
+            in
+            let total = go () in
+            some @@ Match (data' (), main, total)
+          end
+        | xs -> raise NoValid
       end
     with NoValid -> None
 end
@@ -324,7 +333,8 @@ end
 open Expr
 
 let definition_up_to_body buf =
-  begin match peek buf with FUN -> next' buf | _ -> ()
+  begin
+    match peek buf with FUN -> next' buf | _ -> ()
   end;
   let (ID name) = next buf in
   let targs =

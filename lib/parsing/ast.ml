@@ -83,20 +83,17 @@ let rec regeneralize (nw : unit -> 'a) (ty : 'a typ) =
   | TyMeta m ->
       TyMeta
         (ref
-           begin match !m with
-           | Resolved m -> Resolved m
-           | Unresolved ->
-               m := Resolved (TyPoly (nw ()));
-               Resolved (TyMeta m)
+           begin
+             match !m with
+             | Resolved m -> Resolved m
+             | Unresolved ->
+                 m := Resolved (TyPoly (nw ()));
+                 Resolved (TyMeta m)
            end)
   | _ -> ty
 
 let rec force (t : 'a typ) : 'a typ =
   match (t : 'a typ) with
-  | TyTuple t -> TyTuple (List.map force t)
-  | TyArrow (a, b) -> TyArrow (force a, force b)
-  | TyCustom (a, b) -> TyCustom (a, List.map force b)
-  | TyRef a -> TyRef (force a)
   | TyMeta m -> begin
       match !m with Unresolved -> t | Resolved t -> force t
     end

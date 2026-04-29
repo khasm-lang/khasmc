@@ -10,20 +10,19 @@ type typ =
      reduced to a ZST
      TODO: look into instance merging?
   *)
-  | TyIrrelevant
-  | TyBottom
-  | TyInt
-  | TyString
-  | TyChar
-  | TyFloat
-  | TyBool
+  | TyUnknown
+  | TyBase of [ `Irr
+              | `Bottom
+              | `Int
+              | `String
+              | `Char
+              | `Float
+              | `Bool
+              ]
   | TyTuple of typ list
   | TyArrow of typ * typ
   | TyCustom of name * typ list
   | TyRef of typ
-[@@deriving show { with_path = false }]
-
-type data = (name Parsing.Ast.typ Parsing.Ast.data[@opaque])
 [@@deriving show { with_path = false }]
 
 type binop = Parsing.Ast.binop [@@deriving show { with_path = false }]
@@ -32,54 +31,61 @@ type unaryop = name Parsing.Ast.unaryop
 [@@deriving show { with_path = false }]
 
 (* Type param is "has lambdas "*)
-type expr =
-  | Fail of data * string
-  | Local of data * name
-  | Global of data * name
-  | Constructor of data * name
-  | Int of data * string
-  | String of data * string
-  | Char of data * string
-  | Float of data * string
-  | Bool of data * bool
-  | Tuple of data * expr list
-  | BinOp of data * binop * expr * expr
-  | UnaryOp of data * unaryop * expr
-  (* The interesting case. *)
-  | Lambda of data * name * expr
-  | Funccall of data * expr * expr list
-  | Record of data * name * (name * expr) list
-  | Let of data * name * expr * expr
-  | IfLet of data * name * expr * expr * expr
-  | If of data * name * expr * expr * expr
-  | Seq of data * expr * expr
-  | Modify of data * name * expr
+
+type tag =
+  | Fail of string
+  | Named of [ `Local | `Global | `Constructor ] * name
+  | Prim of [ `Int | `String | `Char | `Float ] * string
+  | Bool of bool
+  | Tuple
+  | BinOp of binop
+  | UnaryOp of unaryop
+  | Lambda of name
+  | Funccall
+  | Record of name * name list
+  | ConstructorField of int * typ list
+  | Let of name (* binding name *)
+  | IfLet of name (* ctor name *)
+  | Seq
+  | Modify of name
+[@@deriving show { with_path = false }]
+
+type data = {
+  uuid: unit uuid; [@opaque]
+  mutable typ: typ;
+}
+[@@deriving show { with_path = false }]
+
+type expr = Expr of data * tag * expr list
 [@@deriving show { with_path = false }]
 
 type record = {
   name : name;
-  constructs : typ;
-  fields : (name * typ) list;
+  fields : name list;
 }
 [@@deriving show { with_path = false }]
+
+module Ctor = struct
 
 type constructor = {
   name : name;
-  constructs : typ;
-  fields : (name * typ) list;
+  index : int; (* index in the type (for tag) *)
 }
 [@@deriving show { with_path = false }]
 
-type 'a definition = {
+end
+open Ctor
+
+type definition = {
   name : name;
   args : (name * typ) list;
+  returns : typ;
   body : expr;
-  has_lambdas : (unit, 'a) Share.Maybe.maybe; [@opaque]
 }
 [@@deriving show { with_path = false }]
 
-type 'a program = {
-  defs : 'a definition list;
+type program = {
+  defs : definition list;
   records : record list;
   constructors : constructor list;
 }
