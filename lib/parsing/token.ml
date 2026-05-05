@@ -59,7 +59,7 @@ type t_TOKEN =
 [@@deriving show { with_path = false }]
 
 let digit = [%sedlex.regexp? '0' .. '9']
-let idchar = [%sedlex.regexp? Star (ll | lu | digit)]
+let idchar = [%sedlex.regexp? Star (ll | lu | digit | '_')]
 let path = [%sedlex.regexp? Star ((lu, idchar), '.')]
 let id = [%sedlex.regexp? path, ll, idchar]
 let type_id = [%sedlex.regexp? path, lu, idchar]

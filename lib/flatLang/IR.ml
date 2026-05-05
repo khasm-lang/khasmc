@@ -34,7 +34,7 @@ type unaryop = name Parsing.Ast.unaryop
 
 type tag =
   | Fail of string
-  | Named of [ `Local | `Global | `Constructor ] * name
+  | Named of [ `Local | `Global | `Constructor of typ list ] * name
   | Prim of [ `Int | `String | `Char | `Float ] * string
   | Bool of bool
   | Tuple
@@ -43,7 +43,7 @@ type tag =
   | Lambda of name
   | Funccall
   | Record of name * name list
-  | ConstructorField of int * typ list
+  | Unpack of typ list * name list
   | Let of name (* binding name *)
   | IfLet of name (* ctor name *)
   | Seq
@@ -51,12 +51,12 @@ type tag =
 [@@deriving show { with_path = false }]
 
 type data = {
-  uuid: unit uuid; [@opaque]
+  uuid: unit uuid; 
   mutable typ: typ;
 }
 [@@deriving show { with_path = false }]
 
-type expr = Expr of data * tag * expr list
+type expr = Expr of (data [@opaque]) * tag * expr list
 [@@deriving show { with_path = false }]
 
 type record = {

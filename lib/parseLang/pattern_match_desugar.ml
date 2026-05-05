@@ -4,6 +4,8 @@ open Share.Maybe
 open Share.Types
 open Share.Uuid
 
+let p_expr x = print_endline (show_expr pp_resolved (pp_typ pp_resolved) x)
+
 let partition_mapi (map : int -> 'a -> ('b, 'c) Either.t)
     (list : 'a list) : 'b list * 'c list =
   let rec go i l =
@@ -18,7 +20,7 @@ let partition_mapi (map : int -> 'a -> ('b, 'c) Either.t)
   in
   go 0 list
 
-(* accessors, rows, bodies
+(* accessors + accessor types, rows, bodies
    match a, b with
    1, 2 -> one
    3, 4 -> two
@@ -29,7 +31,7 @@ let partition_mapi (map : int -> 'a -> ('b, 'c) Either.t)
    [one, two]
 *)
 type ('a, 'b) matrix =
-  ('a, 'b) expr list * 'a case list list * ('a, 'b) expr list
+  (('a, 'b) expr * 'a typ) list * 'a case list list * ('a, 'b) expr list
 [@@deriving show { with_path = false }]
 
 let show_matrix' = show_matrix pp_resolved (pp_typ pp_resolved)
@@ -37,8 +39,10 @@ let fst3 (a, b, c) = a
 let snd3 (a, b, c) = b
 let trd3 (a, b, c) = c
 let data_bot () = data_of @@ uuid_using TyBottom
-let add_get_contr n e = UnaryOp (data_bot (), GetConstrField n, e)
-let add_get_tuple n e = UnaryOp (data_bot (), Project n, e)
+let add_get_tuple n (e,t) = (UnaryOp (data_bot (), Project n, e),
+                             t |> function
+                             | TyTuple t -> List.nth t n
+                             | _ -> failwith "add get tuple not tuple type")
 
 let rec is_pat_refutable (pat : 'a case) =
   match pat with
@@ -176,12 +180,33 @@ let normalize_first_col (matrix : ('a, 'b) matrix) =
       List.map2 (fun col1 rest -> col1 :: List.tl rest) fsts' rows,
       bodys' )
 
+let rec determine_ctor_element_types (typdefs : ('a, 'b typdef) Hashtbl.t) ctorname (expr, typ) =
+  let target, rest = match typ with
+    | TyCustom (a,b) -> a,b
+    | _ -> failwith "impossible"
+  in 
+  let relevant_typdef = Hashtbl.find typdefs target in
+  let inst_polys_as = List.combine relevant_typdef.args (List.map force rest) in
+  let case = relevant_typdef.content
+             |> function Sum ctors -> begin
+                 List.filter (fun (ctornm, rest) -> ctornm = ctorname) ctors
+                   end
+               | _ -> failwith "record?"
+  in
+  let inst =
+    case
+    |> List.find (fun (nm, rest) -> nm = ctorname)
+    |> fun (nm, rest) -> List.map (subst_polys inst_polys_as) rest
+  in
+  inst
+
 (* the main compilation function
    this turns a full pattern match into things of form:
    1. no Match statements whatsoever (only Lets directly to variables)
    2. Match, but only of form `if let ... else ...` 
 *)
-let rec compile (matrix : ('a, 'b) matrix) : 'c =
+let rec compile typdefs (matrix : ('a, 'b) matrix) : 'c =
+  let compile = compile typdefs in
   let accs, rows, bodys = matrix in
   (* default out if patterns are empty
      TODO: add warning for when not everything is empty
@@ -213,7 +238,7 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
             [
               ( List.hd bodys |> fun exp ->
                 LetIn
-                  (data_bot (), CaseVar nm, None, List.hd accs, exp)
+                  (data_bot (), CaseVar nm, None, fst @@ List.hd accs, exp)
               );
             ] )
         in
@@ -256,7 +281,7 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
        - make sure the arguments work themselves out correctly
        - generate submatrixes properly
        - try not to explode
-    *)
+        *)
         let yes, no =
           partition_mapi
             (fun idx elm ->
@@ -273,13 +298,16 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
         (* add in all the accessors for the subpatterns of
            the constructor
         *)
-        let added_accessors =
-          List.mapi
-            (fun idx elm -> add_get_contr idx (List.hd accs))
-            ctorbody
+        let genned_yes_names = fresh_resolved_n (List.length ctorbody) in
+        let added_accessor_vars =
+          List.map (fun x -> Var (data_bot (), x)
+                   ) genned_yes_names
+        in
+        let added_accessor_typs =
+          determine_ctor_element_types typdefs ctorname (List.hd accs)
         in
         let yesmat : ('a, 'b) matrix =
-          (added_accessors @ List.tl accs, yesrow, yesbody)
+          (List.combine added_accessor_vars added_accessor_typs @ List.tl accs, yesrow, yesbody)
         in
         (* no matrix retains the same accessors *)
         let nomat : ('a, 'b) matrix = (accs, norow, nobody) in
@@ -287,12 +315,15 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
           failwith "bodys are empty ctor?"
         else
           let yes = compile yesmat in
+          let yes_add_unpack =
+            UnpackConstructor(data_bot (), added_accessor_typs, genned_yes_names, fst @@ List.hd accs, yes)
+          in
           let no = compile nomat in
           let dummy = fresh_resolved () in
           Match
             ( data_bot (),
-              List.hd accs,
-              [ (CaseCtor (ctorname, []), yes); (CaseVar dummy, no) ]
+              fst @@ List.hd accs,
+              [ (CaseCtor (ctorname, []), yes_add_unpack); (CaseVar dummy, no) ]
             )
     | CaseLit lit ->
         (* very similar to the constructor case *)
@@ -321,11 +352,11 @@ let rec compile (matrix : ('a, 'b) matrix) : 'c =
           let dummy = fresh_resolved () in
           Match
             ( data_bot (),
-              List.hd accs,
+              fst @@ List.hd accs,
               [ (CaseLit lit, yes); (CaseVar dummy, no) ] )
         end
 
-and compile_pre head (cases : ('a case * ('a, 'b) expr) list) : 'c =
+and compile_pre typdefs head (cases : ('a case * ('a, 'b) expr) list) : 'c =
   (* We assume that all the cases are of the same form -
      typechecking should guarantee this. 
      . *)
@@ -337,18 +368,21 @@ and compile_pre head (cases : ('a case * ('a, 'b) expr) list) : 'c =
     (*
        IMPORTANT: remember to compile the bodies also
 *)
-    let bodys = List.map pattern_comp bodys in
+    let bodys = List.map (pattern_comp typdefs) bodys in
+    let head_ty =
+      head |> get_uuid |> uuid_get_snd
+    in
     let fresh = fresh_resolved () in
     let matrix =
-      ( [ Var (data_bot (), fresh) ],
+      ( [ Var (data_bot (), fresh), head_ty ],
         List.map (fun x -> [ x ]) rows,
         bodys )
     in
-    LetIn (data_bot (), CaseVar fresh, None, head, compile matrix)
+    LetIn (data_bot (), CaseVar fresh, None, head, compile typdefs matrix)
 
 (* main workhorse *)
-and pattern_comp (expr : ('a, resolved typ) expr) : ('a, 'b) expr =
-  let go = pattern_comp in
+and pattern_comp typdefs (expr : ('a, resolved typ) expr) : ('a, 'b) expr =
+  let go = pattern_comp typdefs in
   match expr with
   | LetIn (data, case, ty, head, body) -> (
       match case with
@@ -366,18 +400,22 @@ and pattern_comp (expr : ('a, resolved typ) expr) : ('a, 'b) expr =
   | Lambda (data, nm, ty, body) -> Lambda (data, nm, ty, go body)
   | Tuple (data, ts) -> Tuple (data, List.map go ts)
   | Annot (_, _, _) -> failwith "Annotation after typechecking"
-  | Match (data, head, cases) -> compile_pre head cases
+  | Match (data, head, cases) -> compile_pre typdefs head cases
   | Modify (data, nm, expr) -> Modify (data, nm, go expr)
   | Record (data, nm, cases) ->
       Record (data, nm, List.map (fun (a, b) -> (a, go b)) cases)
   | otherwise -> expr
 
 let pattern_match_desugar (top : ('a, 'b, void) toplevel list) :
-    ('a, 'b, void) toplevel list =
+  ('a, 'b, void) toplevel list =
+  let map = Hashtbl.create 100 in
+  List.iter (function | Typdef t ->
+      Hashtbl.add map t.name t
+                                    | _ -> ()) top;
   List.map
     (function
       | Definition def ->
-          let comp'd = pattern_comp (get def.body) in
+          let comp'd = pattern_comp map (get def.body) in
           (*
           print_endline "\ncompiled to:";
           print_endline

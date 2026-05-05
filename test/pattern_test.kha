@@ -1,0 +1,24 @@
+fun main (m : Int): Int =
+        let Right (Left x) = swap (Left (Left 10)) in
+        let Both a b = swap_two (Both 5 10) in
+        x
+
+type Either 'a 'b =
+        | Left of 'a
+        | Right of 'b
+end
+
+fun swap {type 'a 'b} (e : Either 'a 'b) : Either 'b 'a =
+        match e with
+        | Left x => Right x
+        | Right x => Left x
+        end
+
+fun swap_two (x : Two) : Two =
+    match x with
+    | Both a b => Both b a
+    end
+    
+type Two =
+    | Both of Int Int
+end

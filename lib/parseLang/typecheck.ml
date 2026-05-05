@@ -134,7 +134,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
       | _ -> err "not tuple but should be tuple :("
     end
   | CaseCtor (name, args) -> begin
-      match t with
+      match force t with
       (* TODO: this has a bunch of "assertions" in it, mostly around
          the fact that it assumes that type arguments are properly
          filled in with the righ tnumber of them and whatnot
@@ -166,7 +166,7 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
                     end
               end
           end
-      | _ -> err "Tried to pattern match on non-pattern matchable"
+      | _ -> err ("Tried to pattern match on non-pattern matchable: " ^ show_typ pp_resolved t)
     end
 
 let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
@@ -330,8 +330,6 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
             ok @@ TyRef t
         | GetRecField r ->
             failwith "implement record field access typechecking"
-        | GetConstrField i ->
-            failwith "get constr field in typechecking"
         | Project i ->
             let* x'ty = infer ctx expr in
             begin
@@ -354,6 +352,7 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
               | _ -> err "can't be record and not record"
             end
       end
+    | UnpackConstructor (_, _, _, _, _) -> failwith "unpack constructor in typechecking"
     | Record (_, nm, fields) ->
         (* this case is mildly annoying, because we have to deal
           with instantiation more explicitly

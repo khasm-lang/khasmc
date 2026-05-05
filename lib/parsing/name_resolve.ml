@@ -334,7 +334,6 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
         | GetRecField nm ->
             let[@warning "-8"] (Some nm') = get_record_field ctx nm in
             GetRecField nm'
-        | GetConstrField i -> GetConstrField i
         | Project i -> Project i
       in
       UnaryOp (d, op', go a)
@@ -357,7 +356,8 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
           bodies
       in
       Match (d, head', bodies')
-  | Modify (_, _, _) -> failwith "modify"
+  | UnpackConstructor(_, _, _, _, _) -> failwith "unpack constructor in name resolution"
+  | Modify (_, _, _) -> failwith "name resolve modify"
   | Record (dat, name, fields) ->
       let[@warning "-8"] (Some tname) = get_type ctx name in
       let fields =

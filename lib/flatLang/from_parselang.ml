@@ -8,7 +8,7 @@ let rec conv_typ (ty : P.resolved P.typ) : I.typ =
   | TyBottom -> TyBase `Bottom 
   | TyInt -> TyBase `Int 
   | TyString -> TyBase `String 
-  | TyChar -> TyBase `Char 
+  | TyChar -> TyBase `Char
   | TyFloat -> TyBase `Float 
   | TyBool -> TyBase `Bool
   | P.TyTuple t -> I.TyTuple (List.map conv_typ t)
@@ -23,7 +23,14 @@ let conv_tag (e : ('a, 'b) P.expr) : I.tag =
    | P.Fail (_, s) -> I.Fail s
    | P.Var (_, nm) -> Named (`Local, nm)
    | P.MGlobal (_, _, nm) -> Named (`Global, nm)
-   | P.Constructor (dat, nm) -> Named (`Constructor, nm)
+   | P.Constructor (data, nm) ->
+     let ctor_type =
+       Hashtbl.find
+         Parselang.Monomorphize.constructor_types
+         (Share.Uuid.uuid_forget data.uuid)
+       |> List.map conv_typ
+     in
+     Named (`Constructor ctor_type, nm)
    | P.Int (_, i) -> Prim (`Int, i)
    | P.String (_, s) -> Prim (`String, s)
    | P.Char (_, c) -> Prim (`Char, c)
@@ -34,10 +41,14 @@ let conv_tag (e : ('a, 'b) P.expr) : I.tag =
    | P.Seq (_, _, _) -> Seq
    | P.Funccall (_, _, _) -> Funccall
    | P.BinOp (_, o, _, _) -> BinOp o
+   | P.UnaryOp (_, P.GetRecField nm, _) ->
+     failwith "get record field"
    | P.UnaryOp (_, u, _) -> UnaryOp u
    | P.Lambda (_, nm, _, _) -> Lambda nm
    | P.Tuple (_, _) -> Tuple
    | P.Annot (_, _, _) -> failwith "annot after typechecking"
+   | P.UnpackConstructor (_, typs, nms, _, _) ->
+     Unpack (List.map conv_typ typs, nms)
    | P.Match (_, _, [
        (CaseCtor (nm, _), _);
        (CaseVar _, _)
@@ -51,6 +62,8 @@ let conv_tag (e : ('a, 'b) P.expr) : I.tag =
    | P.Modify (_, nm, _) -> Modify nm
    | P.Record (_, nm, children) ->
      I.Record (nm, List.map fst children)
+
+let unknown_types = ref 0
 
 let rec conv_expr (e : ('a, 'b) P.expr) : I.expr =
   let f = conv_expr in
@@ -68,7 +81,8 @@ let rec conv_expr (e : ('a, 'b) P.expr) : I.expr =
        (CaseVar _, rest)
      ]) -> [f head; f body; f rest]
    | P.Modify (_, _, e) -> [f e]
-   | P.Record (_, _, r) -> List.map (fun x -> (f (snd x))) r       
+   | P.Record (_, _, r) -> List.map (fun x -> (f (snd x))) r
+   | P.UnpackConstructor (_, _, _, a, b) -> [f a; f b]
    | _ -> []
   in
   let uuid = Share.Uuid.uuid () in
@@ -77,13 +91,15 @@ let rec conv_expr (e : ('a, 'b) P.expr) : I.expr =
             Parselang.Typecheck.type_information
             (Share.Uuid.uuid_forget (P.get_data e).uuid)
     with
-    | None -> I.TyUnknown
+    | None ->
+      incr unknown_types;
+      I.TyUnknown
     | Some t -> conv_typ t
   in
   Expr ({ uuid; typ }, tag, children)
   
 let rec conv_top (top : (P.resolved, P.resolved P.typ, void) P.toplevel list) : I.program =
-  List.fold_left (fun (acc : I.program) (top : ('a, P.resolved P.typ, void) P.toplevel) ->
+  let res = List.fold_left (fun (acc : I.program) (top : ('a, P.resolved P.typ, void) P.toplevel) ->
       match top with
       | P.Typdef t ->
         begin match t.content with
@@ -101,7 +117,7 @@ let rec conv_top (top : (P.resolved, P.resolved P.typ, void) P.toplevel list) : 
             }
           end
       | P.Definition d -> {
-          acc with
+        acc with
           defs = {
             I.name = d.name;
             args = List.map (fun (nm, ty) -> nm, conv_typ ty) d.args;
@@ -109,4 +125,6 @@ let rec conv_top (top : (P.resolved, P.resolved P.typ, void) P.toplevel list) : 
             body = conv_expr (get d.body);
           } :: acc.defs
         }
-    ) {I.defs = []; records = []; constructors = []} top
+  ) {I.defs = []; records = []; constructors = []} top
+  in
+  res

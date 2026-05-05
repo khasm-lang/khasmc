@@ -26,10 +26,13 @@ let rec verify_e (e : expr) : bool =
   | Expr (_, IfLet _, [a; b; c]) -> v a && v b && v c
   | Expr (_, Seq, children) -> f children
   | Expr (_, Modify _, [m]) -> v m
+  | Expr (_, Unpack _, [a;b]) -> v a && v b
   | _ -> failwith "No match"
   with
   | _ ->
-    failwith ("expr: \n" ^ show_expr e ^ "\n is invalid")
+    print_endline "VERIFY FAILED:";
+    print_endline ("expr: \n" ^ show_expr e ^ "\n is invalid");
+    failwith "verify failed"
 
 let verify top =
   List.for_all (fun d -> verify_e d.body) top.defs

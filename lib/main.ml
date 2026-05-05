@@ -33,7 +33,7 @@ let contr =
 let debug_parse = false
 let debug_flat = true
 let time = true
-let debug_gc = true
+let debug_gc = false
 
 let with_timer name thunk =
   if time then
@@ -143,10 +143,24 @@ let main () =
               let to_flat =
                 with_timer "to flatland" (fun () -> 
                     Flatlang.From_parselang.conv_top p_comp) in
+              
               if debug_flat then begin
                 print_endline "to flatlang";
                 print_endline (Flatlang.IR.show_program to_flat);
                 if not (Flatlang.Verify.verify to_flat) then
+                  print_endline "DID NOT VERIFY"
+                    else ()
+              end;
+
+              let let_folded =
+                with_timer "let fold" (fun () ->
+                    Flatlang.Let_fold.let_fold to_flat
+                  )
+              in
+              if debug_flat then begin
+                print_endline "let folded:";
+                print_endline (Flatlang.IR.show_program let_folded);
+                 if not (Flatlang.Verify.verify to_flat) then
                   print_endline "DID NOT VERIFY"
                     else ()
               end;
