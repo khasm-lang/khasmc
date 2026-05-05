@@ -166,7 +166,10 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
                     end
               end
           end
-      | _ -> err ("Tried to pattern match on non-pattern matchable: " ^ show_typ pp_resolved t)
+      | _ ->
+          err
+            ("Tried to pattern match on non-pattern matchable: "
+            ^ show_typ pp_resolved t)
     end
 
 let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
@@ -352,7 +355,8 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
               | _ -> err "can't be record and not record"
             end
       end
-    | UnpackConstructor (_, _, _, _, _) -> failwith "unpack constructor in typechecking"
+    | UnpackConstructor (_, _, _, _, _) ->
+        failwith "unpack constructor in typechecking"
     | Record (_, nm, fields) ->
         (* this case is mildly annoying, because we have to deal
           with instantiation more explicitly

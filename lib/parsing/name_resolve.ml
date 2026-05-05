@@ -356,7 +356,8 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
           bodies
       in
       Match (d, head', bodies')
-  | UnpackConstructor(_, _, _, _, _) -> failwith "unpack constructor in name resolution"
+  | UnpackConstructor (_, _, _, _, _) ->
+      failwith "unpack constructor in name resolution"
   | Modify (_, _, _) -> failwith "name resolve modify"
   | Record (dat, name, fields) ->
       let[@warning "-8"] (Some tname) = get_type ctx name in

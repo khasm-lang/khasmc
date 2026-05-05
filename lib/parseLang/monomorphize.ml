@@ -4,9 +4,8 @@ open Share.Maybe
 open Share.Types
 open Share.Uuid
 
-let constructor_types :
-  (unit uuid, resolved typ list) Hashtbl.t
-  = Hashtbl.create 100
+let constructor_types : (unit uuid, resolved typ list) Hashtbl.t =
+  Hashtbl.create 100
 
 module ResSet = Set.Make (struct
   type t = resolved
@@ -97,37 +96,30 @@ let rec monomorph_expr (ctx : monomorph_ctx)
       |> mono_ty ctx.poly_map
     in
     let mono_expr_ty = mono_expr_ty' expr in
-    let data' =
-      update_data_uuid (get_data expr) mono_expr_ty
-    in
+    let data' = update_data_uuid (get_data expr) mono_expr_ty in
     match expr with
     | Constructor (data, name) ->
-      (*
+        (*
 little bit of a hack but we know constructors will
          be of form a -> b -> c -> Type so we can gather
          their arguments just from the type they have
       *)
-      let rec unpack = function
-        | TyArrow (a,b) -> a :: unpack b
-        | x -> []
-      in
-      Hashtbl.add
-        constructor_types
-        (data.uuid)
-        (unpack mono_expr_ty);
-      (data_transform (fun _ -> data') expr, [])
+        let rec unpack = function
+          | TyArrow (a, b) -> a :: unpack b
+          | x -> []
+        in
+        Hashtbl.add constructor_types data.uuid (unpack mono_expr_ty);
+        (data_transform (fun _ -> data') expr, [])
     | Var (_, nm) ->
         if ResSet.mem nm ctx.locals then
           (Var (data', nm), [])
         else begin
           let def = Hashtbl.find ctx.definitions nm in
-          let new_uuid =
-            uuid_set_snd (mono_expr_ty) def.data.uuid
-          in
+          let new_uuid = uuid_set_snd mono_expr_ty def.data.uuid in
           let defs =
             if not (Hashtbl.mem ctx.have_done new_uuid) then begin
               Hashtbl.add ctx.have_done new_uuid ();
-              monomorph_def ctx def (mono_expr_ty)
+              monomorph_def ctx def mono_expr_ty
             end
             else
               []

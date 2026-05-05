@@ -210,10 +210,10 @@ let rec case_names (c : 'a case) : 'a list =
   | CaseLit _ -> []
 
 type 'a data = {
-  uuid : 'a uuid; 
+  uuid : 'a uuid;
   (* file line col *)
   span : (string * int * int) option;
-} 
+}
 [@@deriving show { with_path = false }]
 
 let data () = { uuid = Share.Uuid.uuid (); span = None }
@@ -246,7 +246,7 @@ type 'a unaryop =
 
 type ('a, 'b) expr =
   | Fail of 'b data * string
-  | Var of ('b data [@opaque]) * 'a
+  | Var of ('b data[@opaque]) * 'a
   (* For monomorphization
      Arguably this should warrant another AST but I don't think
      that's really needed
@@ -259,7 +259,7 @@ type ('a, 'b) expr =
   | Float of 'b data * string
   | Bool of 'b data * bool
   | LetIn of
-      ('b data [@opaque])
+      ('b data[@opaque])
       * 'a case
       * 'a typ option
       * ('a, 'b) expr
@@ -268,7 +268,8 @@ type ('a, 'b) expr =
   | Funccall of 'b data * ('a, 'b) expr * ('a, 'b) expr
   | BinOp of 'b data * binop * ('a, 'b) expr * ('a, 'b) expr
   | UnaryOp of 'b data * 'a unaryop * ('a, 'b) expr
-  | UnpackConstructor of 'b data * 'a typ list * 'a list * ('a, 'b) expr * ('a, 'b) expr 
+  | UnpackConstructor of
+      'b data * 'a typ list * 'a list * ('a, 'b) expr * ('a, 'b) expr
   | Lambda of 'b data * 'a * 'a typ option * ('a, 'b) expr
   | Tuple of 'b data * ('a, 'b) expr list
   | Annot of 'b data * ('a, 'b) expr * 'a typ
@@ -298,7 +299,7 @@ let get_data (e : ('a, 'b) expr) : 'b data =
   | Match (i, _, _)
   | UnaryOp (i, _, _)
   | Modify (i, _, _)
-  | UnpackConstructor(i, _, _, _, _)
+  | UnpackConstructor (i, _, _, _, _)
   | Record (i, _, _) ->
       i
 
@@ -327,8 +328,8 @@ let data_transform (type a b) (f : a data -> b data) expr =
         Match (f i, go e, List.map (fun (b, a) -> (b, go a)) cs)
     | UnaryOp (i, a, e) -> UnaryOp (f i, a, go e)
     | Modify (i, a, e) -> Modify (f i, a, go e)
-    | UnpackConstructor(i, typ, nms, hd, bd) ->
-      UnpackConstructor(f i, typ, nms, go hd, go bd)
+    | UnpackConstructor (i, typ, nms, hd, bd) ->
+        UnpackConstructor (f i, typ, nms, go hd, go bd)
     | Record (i, a, cs) ->
         Record (f i, a, List.map (fun (a, b) -> (a, go b)) cs)
   in
