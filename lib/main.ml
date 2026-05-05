@@ -151,7 +151,7 @@ let main () =
                 print_endline (Flatlang.IR.show_program to_flat);
               end;
               if debug_flat_small then
-              if not (Flatlang.Verify.verify to_flat) then
+              if not (Flatlang.Verify.verify true to_flat) then
                 print_endline "DID NOT VERIFY"
               else
                 ();
@@ -168,7 +168,7 @@ let main () =
 
               if debug_flat_small then
 
-              if not (Flatlang.Verify.verify to_flat) then
+              if not (Flatlang.Verify.verify true to_flat) then
                 print_endline "DID NOT VERIFY"
               else
                 ();
@@ -179,17 +179,44 @@ let main () =
                 )
               in
               if debug_flat then begin
-                print_endline "types reconstructed:";
-                print_endline (Flatlang.IR.show_program with_types_again);
+                print_endline "types reconstructed print ommitted";
               end;
-                            if debug_flat_small then
+              if debug_flat_small then
+                if not (Flatlang.Verify.verify true with_types_again) then
+                  print_endline "DID NOT VERIFY"
+                else
+                  ();
+                  
+              let clos_conved =
+                with_timer "closure convert" (fun () ->
+                  Flatlang.Closure_convert.clos_conv with_types_again
+                )
+              in
+              
+              if debug_flat then begin
+                print_endline "clos converted:";
+                print_endline (Flatlang.IR.show_program clos_conved);
+              end;
 
-               if not (Flatlang.Verify.verify with_types_again) then
-                print_endline "DID NOT VERIFY"
-              else
-                ();
+              if debug_flat_small then
+                if not (Flatlang.Verify.verify true clos_conved) then
+                  print_endline "DID NOT VERIFY"
+                else
+                  ();
 
-                
+              let with_types_again2 =
+                with_timer "reconstruct types 2" (fun () ->
+                  Flatlang.Reconstruct_types.reconstruct clos_conved
+                )
+              in
+              if debug_flat then begin
+                print_endline "types reconstructed 2 print ommitted";
+              end;
+              if debug_flat_small then
+                if not (Flatlang.Verify.verify true with_types_again2) then
+                  print_endline "DID NOT VERIFY"
+                else
+                  ();
               ()
         end
     end;

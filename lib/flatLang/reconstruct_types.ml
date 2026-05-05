@@ -31,7 +31,9 @@ and reconstruct_e (nm_map : 'a NameMap.t) (expr : expr) : unit =
       dat.typ <- ty
     | None ->
       (* TODO: ensure this is never called *)
+      print_endline "UNKNOWN LOCAL:";
       print_endline (show_expr expr);
+      print_endline "bindings:";
       List.iter (fun (nm, ty) ->
         print_endline (show_name nm ^ ": " ^ show_typ ty)
       ) @@ NameMap.bindings nm_map;
@@ -50,8 +52,16 @@ and reconstruct_e (nm_map : 'a NameMap.t) (expr : expr) : unit =
   | Expr (dat, Lambda (_, input), ts) ->
       dat.typ <- TyArrow (input, get_typ @@ hd ts)
   | Expr (dat, Funccall, ts) ->
-    let[@warning "-8"] TyArrow (l, r) = get_typ @@ hd ts in
-    dat.typ <- l
+    begin match get_typ @@ hd ts with
+    | TyArrow (l, r) -> 
+      dat.typ <- r
+    | x ->
+      print_endline "bad function type: ";
+      print_endline (show_typ x);
+      print_endline "kids:";
+      List.iter (fun x -> print_endline (show_expr x)) (get_children expr);
+      failwith "bad"
+    end
   | Expr (dat, Unpack (_, _), _) ->
     dat.typ <- TyTuple []
   | Expr (dat, Let _, [_; bd])

@@ -35,6 +35,11 @@ let peek2 buf =
   | x :: y :: xs -> y
   | _ -> failwith "peek2 on emptyish buffer"
 
+let peek3 buf =
+  match !buf with
+  | x :: y :: z :: xs -> z
+  | _ -> failwith "peek3 on emptyish buffer"
+
 exception ParseError
 
 let expect tok buf =
@@ -245,6 +250,17 @@ module Expr = struct
         | ID i ->
             next' buf;
             some @@ Var (data' (), i)
+        | FUN ->
+          (* TODO: horrible hack *)
+          begin match peek3 buf with
+          | ARROW ->
+            next' buf;
+            let (ID id) = next buf in
+            let ARROW = next buf in
+            let* body = expr' 0 buf in
+            some @@ Lambda (data' (), id, None, body)
+          | _ -> None
+          end 
         | TYPEID i ->
             next' buf;
             begin

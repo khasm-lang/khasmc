@@ -1,6 +1,6 @@
 fun main (m : Int): Int =
         let Right x = swap (interesting 10) in
-        let Left p = swap (swap (interesting 10)) in
+        let Left p = swap (swap (Left "hi")) in
         let y = Record {
                 name = "ho";
         } in

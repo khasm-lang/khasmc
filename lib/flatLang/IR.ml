@@ -1,6 +1,10 @@
 open Share.Uuid
 open Share.Maybe
 
+
+(* Names are unique _within definitions_ but are not
+   guaranteed to be unique across definitions
+   *)
 type name = Parsing.Ast.resolved
 [@@deriving show { with_path = false }]
 
@@ -10,6 +14,8 @@ module Name = struct
 end
 
 module NameMap = Map.Make(Name)
+
+module NameSet = Set.Make(Name)
 
 (* we need to reuse the same counter to ensure
    we don't generate conflicting names
@@ -65,10 +71,22 @@ type data = {
 }
 [@@deriving show { with_path = false }]
 
-type expr = Expr of (data[@opaque]) * tag * expr list
+let data' () = {
+  uuid = uuid ();
+  typ = TyUnknown;
+}
+
+let data_with_typ typ = {
+  uuid = uuid ();
+  typ = typ;
+}
+
+type expr = Expr of (data) * tag * expr list
 [@@deriving show { with_path = false }]
 
+let get_data (Expr (dat, _, _)) = dat
 let get_typ (Expr (dat, _, _)) = dat.typ
+let get_tag (Expr (_, tag, _)) = tag
 let get_children (Expr (_, _, children)) = children
 
 module Ctor = struct
