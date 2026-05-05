@@ -48,5 +48,8 @@ let let_fold_fixpoint top =
       top
   in
   go top
+
+
+(* choose fixpointing for right now *)
 let let_fold top =
   let_fold_fixpoint top
