@@ -1,4 +1,4 @@
-open Parsing.Ast
+open Frontend.Ast
 open Typecheck
 open Share.Maybe
 open Share.Types
@@ -238,4 +238,12 @@ let monomorphize (top : (resolved, unit, void) toplevel list) :
     in
     List.flatten @@ List.map go top
   in
-  (ctx, rest @ List.map (fun x -> Definition x) defs)
+  let res = rest @ List.map (fun x -> Definition x) defs in 
+  let open Share.Log.DebugParse in
+  debug @@ lazy (
+  "monomorphization:\n" ^
+    "original top: " ^ string_of_int (List.length top)
+    ^ "\nnew top: " ^ string_of_int (List.length res)
+    ^ "\ni.e. new instances: " ^ string_of_int (- List.length top + List.length res)
+  );
+  (ctx, res)

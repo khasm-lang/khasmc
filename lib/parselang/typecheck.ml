@@ -1,5 +1,5 @@
 open Share.Uuid
-open Parsing.Ast
+open Frontend.Ast
 open Share.Result
 open Share.Maybe
 open Share.Types
@@ -537,7 +537,8 @@ and check (ctx : ctx) (e : (resolved, 'b) expr) (t : resolved typ) :
   ok (force ty)
 
 let typecheck_definition (ctx : ctx)
-    (d : (resolved, 'a, yes) definition) : (unit, string) result =
+  (d : (resolved, 'a, yes) definition) : (unit, string) result =
+  let open Share.Log.DebugParse in 
   let polys = d.typeargs in
   let args = d.args in
   ignore (List.map (fun (a, b) -> add_raw_type a b) args);
@@ -599,4 +600,4 @@ make sure metas don't escape (iter hashtbl?) *)
       ()
   | Error e ->
       List.iter print_endline e;
-      failwith "typechecking failed :despair:"
+      failwith "typechecking failed"

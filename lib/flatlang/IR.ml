@@ -5,7 +5,7 @@ open Share.Maybe
 (* Names are unique _within definitions_ but are not
    guaranteed to be unique across definitions
    *)
-type name = Parsing.Ast.resolved
+type name = Frontend.Ast.resolved
 [@@deriving show { with_path = false }]
 
 module Name = struct
@@ -20,7 +20,7 @@ module NameSet = Set.Make(Name)
 (* we need to reuse the same counter to ensure
    we don't generate conflicting names
    *)
-let fresh_name () = Parsing.Ast.fresh_resolved ()
+let fresh_name () = Frontend.Ast.fresh_resolved ()
 
 (* No more polymorphism. *)
 type typ =
@@ -37,7 +37,7 @@ type typ =
   | TyRef of typ
 [@@deriving show { with_path = false }]
 
-type binop = Parsing.Ast.binop [@@deriving show { with_path = false }]
+type binop = Frontend.Ast.binop [@@deriving show { with_path = false }]
 
 type unaryop =
   | Negate

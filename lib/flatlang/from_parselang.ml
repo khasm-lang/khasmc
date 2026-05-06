@@ -1,7 +1,7 @@
 open Share.Types
 open Share.Maybe
 module I = IR
-module P = Parsing.Ast
+module P = Frontend.Ast
 
 let rec conv_typ (ty : P.resolved P.typ) : I.typ =
   match P.force ty with

@@ -14,6 +14,15 @@ type global_ctx = {
 }
 [@@deriving show { with_path = false }]
 
+let global_ctx_stats ctx =
+  let f = string_of_int in
+  String.concat "\n" [
+    "globals: " ^ (f @@ Hashtbl.length ctx.globals);
+    "types: " ^ (f @@ Hashtbl.length ctx.types); 
+    "constructors: " ^ (f @@ Hashtbl.length ctx.constructors); 
+    "record_fields: " ^ (f @@ Hashtbl.length ctx.record_fields); 
+  ]
+
 let new_global_ctx nm =
   {
     module_name = nm;
@@ -418,9 +427,11 @@ let rec resolve_top ctx (top : (string, 'b, unit) toplevel) :
   fixed
 
 let name_resolve (tops : (string, 'b, unit) toplevel list) :
-    (resolved, 'b, void) toplevel list =
+  (resolved, 'b, void) toplevel list =
+  let open Share.Log.DebugParse in
   let top_ctx = new_global_ctx "TOP" in
   let top_ctx = construct_global_ctx top_ctx tops in
+  debug (lazy (global_ctx_stats top_ctx));
   resolve_opens top_ctx tops;
   let fin = List.map (resolve_top top_ctx) tops in
   List.flatten fin

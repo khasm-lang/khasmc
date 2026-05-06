@@ -212,12 +212,12 @@ let rec case_names (c : 'a case) : 'a list =
 type 'a data = {
   uuid : 'a uuid;
   (* file line col *)
-  span : (string * int * int) option;
+  span : Share.Log.span;
 }
 [@@deriving show { with_path = false }]
 
-let data () = { uuid = Share.Uuid.uuid (); span = None }
-let data_of uuid = { uuid; span = None }
+let data () = { uuid = Share.Uuid.uuid (); span = Empty }
+let data_of uuid = { uuid; span = Empty }
 
 let update_data_uuid data nw =
   { data with uuid = uuid_set_snd nw data.uuid }

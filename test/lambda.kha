@@ -1,5 +1,4 @@
 fun main (x : Int) : Int =
     let k = 10 in
-    let y = (fun z -> (fun a -> a + k) (z + x + k)) x in
-    let good = (fun a -> a + a + a) y in
-    y
+    let f = fun x -> k + k + x in
+    f k

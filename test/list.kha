@@ -1,0 +1,18 @@
+type List 'a =
+    | Nil
+    | Cons of 'a (List 'a)
+end
+
+fun map {type 'a 'b} (f : 'a -> 'b) (xs : List 'a) : List 'b =
+    match xs with
+    | Nil => Nil
+    | Cons y ys => Cons (f y) (map f ys)
+    end
+
+fun f (x : Int) : String = "hi"
+    
+fun main (x : Int) : Int =
+    let xs = Cons 0 (Cons 1 Nil) in
+    let ys = map f xs in
+    0
+                

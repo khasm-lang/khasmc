@@ -1,40 +1,35 @@
 open Share.Types
 open Share.Uuid
-open Parsing.Ast
+open Frontend.Ast
 open Parselang.Typecheck
 open Parselang.Monomorphize
-open Parsing.Parser
+open Frontend.Parser
 
 let pp_unit fmt p = Format.fprintf fmt "()"
 let r x = R x
 let data = data' ()
 
-let debug_parse = true
-let debug_flat = true
-let debug_flat_small = true
-let time = true
-let debug_gc = false
-
 let with_timer name thunk =
-  if time then
+  let open Share.Log in
+  if !time then
     print_endline ("\nstarting: " ^ name);
   let start = Unix.gettimeofday () in
   let res = thunk () in
   let stop = Unix.gettimeofday () in
-  if time then begin
+  if !time then begin
     print_endline ("done: " ^ name);
     Printf.printf "took: %4fs\n" (stop -. start)
   end;
-  if time then
+  if !time then
     print_newline ();
   res
 
-let main () =
+let main_sequence file debug_parse debug_flat
+  debug_gc =
   with_timer "khasmc"
     begin
       fun () ->
         Printexc.record_backtrace true;
-        let file = Sys.argv.(1) in
         let s = In_channel.with_open_bin file In_channel.input_all in
         let lexbuf = Sedlexing.Utf8.from_string s in
         begin
@@ -57,7 +52,7 @@ let main () =
 
               let resolved =
                 with_timer "name resolution" (fun () ->
-                    Parsing.Name_resolve.name_resolve e)
+                    Frontend.Name_resolve.name_resolve e)
               in
 
               if debug_parse then begin
@@ -122,7 +117,7 @@ let main () =
                 print_endline "to flatlang";
                 print_endline (Flatlang.IR.show_program to_flat);
               end;
-              if debug_flat_small then
+              if debug_flat then
               if not (Flatlang.Verify.verify true to_flat) then
                 print_endline "DID NOT VERIFY"
               else
@@ -136,7 +131,7 @@ let main () =
               if debug_flat then begin
                 print_endline "types reconstructed print ommitted";
               end;
-              if debug_flat_small then
+              if debug_flat then
                 if not (Flatlang.Verify.verify true with_types_again) then
                   print_endline "DID NOT VERIFY"
                 else
@@ -153,7 +148,7 @@ let main () =
                 print_endline (Flatlang.IR.show_program clos_conved);
               end;
 
-              if debug_flat_small then
+              if debug_flat then
                 if not (Flatlang.Verify.verify true clos_conved) then
                   print_endline "DID NOT VERIFY"
                 else
@@ -167,7 +162,7 @@ let main () =
               if debug_flat then begin
                 print_endline "types reconstructed 2 print ommitted";
               end;
-              if debug_flat_small then
+              if debug_flat then
                 if not (Flatlang.Verify.verify true with_types_again2) then
                   print_endline "DID NOT VERIFY"
                 else
@@ -183,7 +178,7 @@ let main () =
                 print_endline (Flatlang.IR.show_program let_folded);
               end;
 
-              if debug_flat_small then
+              if debug_flat then
 
               if not (Flatlang.Verify.verify true let_folded) then
                 print_endline "DID NOT VERIFY"
@@ -218,3 +213,31 @@ let main () =
       ^ i (stat.top_heap_words / mb)
       ^ "mb)")
   end
+
+
+let main () =
+  let open Share.Log in
+
+  let anon_fun filename =
+    input_files := filename::!input_files
+  in
+
+  let speclist = [
+    ("--debug-parse", Arg.Set debug_parse, "Debug frontend");
+    ("--debug-parse-verbose", Arg.Set debug_parse_verbose,
+    "Debug frontend (verbose)");
+    ("--debug-flat", Arg.Set debug_flat, "Debug flatlang");
+    ("--debug-flat-verbose", Arg.Tuple [Arg.Set debug_flat;
+      Arg.Set debug_flat_verbose], "Debug flatlang (verbose)");
+    ("--debug-gc", Arg.Set debug_gc, "Debug GC info");
+    ("--time", Arg.Set time, "Time compiler")
+  ] in
+
+  let usage = "khasmc [--debug-parse[-verbose]] [--debug-flat[-verbose]] [--debug-gc] [--time] <filenames>" in
+
+  Arg.parse speclist anon_fun usage;
+
+  let file = List.hd !input_files in
+
+  main_sequence file !debug_parse_verbose !debug_flat_verbose
+  !debug_gc 

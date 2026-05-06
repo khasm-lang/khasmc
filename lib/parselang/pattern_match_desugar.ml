@@ -1,4 +1,4 @@
-open Parsing.Ast
+open Frontend.Ast
 open Typecheck
 open Share.Maybe
 open Share.Types
