@@ -18,6 +18,23 @@ let rec conv_typ (ty : P.resolved P.typ) : I.typ =
   | P.TyRef r -> I.TyRef (conv_typ r)
   | P.TyMeta _ -> failwith "unsolved meta"
 
+let rec conv_back_typ (ty : I.typ) : P.resolved P.typ =
+  let go = conv_back_typ in
+    match ty with
+    | I.TyUnknown -> failwith "tyUnknown conv_back_typ"
+    | I.TyBase `Bool -> TyBool
+    | I.TyBase `Irr -> TyPoly (P.fresh_resolved ())
+    | I.TyBase `Float -> TyFloat
+    | I.TyBase `Char -> TyChar
+    | I.TyBase `String -> TyString
+    | I.TyBase `Int -> TyInt
+    | I.TyBase `Bottom -> TyBottom
+    | I.TyTuple t -> TyTuple (List.map conv_back_typ t)
+    | I.TyArrow (a, b) -> TyArrow (go a, go b)
+    | I.TyCustom (nm, t) -> TyCustom (nm, List.map go t)
+    | I.TyRef r -> TyRef (go r)
+
+
 let conv_tag (record_field_indexes : (P.resolved, int) Hashtbl.t)
     (e : ('a, 'b) P.expr) : I.tag =
   match e with
@@ -25,12 +42,7 @@ let conv_tag (record_field_indexes : (P.resolved, int) Hashtbl.t)
   | P.Var (_, nm) -> Named (`Local, nm)
   | P.MGlobal (_, _, nm) -> Named (`Global, nm)
   | P.Constructor (data, nm) ->
-      let ctor_type =
-        Hashtbl.find Parselang.Monomorphize.constructor_types
-          (Share.Uuid.uuid_forget data.uuid)
-        |> List.map conv_typ
-      in
-      Named (`Constructor ctor_type, nm)
+      Named (`Constructor, nm)
   | P.Int (_, i) -> Prim (`Int, i)
   | P.String (_, s) -> Prim (`String, s)
   | P.Char (_, c) -> Prim (`Char, c)
@@ -108,6 +120,8 @@ let rec conv_top
     (top : (P.resolved, P.resolved P.typ, void) P.toplevel list) :
     I.program =
   let record_field_indexes = Hashtbl.create 100 in
+  let ctor_mapping = Hashtbl.create 100 in
+  (* build both at once *)
   List.iter
     (fun (top : ('a, P.resolved P.typ, void) P.toplevel) ->
       match top with
@@ -117,7 +131,7 @@ let rec conv_top
               List.iteri
                 (fun i (nm, _) -> Hashtbl.add record_field_indexes nm i)
                 r
-          | _ -> ()
+          | P.Sum ctors -> Hashtbl.add ctor_mapping t.name t
         end
       | _ -> ())
     top;
@@ -130,9 +144,9 @@ let rec conv_top
             match t.content with
             | P.Record r -> acc
             | P.Sum s ->
-                let f : int -> 'a * 'b -> I.Ctor.constructor =
+                let f : int -> 'a * 'b -> I.constructor =
                  fun i (nm, _) ->
-                  { I.Ctor.index = i; I.Ctor.name = nm }
+                  { I.index = i; I.name = nm }
                 in
                 let all = List.mapi f s in
                 { acc with I.constructors = all @ acc.constructors }
@@ -152,7 +166,22 @@ let rec conv_top
                 }
                 :: acc.defs;
             })
-      { I.defs = []; constructors = [] }
+      { I.defs = []; constructors = [];
+        gen_type_sizes = begin fun name args ->
+          (* TODO: this is really a hack *)
+          let t = Hashtbl.find ctor_mapping name in
+          let[@warning "-8"] P.Sum s = t.content in
+          let res = List.map (fun (_, inner) ->
+            List.map (fun typ ->
+              conv_typ (
+                P.subst_polys (
+                  List.combine t.args (List.map conv_back_typ args)
+                ) typ
+              )
+            ) inner) s in
+          res
+        end
+      }
       top
   in
   res

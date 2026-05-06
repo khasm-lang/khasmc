@@ -9,29 +9,8 @@ let pp_unit fmt p = Format.fprintf fmt "()"
 let r x = R x
 let data = data' ()
 
-let contr =
-  Module
-    ( "A",
-      [
-        Module
-          ( "B",
-            [
-              Definition
-                {
-                  data;
-                  name = "b";
-                  typeargs = [];
-                  args = [];
-                  return = TyBottom;
-                  body = Just (Var (data, "bbody"));
-                };
-            ] );
-        Module ("C", [ Open "B" ]);
-      ] )
-  :: []
-
-let debug_parse = false
-let debug_flat = false
+let debug_parse = true
+let debug_flat = true
 let debug_flat_small = true
 let time = true
 let debug_gc = false
@@ -75,13 +54,6 @@ let main () =
                 print_endline "end\n";
                 print_newline ()
               end;
-
-              let e =
-                if false then
-                  contr
-                else
-                  e
-              in
 
               let resolved =
                 with_timer "name resolution" (fun () ->
@@ -156,26 +128,9 @@ let main () =
               else
                 ();
 
-              let let_folded =
-                with_timer "let fold" (fun () ->
-                    Flatlang.Let_fold.let_fold to_flat)
-              in
-              
-              if debug_flat then begin
-                print_endline "let folded:";
-                print_endline (Flatlang.IR.show_program let_folded);
-              end;
-
-              if debug_flat_small then
-
-              if not (Flatlang.Verify.verify true to_flat) then
-                print_endline "DID NOT VERIFY"
-              else
-                ();
-
               let with_types_again =
                 with_timer "reconstruct types" (fun () ->
-                  Flatlang.Reconstruct_types.reconstruct let_folded
+                  Flatlang.Reconstruct_types.reconstruct to_flat
                 )
               in
               if debug_flat then begin
@@ -217,6 +172,23 @@ let main () =
                   print_endline "DID NOT VERIFY"
                 else
                   ();
+
+              let let_folded =
+                with_timer "let fold" (fun () ->
+                    Flatlang.Let_fold.let_fold with_types_again2)
+              in
+              
+              if debug_flat then begin
+                print_endline "let folded:";
+                print_endline (Flatlang.IR.show_program let_folded);
+              end;
+
+              if debug_flat_small then
+
+              if not (Flatlang.Verify.verify true let_folded) then
+                print_endline "DID NOT VERIFY"
+              else
+                ();
               ()
         end
     end;

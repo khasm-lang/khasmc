@@ -49,10 +49,12 @@ let rec clos_conv_e free term =
   | Expr (dat, Unpack (typs, nms), _) ->
     (expr (Unpack (typs, nms)), [], without nms free')
   | Expr (dat, Lambda (nm, typ), _) ->
+    print_endline "doing lambda";
     let body = List.hd children in
     let def_name = fresh_name () in
     let free'' = NameMap.remove nm free' in
     let to_bind = NameMap.bindings free'' in
+    List.iter (fun (a,b) -> print_endline (show_name a)) to_bind;
     let def = {
       name = def_name;
       (* needs to be last *)

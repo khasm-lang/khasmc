@@ -50,7 +50,7 @@ type unaryop =
 
 type tag =
   | Fail of string
-  | Named of [ `Local | `Global | `Constructor of typ list ] * name
+  | Named of [ `Local | `Global | `Constructor ] * name
   | Prim of [ `Int | `String | `Char | `Float ] * string
   | Bool of bool
   | Tuple
@@ -81,7 +81,7 @@ let data_with_typ typ = {
   typ = typ;
 }
 
-type expr = Expr of (data) * tag * expr list
+type expr = Expr of (data[@opaque]) * tag * expr list
 [@@deriving show { with_path = false }]
 
 let get_data (Expr (dat, _, _)) = dat
@@ -89,15 +89,12 @@ let get_typ (Expr (dat, _, _)) = dat.typ
 let get_tag (Expr (_, tag, _)) = tag
 let get_children (Expr (_, _, children)) = children
 
-module Ctor = struct
-  type constructor = {
-    name : name;
-    index : int; (* index in the type (for tag) *)
-  }
+type constructor = {
+  name : name;
+  index : int; (* index in the type (for tag) *)
+}
   [@@deriving show { with_path = false }]
-end
-
-open Ctor
+  
 
 type definition = {
   name : name;
@@ -110,6 +107,16 @@ type definition = {
 type program = {
   defs : definition list;
   constructors : constructor list;
+  (* given a list of types as arguments to some type,
+     spit out all the inputs to the constructors
+     this is used to determine the size needed to be
+     allocated by a constructor upon its construction,
+     as constructors like Nil need to allocate
+     "more than obvious"
+
+     TODO: this is totally a hack
+     *)
+  gen_type_sizes : (name -> typ list -> typ list list);
 }
 [@@deriving show { with_path = false }]
 

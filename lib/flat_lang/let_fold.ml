@@ -8,8 +8,8 @@ let rec let_fold_e did_something (expr : expr) =
       ( d1,
         Let replace,
         [ (Expr (d2, Named (tag, nm), []) as e); rest ] ) ->
-      did_something := true;
-      subst_for_local_name replace e rest |> go
+    did_something := true;
+    subst_for_local_name replace e rest |> go
   | Expr (dat, tag, children) -> Expr (dat, tag, List.map go children)
 
 let let_fold_n top =

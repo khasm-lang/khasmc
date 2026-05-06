@@ -154,7 +154,8 @@ little bit of a hack but we know constructors will
     | Lambda (_, nm, _, body) ->
         let ctx' = { ctx with locals = ResSet.add nm ctx.locals } in
         let$$ body' = go ctx' body in
-        Lambda (data', nm, None, body')
+        let[@warning "-8"] TyArrow(l,r) = Hashtbl.find type_information (get_uuid expr) in
+        Lambda (data', nm, Some r, body')
     | Tuple (_, tups) ->
         let tups', defs = List.split (List.map (go ctx) tups) in
         (Tuple (data', tups'), List.flatten defs)

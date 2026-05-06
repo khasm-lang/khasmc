@@ -419,9 +419,11 @@ let rec typdef buf =
           | END -> []
           | PIPE -> (
               let (TYPEID ctor) = next buf in
-              match next buf with
+              match peek buf with
               | COLON -> failwith "GADTs"
+              | PIPE -> (ctor, []) :: go ()
               | OF ->
+                next' buf;
                   let rec types () =
                     match peek buf with
                     | END -> []
