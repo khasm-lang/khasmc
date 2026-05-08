@@ -1,7 +1,6 @@
 open Share.Uuid
 open Share.Maybe
 
-
 (* Names are unique _within definitions_ but are not
    guaranteed to be unique across definitions
    *)
@@ -10,12 +9,12 @@ type name = Frontend.Ast.resolved
 
 module Name = struct
   type t = name
+
   let compare = compare
 end
 
-module NameMap = Map.Make(Name)
-
-module NameSet = Set.Make(Name)
+module NameMap = Map.Make (Name)
+module NameSet = Set.Make (Name)
 
 (* we need to reuse the same counter to ensure
    we don't generate conflicting names
@@ -37,7 +36,8 @@ type typ =
   | TyRef of typ
 [@@deriving show { with_path = false }]
 
-type binop = Frontend.Ast.binop [@@deriving show { with_path = false }]
+type binop = Frontend.Ast.binop
+[@@deriving show { with_path = false }]
 
 type unaryop =
   | Negate
@@ -48,11 +48,15 @@ type unaryop =
 
 (* Type param is "has lambdas "*)
 
+type const = [`Int | `String | `Char | `Float | `Bool] * string
+[@@deriving show {with_path = false}]
+
 type tag =
   | Fail of string
-  | Named of [ `Local | `Global | `Constructor ] * name
-  | Prim of [ `Int | `String | `Char | `Float ] * string
-  | Bool of bool
+  (* doesn't neatly fit in Named *)
+  | Extern of string
+  | Named of [ `Local | `Global | `Constructor of typ list ] * name
+  | Prim of const
   | Tuple
   | BinOp of binop
   | UnaryOp of unaryop
@@ -61,6 +65,7 @@ type tag =
   | Unpack of typ list * name list
   | Let of name (* binding name *)
   | IfLet of name (* ctor name *)
+  | IfConst of const
   | Seq
   | Modify of name
 [@@deriving show { with_path = false }]
@@ -71,15 +76,8 @@ type data = {
 }
 [@@deriving show { with_path = false }]
 
-let data' () = {
-  uuid = uuid ();
-  typ = TyUnknown;
-}
-
-let data_with_typ typ = {
-  uuid = uuid ();
-  typ = typ;
-}
+let data' () = { uuid = uuid (); typ = TyUnknown }
+let data_with_typ typ = { uuid = uuid (); typ }
 
 type expr = Expr of (data[@opaque]) * tag * expr list
 [@@deriving show { with_path = false }]
@@ -93,8 +91,7 @@ type constructor = {
   name : name;
   index : int; (* index in the type (for tag) *)
 }
-  [@@deriving show { with_path = false }]
-  
+[@@deriving show { with_path = false }]
 
 type definition = {
   name : name;
@@ -106,8 +103,10 @@ type definition = {
 
 type program = {
   defs : definition list;
-  constructors : constructor list;
-  (* given a list of types as arguments to some type,
+  externs : (string, typ) Hashtbl.t [@opaque];
+  (* map constructor names to their tag numbers *)
+  constructors : (name, int) Hashtbl.t [@opaque];
+     (* given a list of types as arguments to some type,
      spit out all the inputs to the constructors
      this is used to determine the size needed to be
      allocated by a constructor upon its construction,
@@ -116,7 +115,7 @@ type program = {
 
      TODO: this is totally a hack
      *)
-  gen_type_sizes : (name -> typ list -> typ list list);
+  gen_type_sizes : name -> typ list -> typ list list;
 }
 [@@deriving show { with_path = false }]
 

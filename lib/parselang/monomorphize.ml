@@ -154,7 +154,9 @@ little bit of a hack but we know constructors will
     | Lambda (_, nm, _, body) ->
         let ctx' = { ctx with locals = ResSet.add nm ctx.locals } in
         let$$ body' = go ctx' body in
-        let[@warning "-8"] TyArrow(l,r) = Hashtbl.find type_information (get_uuid expr) in
+        let[@warning "-8"] (TyArrow (l, r)) =
+          Hashtbl.find type_information (get_uuid expr)
+        in
         Lambda (data', nm, Some r, body')
     | Tuple (_, tups) ->
         let tups', defs = List.split (List.map (go ctx) tups) in
@@ -234,16 +236,20 @@ let monomorphize (top : (resolved, unit, void) toplevel list) :
   let rest =
     let go : ('a, 'b, void) toplevel -> 'c = function
       | Typdef t -> [ Typdef t ]
+      | Extern _ -> []
       | Definition _ -> []
     in
     List.flatten @@ List.map go top
   in
-  let res = rest @ List.map (fun x -> Definition x) defs in 
+  let res = rest @ List.map (fun x -> Definition x) defs in
   let open Share.Log.DebugParse in
-  debug @@ lazy (
-  "monomorphization:\n" ^
-    "original top: " ^ string_of_int (List.length top)
-    ^ "\nnew top: " ^ string_of_int (List.length res)
-    ^ "\ni.e. new instances: " ^ string_of_int (- List.length top + List.length res)
-  );
+  debug
+  @@ lazy
+       ("monomorphization:\n"
+       ^ "original top: "
+       ^ string_of_int (List.length top)
+       ^ "\nnew top: "
+       ^ string_of_int (List.length res)
+       ^ "\ni.e. new instances: "
+       ^ string_of_int (-List.length top + List.length res));
   (ctx, res)

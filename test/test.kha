@@ -15,6 +15,7 @@ type Record 'a = {
         name : 'a;
 }
 
+extern print : 'a -> ()
 
 fun interesting {type 'a} (x : Int) : Either Int 'a = Left x
 

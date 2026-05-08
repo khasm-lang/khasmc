@@ -29,9 +29,9 @@ fun swap{n} {{type 'a 'b 'c}} (e : Either{n} 'a (Either{n} 'b 'c)) : Either{n} (
     '''
 
 
-for i in range(0,100000):
+for i in range(0,100000//4):
     print(string(i))
 print("fun main (m : Int) : Int =")
-for j in range(0,100000):
+for j in range(0,100000//4):
     print(f"let ret{j} = main{j} {j} in")
 print("0")

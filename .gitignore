@@ -7,3 +7,4 @@ gmon*
 *.svg
 massif*
 test/big.kha
+test/medium.kha

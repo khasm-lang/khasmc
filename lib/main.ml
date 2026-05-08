@@ -24,8 +24,8 @@ let with_timer name thunk =
     print_newline ();
   res
 
-let main_sequence file debug_parse debug_flat
-  debug_gc =
+let main_sequence file debug_parse debug_flat debug_flat_small
+    debug_gc emit =
   with_timer "khasmc"
     begin
       fun () ->
@@ -115,40 +115,56 @@ let main_sequence file debug_parse debug_flat
 
               if debug_flat then begin
                 print_endline "to flatlang";
-                print_endline (Flatlang.IR.show_program to_flat);
+                print_endline (Flatlang.IR.show_program to_flat)
               end;
-              if debug_flat then
-              if not (Flatlang.Verify.verify true to_flat) then
-                print_endline "DID NOT VERIFY"
-              else
-                ();
-
-              let with_types_again =
-                with_timer "reconstruct types" (fun () ->
-                  Flatlang.Reconstruct_types.reconstruct to_flat
-                )
-              in
-              if debug_flat then begin
-                print_endline "types reconstructed print ommitted";
-              end;
-              if debug_flat then
-                if not (Flatlang.Verify.verify true with_types_again) then
+              if debug_flat_small then
+                if not (Flatlang.Verify.verify true to_flat) then
                   print_endline "DID NOT VERIFY"
                 else
                   ();
-                  
-              let clos_conved =
-                with_timer "closure convert" (fun () ->
-                  Flatlang.Closure_convert.clos_conv with_types_again
-                )
+
+              let let_folded =
+                with_timer "let fold" (fun () ->
+                    Flatlang.Let_fold.let_fold to_flat)
               in
-              
+
               if debug_flat then begin
-                print_endline "clos converted:";
-                print_endline (Flatlang.IR.show_program clos_conved);
+                print_endline "let folded:";
+                print_endline (Flatlang.IR.show_program let_folded)
               end;
 
-              if debug_flat then
+              if debug_flat_small then
+                if not (Flatlang.Verify.verify true let_folded) then
+                  print_endline "DID NOT VERIFY"
+                else
+                  ();
+
+              let with_types_again =
+                with_timer "reconstruct types" (fun () ->
+                    Flatlang.Reconstruct_types.reconstruct let_folded)
+              in
+              if debug_flat then begin
+                print_endline "types reconstructed print ommitted"
+              end;
+              if debug_flat_small then
+                if not (Flatlang.Verify.verify true with_types_again)
+                then
+                  print_endline "DID NOT VERIFY"
+                else
+                  ();
+
+              let clos_conved =
+                with_timer "closure convert" (fun () ->
+                    Flatlang.Closure_convert.clos_conv
+                      with_types_again)
+              in
+
+              if debug_flat then begin
+                print_endline "clos converted:";
+                print_endline (Flatlang.IR.show_program clos_conved)
+              end;
+
+              if debug_flat_small then
                 if not (Flatlang.Verify.verify true clos_conved) then
                   print_endline "DID NOT VERIFY"
                 else
@@ -156,34 +172,22 @@ let main_sequence file debug_parse debug_flat
 
               let with_types_again2 =
                 with_timer "reconstruct types 2" (fun () ->
-                  Flatlang.Reconstruct_types.reconstruct clos_conved
-                )
+                    Flatlang.Reconstruct_types.reconstruct clos_conved)
               in
               if debug_flat then begin
-                print_endline "types reconstructed 2 print ommitted";
+                print_endline "types reconstructed 2 print ommitted"
               end;
-              if debug_flat then
-                if not (Flatlang.Verify.verify true with_types_again2) then
+              if debug_flat_small then
+                if not (Flatlang.Verify.verify true with_types_again2)
+                then
                   print_endline "DID NOT VERIFY"
                 else
                   ();
 
-              let let_folded =
-                with_timer "let fold" (fun () ->
-                    Flatlang.Let_fold.let_fold with_types_again2)
-              in
-              
-              if debug_flat then begin
-                print_endline "let folded:";
-                print_endline (Flatlang.IR.show_program let_folded);
+              if emit then begin
+                Flatlang.Javascript.emit with_types_again2
               end;
 
-              if debug_flat then
-
-              if not (Flatlang.Verify.verify true let_folded) then
-                print_endline "DID NOT VERIFY"
-              else
-                ();
               ()
         end
     end;
@@ -214,30 +218,37 @@ let main_sequence file debug_parse debug_flat
       ^ "mb)")
   end
 
-
 let main () =
   let open Share.Log in
+  let anon_fun filename = input_files := filename :: !input_files in
 
-  let anon_fun filename =
-    input_files := filename::!input_files
+  let speclist =
+    [
+      ("--debug-parse", Arg.Set debug_parse, "Debug frontend");
+      ( "--debug-parse-verbose",
+        Arg.Set debug_parse_verbose,
+        "Debug frontend (verbose)" );
+      ("--debug-flat", Arg.Set debug_flat, "Debug flatlang");
+      ( "--debug-flat-verbose",
+        Arg.Tuple [ Arg.Set debug_flat; Arg.Set debug_flat_verbose ],
+        "Debug flatlang (verbose)" );
+      ("--debug-gc", Arg.Set debug_gc, "Debug GC info");
+      ("--time", Arg.Set time, "Time compiler");
+      ("--jobs", Arg.Set_int Share.Par.num_domains, "Set jobs");
+      ("-j", Arg.Set_int Share.Par.num_domains, "Set jobs");
+      ("--par", Arg.Set Share.Par.use_par, "Use parallelism (expr.)");
+      ("--emit", Arg.Set emit, "Emit JS (expr.)")
+    ]
   in
 
-  let speclist = [
-    ("--debug-parse", Arg.Set debug_parse, "Debug frontend");
-    ("--debug-parse-verbose", Arg.Set debug_parse_verbose,
-    "Debug frontend (verbose)");
-    ("--debug-flat", Arg.Set debug_flat, "Debug flatlang");
-    ("--debug-flat-verbose", Arg.Tuple [Arg.Set debug_flat;
-      Arg.Set debug_flat_verbose], "Debug flatlang (verbose)");
-    ("--debug-gc", Arg.Set debug_gc, "Debug GC info");
-    ("--time", Arg.Set time, "Time compiler")
-  ] in
-
-  let usage = "khasmc [--debug-parse[-verbose]] [--debug-flat[-verbose]] [--debug-gc] [--time] <filenames>" in
+  let usage =
+    "khasmc [--debug-parse[-verbose]] [--debug-flat[-verbose]] \
+     [--debug-gc] [--time] [-j/--jobs n] [--par] [--emit] <filenames>"
+  in
 
   Arg.parse speclist anon_fun usage;
 
   let file = List.hd !input_files in
 
   main_sequence file !debug_parse_verbose !debug_flat_verbose
-  !debug_gc 
+    !debug_flat !debug_gc !emit

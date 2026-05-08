@@ -246,6 +246,7 @@ type 'a unaryop =
 
 type ('a, 'b) expr =
   | Fail of 'b data * string
+  | Extern of 'b data * string
   | Var of ('b data[@opaque]) * 'a
   (* For monomorphization
      Arguably this should warrant another AST but I don't think
@@ -281,6 +282,7 @@ type ('a, 'b) expr =
 let get_data (e : ('a, 'b) expr) : 'b data =
   match e with
   | Fail (i, _)
+  | Extern (i, _)
   | MGlobal (i, _, _)
   | Var (i, _)
   | Constructor (i, _)
@@ -309,6 +311,7 @@ let data_transform (type a b) (f : a data -> b data) expr =
   let rec go e =
     match e with
     | Fail (d, s) -> Fail (f d, s)
+    | Extern (d, s) -> Extern (f d, s)
     | MGlobal (d, p, s) -> MGlobal (f d, p, s)
     | Var (i, s) -> Var (f i, s)
     | Constructor (i, s) -> Constructor (f i, s)
@@ -410,6 +413,8 @@ type ('a, 'b, 'c) toplevel =
       -> ('a, 'b, unit) toplevel
   | Typdef : 'a typdef -> ('a, 'b, 'c) toplevel
   | Definition : ('a, 'b, yes) definition -> ('a, 'b, 'c) toplevel
+  (* store the exact name to be output *)
+  | Extern : string * 'a typ -> ('a, 'b, 'c) toplevel
   | Open : 'a -> ('a, 'b, unit) toplevel
 
 module PrintToplevel = struct
@@ -431,7 +436,14 @@ module PrintToplevel = struct
     (let __3 = pp_definition
      and __2 = pp_yes
      and __1 = pp_typdef
-     and __0 = pp_toplevel in
+     and __0 = pp_toplevel
+     and pptyp : type a.
+         (Format.formatter -> a -> unit) ->
+         Format.formatter ->
+         a typ ->
+         unit =
+       pp_typ
+     in
      let open! Ppx_deriving_runtime in
      fun poly_a ->
        fun poly_b ->
@@ -479,7 +491,14 @@ module PrintToplevel = struct
            | Open a0 ->
                Ppx_deriving_runtime.Format.fprintf fmt "(@[<2>Open@ ";
                (poly_a fmt) a0;
-               Ppx_deriving_runtime.Format.fprintf fmt "@])")
+               Ppx_deriving_runtime.Format.fprintf fmt "@])"
+           | Extern (nm, typ) -> begin
+               Ppx_deriving_runtime.Format.fprintf fmt
+                 "(@[<2>Extern@ ";
+               Ppx_deriving_runtime.Format.fprintf fmt "%s" nm;
+               pptyp poly_a fmt typ;
+               Ppx_deriving_runtime.Format.fprintf fmt "@])"
+             end)
     [@ocaml.warning "-39"]
 
   and show_toplevel : type a b c.

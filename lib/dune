@@ -3,7 +3,7 @@
 (library
  (public_name khasmc)
  (name khasmc)
- (libraries angstrom sedlex fmt batteries ppx_deriving)
+ (libraries angstrom sedlex fmt batteries ppx_deriving domainslib)
  (preprocess
   (pps ppx_deriving.show sedlex.ppx))
  (flags

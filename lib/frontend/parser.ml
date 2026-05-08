@@ -251,16 +251,17 @@ module Expr = struct
             next' buf;
             some @@ Var (data' (), i)
         | FUN ->
-          (* TODO: horrible hack *)
-          begin match peek3 buf with
-          | ARROW ->
-            next' buf;
-            let (ID id) = next buf in
-            let ARROW = next buf in
-            let* body = expr' 0 buf in
-            some @@ Lambda (data' (), id, None, body)
-          | _ -> None
-          end 
+            (* TODO: horrible hack *)
+            begin
+              match peek3 buf with
+              | ARROW ->
+                  next' buf;
+                  let (ID id) = next buf in
+                  let ARROW = next buf in
+                  let* body = expr' 0 buf in
+                  some @@ Lambda (data' (), id, None, body)
+              | _ -> None
+            end
         | TYPEID i ->
             next' buf;
             begin
@@ -423,7 +424,7 @@ let rec typdef buf =
               | COLON -> failwith "GADTs"
               | PIPE -> (ctor, []) :: go ()
               | OF ->
-                next' buf;
+                  next' buf;
                   let rec types () =
                     match peek buf with
                     | END -> []
@@ -464,6 +465,12 @@ let rec toplevel' buf =
       res :: toplevel' buf
     end
   | DONE -> []
+  | EXTERN -> begin
+      let (ID str) = next buf in
+      let COLON = next buf in
+      let typ = type' buf in
+      Extern (str, typ) :: toplevel' buf
+    end
   | TYPE ->
       let curr = typdef buf in
       Typdef curr :: toplevel' buf

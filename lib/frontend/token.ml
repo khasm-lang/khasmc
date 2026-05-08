@@ -47,6 +47,7 @@ type t_TOKEN =
   | THEN
   | ELSE
   | OF
+  | EXTERN
   | BOOL of bool
   | STRING of string
   | ID of string
@@ -125,6 +126,7 @@ let rec lexer_ buf : (t_TOKEN, exn) Result.t =
       | "of" -> OF
       | "true" -> BOOL true
       | "false" -> BOOL false
+      | "extern" -> EXTERN
       | string ->
           let str = Sedlexing.Utf8.lexeme buf in
           let str' = String.sub str 1 (String.length str - 2) in

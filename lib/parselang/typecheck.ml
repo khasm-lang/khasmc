@@ -26,6 +26,7 @@ let typ_pp t = print_endline (show_typ pp_resolved t)
   f : int -> ?
  *)
 
+module StrMap = Map.Make (String)
 module Locals = Map.Make (CompareResolved)
 
 type ctx = {
@@ -33,8 +34,8 @@ type ctx = {
   ctors : (resolved, resolved typdef) Hashtbl.t;
   types : (resolved, resolved typdef) Hashtbl.t;
   funs : (resolved, (resolved, unit, no) definition) Hashtbl.t;
-  (* measurable perf bonus *)
   locals : resolved typ Locals.t;
+  externs : resolved typ StrMap.t;
   (* if someone ever has enough polyvars in scope to make this an issue,
      i will be very scared
   *)
@@ -50,6 +51,7 @@ let empty_ctx () =
     types = Hashtbl.create 100;
     funs = Hashtbl.create 100;
     locals = Locals.empty;
+    externs = StrMap.empty;
     local_polys = [];
   }
 
@@ -91,19 +93,34 @@ let search (ctx : ctx) (id : resolved) : (resolved typ, string) result
 let type_information : (unit uuid, resolved typ) Hashtbl.t =
   new_by_uuid 100
 
-let add_type uuid typ = Hashtbl.replace type_information uuid typ
+let type_info_mutex = Mutex.create ()
+
+let with_mutex thunk =
+  if true then
+    thunk ()
+  else begin
+    Mutex.lock type_info_mutex;
+    let res = thunk () in
+    Mutex.unlock type_info_mutex;
+    res
+  end
+
+let add_type uuid typ =
+  with_mutex (fun () -> Hashtbl.replace type_information uuid typ)
 
 let add_type_with_existing old_uuid =
-  let fresh = uuid () in
-  let typ = Hashtbl.find type_information old_uuid in
-  add_type fresh typ;
-  fresh
+  with_mutex (fun () ->
+      let fresh = uuid () in
+      let typ = Hashtbl.find type_information old_uuid in
+      add_type fresh typ;
+      fresh)
 
 let ident_type_info : (resolved, resolved typ) Hashtbl.t =
   Hashtbl.create 100
 
 let add_raw_type id typ =
-  Hashtbl.replace ident_type_info id (force typ)
+  with_mutex (fun () ->
+      Hashtbl.replace ident_type_info id (force typ))
 
 let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
     (t : resolved typ) :
@@ -178,6 +195,7 @@ let rec infer (ctx : ctx) (e : _ expr) : (resolved typ, string) result
     match e with
     | Fail _ -> failwith "fail node in typechecking"
     | MGlobal _ -> failwith "monomorphization info in typechecking"
+    | Extern (i, nm) -> StrMap.find nm ctx.externs |> ok
     (* try find that thing *)
     | Var (i, v) ->
         let* found = search ctx v in
@@ -537,8 +555,8 @@ and check (ctx : ctx) (e : (resolved, 'b) expr) (t : resolved typ) :
   ok (force ty)
 
 let typecheck_definition (ctx : ctx)
-  (d : (resolved, 'a, yes) definition) : (unit, string) result =
-  let open Share.Log.DebugParse in 
+    (d : (resolved, 'a, yes) definition) : (unit, string) result =
+  let open Share.Log.DebugParse in
   let polys = d.typeargs in
   let args = d.args in
   ignore (List.map (fun (a, b) -> add_raw_type a b) args);
@@ -560,6 +578,7 @@ let typecheck_toplevel (ctx : ctx)
     (t : (resolved, unit, void) toplevel) : (unit, string) result =
   match t with
   | Typdef _ -> ok ()
+  | Extern _ -> ok ()
   | Definition d ->
       add_raw_type d.name (definition_type d);
       typecheck_definition ctx d
@@ -580,6 +599,8 @@ let gather (t : (resolved, 'a, void) toplevel list) : ctx =
               Hashtbl.add ctx.types t.name t;
               ctx
         end
+      | Extern (nm, typ) ->
+          { ctx with externs = StrMap.add nm typ ctx.externs }
       | Definition d ->
           Hashtbl.add ctx.funs d.name (forget_body d);
           ctx)
@@ -587,7 +608,7 @@ let gather (t : (resolved, 'a, void) toplevel list) : ctx =
 
 let typecheck (t : (resolved, 'a, void) toplevel list) : unit =
   let ctx = gather t in
-  List.map (typecheck_toplevel ctx) t |> collect |> function
+  Share.Par.par_map (typecheck_toplevel ctx) t |> collect |> function
   | Ok _ ->
       (*
        TODO: is this needed?

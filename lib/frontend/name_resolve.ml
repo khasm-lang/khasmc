@@ -2,6 +2,7 @@ open Ast
 open Share.Types
 open Share.Uuid
 open Share.Maybe
+module StrSet = Set.Make (String)
 
 type global_ctx = {
   module_name : string;
@@ -11,17 +12,19 @@ type global_ctx = {
   types : (string, resolved) Hashtbl_p.t;
   constructors : (string, resolved) Hashtbl_p.t;
   record_fields : (string, resolved) Hashtbl_p.t;
+  externs : StrSet.t; [@opaque]
 }
 [@@deriving show { with_path = false }]
 
 let global_ctx_stats ctx =
   let f = string_of_int in
-  String.concat "\n" [
-    "globals: " ^ (f @@ Hashtbl.length ctx.globals);
-    "types: " ^ (f @@ Hashtbl.length ctx.types); 
-    "constructors: " ^ (f @@ Hashtbl.length ctx.constructors); 
-    "record_fields: " ^ (f @@ Hashtbl.length ctx.record_fields); 
-  ]
+  String.concat "\n"
+    [
+      "globals: " ^ f @@ Hashtbl.length ctx.globals;
+      "types: " ^ f @@ Hashtbl.length ctx.types;
+      "constructors: " ^ f @@ Hashtbl.length ctx.constructors;
+      "record_fields: " ^ f @@ Hashtbl.length ctx.record_fields;
+    ]
 
 let new_global_ctx nm =
   {
@@ -32,6 +35,7 @@ let new_global_ctx nm =
     types = Hashtbl.create 10;
     constructors = Hashtbl.create 10;
     record_fields = Hashtbl.create 10;
+    externs = StrSet.empty;
   }
 
 module StrMap = Map.Make (String)
@@ -182,6 +186,8 @@ let rec construct_global_ctx ctx
         | Open name ->
             (* resolve opens later *)
             acc
+        | Extern (nm, typ) ->
+            { acc with externs = StrSet.add nm acc.externs }
         | Module (nm, inner) ->
             let inner_ctx = new_global_ctx nm in
             let inner_ctx' = construct_global_ctx inner_ctx inner in
@@ -306,6 +312,7 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
   let go = resolve_expr ctx l_ctx in
   match expr with
   | Fail (d, s) -> Fail (d, s)
+  | Extern (d, s) -> Extern (d, s)
   | Var (d, nm) ->
       (* try locals first *)
       begin
@@ -314,7 +321,10 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
         | None -> (
             match get_global ctx nm with
             | Some res -> Var (d, res)
-            | None -> failwith ("unknown variable: " ^ nm))
+            | None -> (
+                match StrSet.mem nm ctx.externs with
+                | true -> Extern (d, nm)
+                | false -> failwith ("unknown variable: " ^ nm)))
       end
   | MGlobal (_, _, _) -> failwith "monomorph info in name resolution"
   | Constructor (d, nm) ->
@@ -421,13 +431,23 @@ let rec resolve_top ctx (top : (string, 'b, unit) toplevel) :
               List.map (resolve_top child) inners |> List.flatten
         end
     | Typdef t -> Typdef (resolve_typdef ctx t) :: []
+    | Extern (nm, typ) ->
+        let polys = get_polys typ in
+        let nms = fresh_resolved_n (List.length polys) in
+        let l_ctx =
+          {
+            (new_local_ctx ()) with
+            typevars = StrMap.of_list (List.combine polys nms);
+          }
+        in
+        Extern (nm, resolve_type ctx l_ctx typ) :: []
     | Definition d -> Definition (resolve_definition ctx d) :: []
     | Open _ -> (* we can ignore them *) []
   in
   fixed
 
 let name_resolve (tops : (string, 'b, unit) toplevel list) :
-  (resolved, 'b, void) toplevel list =
+    (resolved, 'b, void) toplevel list =
   let open Share.Log.DebugParse in
   let top_ctx = new_global_ctx "TOP" in
   let top_ctx = construct_global_ctx top_ctx tops in

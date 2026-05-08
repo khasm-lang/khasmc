@@ -1,0 +1,10 @@
+fun main (n : Int) : Int =
+    match n = 0 with
+    | true => 1
+    | false =>
+        match n = 1 with
+        | true => 1
+        | false =>
+            ((main (n - 1)) + (main (n - 2)))
+    end
+    end

@@ -20,34 +20,39 @@ let rec conv_typ (ty : P.resolved P.typ) : I.typ =
 
 let rec conv_back_typ (ty : I.typ) : P.resolved P.typ =
   let go = conv_back_typ in
-    match ty with
-    | I.TyUnknown -> failwith "tyUnknown conv_back_typ"
-    | I.TyBase `Bool -> TyBool
-    | I.TyBase `Irr -> TyPoly (P.fresh_resolved ())
-    | I.TyBase `Float -> TyFloat
-    | I.TyBase `Char -> TyChar
-    | I.TyBase `String -> TyString
-    | I.TyBase `Int -> TyInt
-    | I.TyBase `Bottom -> TyBottom
-    | I.TyTuple t -> TyTuple (List.map conv_back_typ t)
-    | I.TyArrow (a, b) -> TyArrow (go a, go b)
-    | I.TyCustom (nm, t) -> TyCustom (nm, List.map go t)
-    | I.TyRef r -> TyRef (go r)
-
+  match ty with
+  | I.TyUnknown -> failwith "tyUnknown conv_back_typ"
+  | I.TyBase `Bool -> TyBool
+  | I.TyBase `Irr -> TyPoly (P.fresh_resolved ())
+  | I.TyBase `Float -> TyFloat
+  | I.TyBase `Char -> TyChar
+  | I.TyBase `String -> TyString
+  | I.TyBase `Int -> TyInt
+  | I.TyBase `Bottom -> TyBottom
+  | I.TyTuple t -> TyTuple (List.map conv_back_typ t)
+  | I.TyArrow (a, b) -> TyArrow (go a, go b)
+  | I.TyCustom (nm, t) -> TyCustom (nm, List.map go t)
+  | I.TyRef r -> TyRef (go r)
 
 let conv_tag (record_field_indexes : (P.resolved, int) Hashtbl.t)
     (e : ('a, 'b) P.expr) : I.tag =
   match e with
   | P.Fail (_, s) -> I.Fail s
+  | P.Extern (_, s) -> I.Extern s
   | P.Var (_, nm) -> Named (`Local, nm)
   | P.MGlobal (_, _, nm) -> Named (`Global, nm)
   | P.Constructor (data, nm) ->
-      Named (`Constructor, nm)
+    let ctor_type =
+      Hashtbl.find Parselang.Monomorphize.constructor_types
+        (Share.Uuid.uuid_forget data.uuid)
+        |> List.map conv_typ
+    in
+    Named (`Constructor ctor_type, nm)
   | P.Int (_, i) -> Prim (`Int, i)
   | P.String (_, s) -> Prim (`String, s)
   | P.Char (_, c) -> Prim (`Char, c)
   | P.Float (_, f) -> Prim (`Float, f)
-  | P.Bool (_, b) -> I.Bool b
+  | P.Bool (_, b) -> Prim (`Bool, string_of_bool b)
   | P.LetIn (_, P.CaseVar nm, _, _, _) -> Let nm
   | P.LetIn (_, _, _, _, _) -> failwith "Malformed let"
   | P.Seq (_, _, _) -> Seq
@@ -71,7 +76,12 @@ let conv_tag (record_field_indexes : (P.resolved, int) Hashtbl.t)
       Unpack (List.map conv_typ typs, nms)
   | P.Match (_, _, [ (CaseCtor (nm, _), _); (CaseVar _, _) ]) ->
       (* TODO: this method of implicit structure is pretty icky *)
-      IfLet nm
+    IfLet nm
+  | P.Match (_, _, [ (CaseLit lit, _); (CaseVar _, _)]) ->
+    begin match lit with
+    | P.LBool b -> I.IfConst (`Bool, string_of_bool b)
+    | P.LInt i -> I.IfConst (`Int, i)
+    end
   | P.Match _ ->
       print_endline "MALFORMED MATCH:";
       print_endline
@@ -96,8 +106,8 @@ let rec conv_expr (rfi : (P.resolved, int) Hashtbl.t)
     | P.Lambda (_, _, _, bd) -> [ f bd ]
     | P.Tuple (_, t) -> List.map f t
     | P.Match
-        (_, head, [ (CaseCtor (nm, _), body); (CaseVar _, rest) ]) ->
-        [ f head; f body; f rest ]
+        (_, head, [ (_, body); (_, rest) ]) ->
+      [ f head; f body; f rest ]
     | P.Modify (_, _, e) -> [ f e ]
     | P.Record (_, _, r) -> List.map (fun x -> f (snd x)) r
     | P.UnpackConstructor (_, _, _, a, b) -> [ f a; f b ]
@@ -129,7 +139,8 @@ let rec conv_top
           match t.content with
           | P.Record r ->
               List.iteri
-                (fun i (nm, _) -> Hashtbl.add record_field_indexes nm i)
+                (fun i (nm, _) ->
+                  Hashtbl.add record_field_indexes nm i)
                 r
           | P.Sum ctors -> Hashtbl.add ctor_mapping t.name t
         end
@@ -144,13 +155,15 @@ let rec conv_top
             match t.content with
             | P.Record r -> acc
             | P.Sum s ->
-                let f : int -> 'a * 'b -> I.constructor =
-                 fun i (nm, _) ->
-                  { I.index = i; I.name = nm }
-                in
-                let all = List.mapi f s in
-                { acc with I.constructors = all @ acc.constructors }
+              let f : int -> 'a * 'b -> unit =
+                 fun i (nm, _) -> Hashtbl.add acc.constructors nm i
+              in
+              List.iteri f s;
+              acc
           end
+        | P.Extern (nm, typ) ->
+            Hashtbl.add acc.externs nm (conv_typ typ);
+            acc
         | P.Definition d ->
             {
               acc with
@@ -166,21 +179,31 @@ let rec conv_top
                 }
                 :: acc.defs;
             })
-      { I.defs = []; constructors = [];
-        gen_type_sizes = begin fun name args ->
-          (* TODO: this is really a hack *)
-          let t = Hashtbl.find ctor_mapping name in
-          let[@warning "-8"] P.Sum s = t.content in
-          let res = List.map (fun (_, inner) ->
-            List.map (fun typ ->
-              conv_typ (
-                P.subst_polys (
-                  List.combine t.args (List.map conv_back_typ args)
-                ) typ
-              )
-            ) inner) s in
-          res
-        end
+      {
+        I.defs = [];
+        constructors = Hashtbl.create 100;
+        externs = Hashtbl.create 100;
+        gen_type_sizes =
+          begin
+            fun name args ->
+              (* TODO: this is really a hack *)
+              let t = Hashtbl.find ctor_mapping name in
+              let[@warning "-8"] (P.Sum s) = t.content in
+              let res =
+                List.map
+                  (fun (_, inner) ->
+                    List.map
+                      (fun typ ->
+                        conv_typ
+                          (P.subst_polys
+                             (List.combine t.args
+                                (List.map conv_back_typ args))
+                             typ))
+                      inner)
+                  s
+              in
+              res
+          end;
       }
       top
   in

@@ -16,6 +16,7 @@ depends: [
   "fileutils"
   "ppx_inline_test"
   "odoc" {with-doc}
+  "domainslib"
 ]
 build: [
   ["dune" "subst"] {dev}

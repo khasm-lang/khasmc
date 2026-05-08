@@ -1,4 +1,7 @@
-fun main (x : Int) : Int =
+fun main (m : Int) : Int =
     let k = 10 in
-    let f = fun x -> k + k + x in
-    f k
+    let f = fun x -> x + x in
+    print_int (f k)
+
+
+extern print_int : Int -> Int  

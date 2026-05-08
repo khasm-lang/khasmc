@@ -1,0 +1,3 @@
+fun main (x : Int) : Int =
+    let y = (let z = x in z) + (let k = x + x in k) in
+    y
