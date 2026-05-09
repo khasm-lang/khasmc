@@ -75,11 +75,13 @@ let rec emit_e ctors (expr : expr) =
 
 
 let emit top =
-  List.iter (fun def ->
+  print_endline "let print = x => console.log(x);\n";
+    List.iter (fun def ->
     print_endline "// BODY FOR: ";
     print_endline ("//" ^ show_name def.name);
     print_string ("let " ^ show def.name ^ " = (");
     List.iter (fun (e,_) -> print_string (show e ^ " => ")) def.args;
     print_string (emit_e top.constructors def.body);
-    print_endline ");"
-  ) top.defs 
+    print_endline ");\n"
+  ) top.defs;
+  print_endline "k_0(10)"  

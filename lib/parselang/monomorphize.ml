@@ -14,7 +14,7 @@ module ResSet = Set.Make (struct
 end)
 
 type monomorph_ctx = {
-  have_done : (resolved typ uuid, unit) Hashtbl.t; [@opaque]
+  have_done : (resolved typ uuid, resolved) Hashtbl.t; [@opaque]
   poly_map : (resolved * resolved typ) list;
   definitions :
     (resolved, (resolved, unit, yes) definition) Hashtbl.t;
@@ -114,17 +114,16 @@ little bit of a hack but we know constructors will
         if ResSet.mem nm ctx.locals then
           (Var (data', nm), [])
         else begin
-          let def = Hashtbl.find ctx.definitions nm in
+          let def = Hashtbl.find ctx.definitions nm in 
           let new_uuid = uuid_set_snd mono_expr_ty def.data.uuid in
-          let defs =
-            if not (Hashtbl.mem ctx.have_done new_uuid) then begin
-              Hashtbl.add ctx.have_done new_uuid ();
-              monomorph_def ctx def mono_expr_ty
-            end
-            else
-              []
-          in
-          (MGlobal (data', new_uuid, nm), defs)
+          match Hashtbl.find_opt ctx.have_done new_uuid with
+          | None ->
+            let new_nm = fresh_resolved () in
+            Hashtbl.add ctx.have_done new_uuid new_nm;
+            let defs = monomorph_def ctx def new_nm mono_expr_ty in
+            (MGlobal (data', new_nm), defs)
+          | Some nm ->
+            (MGlobal (data', nm), [])
         end
     | LetIn (_, cases, _, head, body) ->
         let ctx' =
@@ -205,7 +204,7 @@ little bit of a hack but we know constructors will
   go ctx exp
 
 and monomorph_def (ctx : monomorph_ctx)
-    (def : (resolved, unit, yes) definition) (against : resolved typ)
+  (def : (resolved, unit, yes) definition) (new_nm : resolved) (against : resolved typ)
     : (resolved, resolved typ, yes) definition list =
   let combined_typ = definition_type def in
   let mapping = match_polys against combined_typ in
@@ -217,7 +216,10 @@ and monomorph_def (ctx : monomorph_ctx)
     }
   in
   let exp, rest = monomorph_expr ctx' (get def.body) in
-  let me = def_with_new_body_typ def exp against in
+  let me = { (def_with_new_body_typ def exp against) with
+    name = new_nm;
+  }
+  in
   me :: rest
 
 let monomorphize (top : (resolved, unit, void) toplevel list) :
@@ -232,7 +234,10 @@ let monomorphize (top : (resolved, unit, void) toplevel list) :
         | _ -> false)
       top
   in
-  let defs = monomorph_def ctx main (TyArrow (TyInt, TyInt)) in
+  let main_ty = (TyArrow (TyInt, TyInt)) in 
+  Hashtbl.add ctx.have_done
+    (uuid_set_snd main_ty main.data.uuid) main.name;
+  let defs = monomorph_def ctx main main.name main_ty in
   let rest =
     let go : ('a, 'b, void) toplevel -> 'c = function
       | Typdef t -> [ Typdef t ]

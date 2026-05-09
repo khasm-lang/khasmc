@@ -326,7 +326,7 @@ let rec resolve_expr ctx l_ctx (expr : (string, 'a) expr) :
                 | true -> Extern (d, nm)
                 | false -> failwith ("unknown variable: " ^ nm)))
       end
-  | MGlobal (_, _, _) -> failwith "monomorph info in name resolution"
+  | MGlobal (_, _) -> failwith "monomorph info in name resolution"
   | Constructor (d, nm) ->
       let[@warning "-8"] (Some nm) = get_constructor ctx nm in
       Constructor (d, nm)

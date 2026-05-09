@@ -1,10 +1,18 @@
-fun main (n : Int) : Int =
+extern print : 'a -> ()
+
+fun fib (n : Int) : Int =
     match n = 0 with
-    | true => 1
+    | true => 0
     | false =>
         match n = 1 with
         | true => 1
         | false =>
-            ((main (n - 1)) + (main (n - 2)))
+            ((fib (n - 1)) + (fib (n - 2)))
+        end
     end
-    end
+
+fun main (n : Int) : Int =
+    let k = print (fib n) in
+    0
+
+

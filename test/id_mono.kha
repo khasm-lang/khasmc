@@ -1,0 +1,7 @@
+fun main (x : Int) : Int =
+    let a = id "hi" in
+    let b = id 0 in
+    x
+
+
+fun id {type 'a} (x : 'a) : 'a = x    

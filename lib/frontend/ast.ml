@@ -252,7 +252,7 @@ type ('a, 'b) expr =
      Arguably this should warrant another AST but I don't think
      that's really needed
    *)
-  | MGlobal of 'b data * 'a typ uuid * 'a
+  | MGlobal of 'b data * 'a
   | Constructor of 'b data * 'a
   | Int of 'b data * string
   | String of 'b data * string
@@ -283,7 +283,7 @@ let get_data (e : ('a, 'b) expr) : 'b data =
   match e with
   | Fail (i, _)
   | Extern (i, _)
-  | MGlobal (i, _, _)
+  | MGlobal (i, _)
   | Var (i, _)
   | Constructor (i, _)
   | Int (i, _)
@@ -312,7 +312,7 @@ let data_transform (type a b) (f : a data -> b data) expr =
     match e with
     | Fail (d, s) -> Fail (f d, s)
     | Extern (d, s) -> Extern (f d, s)
-    | MGlobal (d, p, s) -> MGlobal (f d, p, s)
+    | MGlobal (d, s) -> MGlobal (f d, s)
     | Var (i, s) -> Var (f i, s)
     | Constructor (i, s) -> Constructor (f i, s)
     | Int (i, s) -> Int (f i, s)

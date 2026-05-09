@@ -1,6 +1,11 @@
+extern print : 'a -> ()
+
 fun main (m : Int): Int =
         let Right x = swap (interesting 10) in
         let Left p = swap (swap (Left "hi")) in
+        let a = print x in
+        let b = print (swap (Left "hi")) in
+        let c = print (interesting 0) in
         let y = Record {
                 name = "ho";
         } in
@@ -14,8 +19,6 @@ end
 type Record 'a = {
         name : 'a;
 }
-
-extern print : 'a -> ()
 
 fun interesting {type 'a} (x : Int) : Either Int 'a = Left x
 

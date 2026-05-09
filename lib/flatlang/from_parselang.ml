@@ -40,7 +40,7 @@ let conv_tag (record_field_indexes : (P.resolved, int) Hashtbl.t)
   | P.Fail (_, s) -> I.Fail s
   | P.Extern (_, s) -> I.Extern s
   | P.Var (_, nm) -> Named (`Local, nm)
-  | P.MGlobal (_, _, nm) -> Named (`Global, nm)
+  | P.MGlobal (_, nm) -> Named (`Global, nm)
   | P.Constructor (data, nm) ->
     let ctor_type =
       Hashtbl.find Parselang.Monomorphize.constructor_types
