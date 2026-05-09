@@ -12,16 +12,21 @@ let show (nm : name) =
   else string_of_int x)
 
 let build_ctor num_args idx =
-  let i = string_of_int in 
-  let rec go_a n =
-    if n = 0 then ""
-    else ("c" ^ i n ^ " => " ^ go_a (n - 1))
-  in
-  let rec go_b n =
-    if n = 0 then ""
-    else (i (num_args - n) ^ ": c" ^ i n ^ ", " ^ go_b (n - 1))
-  in
-  go_a num_args ^ "{return {" ^ go_b num_args ^ "\"tag\": " ^ i idx ^ "};}"
+  if num_args = 0 then
+    "(() => {return { \"tag\": " ^ string_of_int idx ^ " };})()"
+  else
+    begin
+      let i = string_of_int in 
+      let rec go_a n =
+        if n = 0 then ""
+        else ("c" ^ i n ^ " => " ^ go_a (n - 1))
+      in
+      let rec go_b n =
+        if n = 0 then ""
+        else (i (num_args - n) ^ ": c" ^ i n ^ ", " ^ go_b (n - 1))
+      in
+      go_a num_args ^ "{return {" ^ go_b num_args ^ "\"tag\": " ^ i idx ^ "};}"
+    end
 
 let rec emit_e ctors (expr : expr) =
   let go x = p (emit_e ctors x) in
@@ -33,6 +38,7 @@ let rec emit_e ctors (expr : expr) =
     let tag = Hashtbl.find ctors nm in
     build_ctor (List.length args) tag
   | Expr (dat, Named (_, nm), args) -> show nm
+  | Expr (dat, Prim (`String, s), args) -> ("\"" ^ s ^ "\"")
   | Expr (dat, Prim (_, nm), args) -> nm
   | Expr (dat, Tuple, args) -> arr_of (List.map go args) 
   | Expr (dat, BinOp Add, [a;b]) -> go a ^ "+" ^ go b
@@ -75,7 +81,7 @@ let rec emit_e ctors (expr : expr) =
 
 
 let emit top =
-  print_endline "let print = x => console.log(x);\n";
+  print_endline "let print = x => console.log(JSON.stringify(x, null, 2));\n";
     List.iter (fun def ->
     print_endline "// BODY FOR: ";
     print_endline ("//" ^ show_name def.name);

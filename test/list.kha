@@ -1,3 +1,5 @@
+extern print : 'a -> ()
+
 type List 'a =
     | Nil
     | Cons of 'a (List 'a)
@@ -9,10 +11,47 @@ fun map {type 'a 'b} (f : 'a -> 'b) (xs : List 'a) : List 'b =
     | Cons y ys => Cons (f y) (map f ys)
     end
 
+fun filter {type 'a} (f : 'a -> Bool) (xs : List 'a) : List 'a =
+    match xs with
+    | Nil => Nil
+    | Cons y ys =>
+        match f y with
+        | false => filter f ys
+        | true => Cons y (filter f ys)
+        end
+    end
+
+fun replicate {type 'a} (x : Int) (elm : 'a) : List 'a =
+    match x with
+    | 0 => Nil
+    | n => Cons elm (replicate (n - 1) elm)
+    end
+    
+fun append {type 'a} (xs : List 'a) (ys : List 'a) : List 'a =
+    match xs with
+    | Nil => ys
+    | Cons x xs => Cons x (append xs ys)
+    end
+    
+fun flatten {type 'a} (xs : List (List 'a)) : List 'a =
+    match xs with
+    | Nil => Nil
+    | Cons x xs => append x (flatten xs)  
+    end
+    
 fun f (x : Int) : String = "hi"
+
+fun is_zero (x : Int) : Bool = (x = 0)
     
 fun main (x : Int) : Int =
-    let xs = Cons 0 (Cons 1 Nil) in
+    let xs = Cons 0 (Cons 1 (Cons 0 Nil)) in
     let ys = map f xs in
+    let zs = filter is_zero xs in
+    let a = print xs in
+    let b = print ys in
+    let c = print zs in
+    let big = replicate 3 xs in
+    let d = print big in
+    let big_flat = flatten big in
+    let e = print big_flat in
     0
-                
