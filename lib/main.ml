@@ -25,7 +25,7 @@ let with_timer name thunk =
   res
 
 let main_sequence file debug_parse debug_flat debug_flat_small
-    debug_gc emit =
+    debug_gc emit run =
   with_timer "khasmc"
     begin
       fun () ->
@@ -184,8 +184,19 @@ let main_sequence file debug_parse debug_flat debug_flat_small
                 else
                   ();
 
+              if run then begin
+                let oc = open_out "output.js" in
+                Flatlang.Javascript.emit with_types_again2 oc;
+                Out_channel.flush oc;
+                let (inp, outp) = Unix.open_process "node output.js" in
+                let res = In_channel.input_all inp in
+                let _ = Unix.close_process (inp, outp) in
+                let _ = Printf.printf "%s\n" res in
+                ()
+              end;
+
               if emit then begin
-                Flatlang.Javascript.emit with_types_again2
+                Flatlang.Javascript.emit with_types_again2 stdout
               end;
 
               ()
@@ -237,13 +248,14 @@ let main () =
       ("--jobs", Arg.Set_int Share.Par.num_domains, "Set jobs");
       ("-j", Arg.Set_int Share.Par.num_domains, "Set jobs");
       ("--par", Arg.Set Share.Par.use_par, "Use parallelism (expr.)");
-      ("--emit", Arg.Set emit, "Emit JS (expr.)")
+      ("--emit", Arg.Set emit, "Emit JS (expr.)");
+      ("--run", Arg.Set run, "Emit and run JS (expr.)")
     ]
   in
 
   let usage =
     "khasmc [--debug-parse[-verbose]] [--debug-flat[-verbose]] \
-     [--debug-gc] [--time] [-j/--jobs n] [--par] [--emit] <filenames>"
+     [--debug-gc] [--time] [-j/--jobs n] [--par] [--emit] [--run] <filenames>"
   in
 
   Arg.parse speclist anon_fun usage;
@@ -251,4 +263,4 @@ let main () =
   let file = List.hd !input_files in
 
   main_sequence file !debug_parse_verbose !debug_flat_verbose
-    !debug_flat !debug_gc !emit
+    !debug_flat !debug_gc !emit !run

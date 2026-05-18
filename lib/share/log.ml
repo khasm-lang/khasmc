@@ -1,6 +1,6 @@
 type span =
   | Empty
-  | Span of string * int * int
+  | Span of (Parseff.location [@opaque])
 [@@deriving show { with_path = false }]
 
 let time = ref false
@@ -10,6 +10,7 @@ let debug_flat_verbose = ref false
 let debug_flat = ref false
 let debug_gc = ref false
 let emit = ref false
+let run = ref false
 let input_files : string list ref = ref []
 let debug s = Printf.fprintf stderr "debug: %s" s
 

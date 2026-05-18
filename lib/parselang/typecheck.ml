@@ -126,10 +126,16 @@ let rec break_down_case_pattern (ctx : ctx) (c : resolved case)
     (t : resolved typ) :
     ((resolved * resolved typ) list, string) result =
   let break_and_map a b =
-    List.map2 (break_down_case_pattern ctx) a b
+    if List.length a <> List.length b then
+      Error ("Case is missing cases: " ^
+      String.concat " " (List.map ((show_case pp_resolved)) a)
+      )
+    else begin
+      List.map2 (break_down_case_pattern ctx) a b
     |> collect
     |> Result.map List.flatten
     |> Result.map_error (String.concat " ")
+    end
   in
   match c with
   | CaseWild -> ok []

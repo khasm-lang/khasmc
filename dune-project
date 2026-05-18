@@ -13,7 +13,7 @@
 (package
  (name khasmc)
  (synopsis "Compiler for khasm programming language")
- (depends ocaml sedlex angstrom dune fmt ppx_deriving batteries fileutils ppx_inline_test domainslib)
+ (depends ocaml sedlex angstrom parseff dune fmt ppx_deriving batteries fileutils ppx_inline_test domainslib)
  (tags
   ("compiler" "khasm" "programming language")))
 

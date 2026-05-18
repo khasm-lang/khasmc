@@ -9,14 +9,16 @@ depends: [
   "ocaml"
   "sedlex"
   "angstrom"
+  "parseff"
   "dune" {>= "3.10"}
   "fmt"
   "ppx_deriving"
   "batteries"
   "fileutils"
   "ppx_inline_test"
-  "odoc" {with-doc}
   "domainslib"
+  "odoc" {with-doc}
+  "menhir" {>= "20180523"}
 ]
 build: [
   ["dune" "subst"] {dev}

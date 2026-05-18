@@ -80,7 +80,10 @@ let rec emit_e ctors (expr : expr) =
   | _ -> failwith  "invalid input"
 
 
-let emit top =
+let emit top chan =
+  let print_endline x = Printf.fprintf chan "%s\n" x in
+  let print_string x = Printf.fprintf chan "%s" x in 
+
   print_endline "let print = x => console.log(JSON.stringify(x, null, 2));\n";
     List.iter (fun def ->
     print_endline "// BODY FOR: ";
