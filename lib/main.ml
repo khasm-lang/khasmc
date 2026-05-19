@@ -24,8 +24,10 @@ let with_timer name thunk =
     print_newline ();
   res
 
-let main_sequence file debug_parse debug_flat debug_flat_small
-    debug_gc emit run =
+let main_sequence file
+  debug_parse debug_flat debug_flat_small
+  debug_gc emit run =
+  Frontend.Parser_2.test ();
   with_timer "khasmc"
     begin
       fun () ->
