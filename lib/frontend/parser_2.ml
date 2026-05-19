@@ -2,7 +2,6 @@ open Ast
 
 let pp_string fmt s = Format.fprintf fmt "%s" s
 let ws = Parseff.skip_whitespace
-
 let p_expr x = print_endline (show_expr pp_string pp_unit x)
 
 let lit s =
@@ -19,8 +18,18 @@ let d () =
   { uuid = Share.Uuid.uuid (); span = Span (Parseff.location ()) }
 
 let keywords =
-  [ "let"; "in"; "fun"; "match"; "if";
-    "then"; "else"; "type"; "with"; "end"]
+  [
+    "let";
+    "in";
+    "fun";
+    "match";
+    "if";
+    "then";
+    "else";
+    "type";
+    "with";
+    "end";
+  ]
 
 (* makes the assumption nobody is putting \b in their file *)
 let backtrack () : 'a =
@@ -247,8 +256,7 @@ let rec expr_app sofar curr_prec () =
             let p = expr_paren true () in
             (* collect further app-es *)
             let rest =
-              Parseff.sep_by (expr_paren true) Parseff.whitespace
-                ()
+              Parseff.sep_by (expr_paren true) Parseff.whitespace ()
             in
             let orig = Funccall (d (), sofar, p) in
             let app =
@@ -336,7 +344,7 @@ and expr_paren dop () =
         let hd = expr false 0 () in
         lit "with";
         let cases =
-          Parseff.many 
+          Parseff.many
             (fun () ->
               lit "|";
               let c = do_case () in
@@ -352,17 +360,16 @@ and expr_paren dop () =
         lit "(";
         let res = expr false 0 () in
         lit ")";
-        res
-      );
+        res);
     ]
     ()
 
 (* "starting point" *)
 and expr (dop : bool) (curr_prec : int) () =
-  Parseff.rec_ (fun () -> 
-    let curr = expr_paren dop () in
-    expr_app curr curr_prec ())
-    
+  Parseff.rec_ (fun () ->
+      let curr = expr_paren dop () in
+      expr_app curr curr_prec ())
+
 let do_expr () = expr false 0 ()
 
 let print_error error =
@@ -375,7 +382,7 @@ let parser () =
 
 let test () =
   let s = {|
-  (1,(3,4,5+3*5=8))
+  (1, match 0 with | 0 => foo 1 * 3 | _ => 0 end)
 |} in
   let src = Parseff.Source.of_string s in
   let ret = Parseff.parse_source src parser in
@@ -387,7 +394,7 @@ let test () =
       print_int (pos - 1);
       print_string ", ";
       print_endline
-        ( String.sub s pos (pos+5) )
+        (String.sub s pos (min (pos + 5) (String.length s - pos)))
 
 let def_up_to_body () =
   lit "fun";

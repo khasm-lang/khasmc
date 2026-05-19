@@ -27,7 +27,6 @@ let with_timer name thunk =
 let main_sequence file
   debug_parse debug_flat debug_flat_small
   debug_gc emit run =
-  Frontend.Parser_2.test ();
   with_timer "khasmc"
     begin
       fun () ->
@@ -233,6 +232,7 @@ let main_sequence file
 
 let main () =
   let open Share.Log in
+    Frontend.Parser_2.test ();
   let anon_fun filename = input_files := filename :: !input_files in
 
   let speclist =
@@ -248,7 +248,6 @@ let main () =
       ("--debug-gc", Arg.Set debug_gc, "Debug GC info");
       ("--time", Arg.Set time, "Time compiler");
       ("--jobs", Arg.Set_int Share.Par.num_domains, "Set jobs");
-      ("-j", Arg.Set_int Share.Par.num_domains, "Set jobs");
       ("--par", Arg.Set Share.Par.use_par, "Use parallelism (expr.)");
       ("--emit", Arg.Set emit, "Emit JS (expr.)");
       ("--run", Arg.Set run, "Emit and run JS (expr.)")
@@ -257,12 +256,17 @@ let main () =
 
   let usage =
     "khasmc [--debug-parse[-verbose]] [--debug-flat[-verbose]] \
-     [--debug-gc] [--time] [-j/--jobs n] [--par] [--emit] [--run] <filenames>"
+     [--debug-gc] [--time] [--jobs n] [--par] [--emit] [--run] <filenames>"
   in
 
   Arg.parse speclist anon_fun usage;
 
-  let file = List.hd !input_files in
-
-  main_sequence file !debug_parse_verbose !debug_flat_verbose
-    !debug_flat !debug_gc !emit !run
+  if (List.length !input_files = 0) then
+    print_endline usage
+  else begin
+    
+    let file = List.hd !input_files in
+    
+    main_sequence file !debug_parse_verbose !debug_flat_verbose
+      !debug_flat !debug_gc !emit !run
+  end
