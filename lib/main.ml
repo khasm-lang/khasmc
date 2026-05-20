@@ -24,184 +24,174 @@ let with_timer name thunk =
     print_newline ();
   res
 
-let main_sequence file
-  debug_parse debug_flat debug_flat_small
-  debug_gc emit run =
-  with_timer "khasmc"
-    begin
-      fun () ->
-        Printexc.record_backtrace true;
-        let s = In_channel.with_open_bin file In_channel.input_all in
-        let lexbuf = Sedlexing.Utf8.from_string s in
-        begin
-          match with_timer "parser" (fun () -> toplevel lexbuf) with
-          | Error s ->
-              print_endline "noooo it failed :despair:";
-              print_endline s
-          | Ok e ->
-              if debug_parse then begin
-                print_endline "parsed:";
-                List.iter
-                  (fun x ->
-                    print_endline
-                      (show_toplevel Format.pp_print_string pp_unit
-                         pp_unit x))
-                  e;
-                print_endline "end\n";
-                print_newline ()
-              end;
+let main_sequence file debug_parse debug_flat debug_flat_small
+    debug_gc emit run =
+  with_timer "khasmc" begin fun () ->
+      Printexc.record_backtrace true;
+      let s = In_channel.with_open_bin file In_channel.input_all in
+      begin
+        let e =
+          with_timer "parser" (fun () -> Frontend.Parser_2.toplevel s)
+        in
 
-              let resolved =
-                with_timer "name resolution" (fun () ->
-                    Frontend.Name_resolve.name_resolve e)
-              in
+        if debug_parse then begin
+          print_endline "parsed:";
+          List.iter
+            (fun x ->
+              print_endline
+                (show_toplevel Format.pp_print_string pp_unit pp_unit
+                   x))
+            e;
+          print_endline "end\n";
+          print_newline ()
+        end;
 
-              if debug_parse then begin
-                print_endline "name resolved:";
-                List.iter
-                  (fun x ->
-                    print_endline
-                      (show_toplevel pp_resolved pp_unit pp_unit x))
-                  resolved
-              end;
+        let resolved =
+          with_timer "name resolution" (fun () ->
+              Frontend.Name_resolve.name_resolve e)
+        in
 
-              with_timer "typechecking" (fun () -> typecheck resolved);
+        if debug_parse then begin
+          print_endline "name resolved:";
+          List.iter
+            (fun x ->
+              print_endline
+                (show_toplevel pp_resolved pp_unit pp_unit x))
+            resolved
+        end;
 
-              if debug_parse then begin
-                print_endline "raw type info:";
-                Hashtbl.iter
-                  (fun nm ty ->
-                    print_endline
-                      (show_resolved nm
-                      ^ " : "
-                      ^ show_typ pp_resolved ty))
-                  ident_type_info
-              end;
+        with_timer "typechecking" (fun () -> typecheck resolved);
 
-              let ctx, after_mono =
-                with_timer "monomorphization" (fun () ->
-                    monomorphize resolved)
-              in
+        if debug_parse then begin
+          print_endline "raw type info:";
+          Hashtbl.iter
+            (fun nm ty ->
+              print_endline
+                (show_resolved nm ^ " : " ^ show_typ pp_resolved ty))
+            ident_type_info
+        end;
 
-              if debug_parse then begin
-                print_endline "mono'd:";
-                List.iter
-                  (fun x ->
-                    print_endline
-                      (show_toplevel pp_resolved pp_unit pp_void x))
-                  after_mono;
-                print_endline "\nctx:";
-                print_endline (show_monomorph_ctx ctx)
-              end;
+        let ctx, after_mono =
+          with_timer "monomorphization" (fun () ->
+              monomorphize resolved)
+        in
 
-              let p_comp =
-                with_timer "pattern compilation" (fun () ->
-                    Parselang.Pattern_match_desugar
-                    .pattern_match_desugar after_mono)
-              in
+        if debug_parse then begin
+          print_endline "mono'd:";
+          List.iter
+            (fun x ->
+              print_endline
+                (show_toplevel pp_resolved pp_unit pp_void x))
+            after_mono;
+          print_endline "\nctx:";
+          print_endline (show_monomorph_ctx ctx)
+        end;
 
-              if debug_parse then begin
-                print_endline "pattern compiled:";
-                List.iter
-                  (fun x ->
-                    print_endline
-                      (show_toplevel pp_resolved pp_unit pp_void x))
-                  p_comp
-              end;
+        let p_comp =
+          with_timer "pattern compilation" (fun () ->
+              Parselang.Pattern_match_desugar.pattern_match_desugar
+                after_mono)
+        in
 
-              let to_flat =
-                with_timer "to flatland" (fun () ->
-                    Flatlang.From_parselang.conv_top p_comp)
-              in
+        if debug_parse then begin
+          print_endline "pattern compiled:";
+          List.iter
+            (fun x ->
+              print_endline
+                (show_toplevel pp_resolved pp_unit pp_void x))
+            p_comp
+        end;
 
-              if debug_flat then begin
-                print_endline "to flatlang";
-                print_endline (Flatlang.IR.show_program to_flat)
-              end;
-              if debug_flat_small then
-                if not (Flatlang.Verify.verify true to_flat) then
-                  print_endline "DID NOT VERIFY"
-                else
-                  ();
+        let to_flat =
+          with_timer "to flatland" (fun () ->
+              Flatlang.From_parselang.conv_top p_comp)
+        in
 
-              let let_folded =
-                with_timer "let fold" (fun () ->
-                    Flatlang.Let_fold.let_fold to_flat)
-              in
+        if debug_flat then begin
+          print_endline "to flatlang";
+          print_endline (Flatlang.IR.show_program to_flat)
+        end;
+        if debug_flat_small then
+          if not (Flatlang.Verify.verify true to_flat) then
+            print_endline "DID NOT VERIFY"
+          else
+            ();
 
-              if debug_flat then begin
-                print_endline "let folded:";
-                print_endline (Flatlang.IR.show_program let_folded)
-              end;
+        let let_folded =
+          with_timer "let fold" (fun () ->
+              Flatlang.Let_fold.let_fold to_flat)
+        in
 
-              if debug_flat_small then
-                if not (Flatlang.Verify.verify true let_folded) then
-                  print_endline "DID NOT VERIFY"
-                else
-                  ();
+        if debug_flat then begin
+          print_endline "let folded:";
+          print_endline (Flatlang.IR.show_program let_folded)
+        end;
 
-              let with_types_again =
-                with_timer "reconstruct types" (fun () ->
-                    Flatlang.Reconstruct_types.reconstruct let_folded)
-              in
-              if debug_flat then begin
-                print_endline "types reconstructed print ommitted"
-              end;
-              if debug_flat_small then
-                if not (Flatlang.Verify.verify true with_types_again)
-                then
-                  print_endline "DID NOT VERIFY"
-                else
-                  ();
+        if debug_flat_small then
+          if not (Flatlang.Verify.verify true let_folded) then
+            print_endline "DID NOT VERIFY"
+          else
+            ();
 
-              let clos_conved =
-                with_timer "closure convert" (fun () ->
-                    Flatlang.Closure_convert.clos_conv
-                      with_types_again)
-              in
+        let with_types_again =
+          with_timer "reconstruct types" (fun () ->
+              Flatlang.Reconstruct_types.reconstruct let_folded)
+        in
+        if debug_flat then begin
+          print_endline "types reconstructed print ommitted"
+        end;
+        if debug_flat_small then
+          if not (Flatlang.Verify.verify true with_types_again) then
+            print_endline "DID NOT VERIFY"
+          else
+            ();
 
-              if debug_flat then begin
-                print_endline "clos converted:";
-                print_endline (Flatlang.IR.show_program clos_conved)
-              end;
+        let clos_conved =
+          with_timer "closure convert" (fun () ->
+              Flatlang.Closure_convert.clos_conv with_types_again)
+        in
 
-              if debug_flat_small then
-                if not (Flatlang.Verify.verify true clos_conved) then
-                  print_endline "DID NOT VERIFY"
-                else
-                  ();
+        if debug_flat then begin
+          print_endline "clos converted:";
+          print_endline (Flatlang.IR.show_program clos_conved)
+        end;
 
-              let with_types_again2 =
-                with_timer "reconstruct types 2" (fun () ->
-                    Flatlang.Reconstruct_types.reconstruct clos_conved)
-              in
-              if debug_flat then begin
-                print_endline "types reconstructed 2 print ommitted"
-              end;
-              if debug_flat_small then
-                if not (Flatlang.Verify.verify true with_types_again2)
-                then
-                  print_endline "DID NOT VERIFY"
-                else
-                  ();
+        if debug_flat_small then
+          if not (Flatlang.Verify.verify true clos_conved) then
+            print_endline "DID NOT VERIFY"
+          else
+            ();
 
-              if run then begin
-                let oc = open_out "output.js" in
-                Flatlang.Javascript.emit with_types_again2 oc;
-                Out_channel.flush oc;
-                let (inp, outp) = Unix.open_process "node output.js" in
-                let res = In_channel.input_all inp in
-                let _ = Unix.close_process (inp, outp) in
-                let _ = Printf.printf "%s\n" res in
-                ()
-              end;
+        let with_types_again2 =
+          with_timer "reconstruct types 2" (fun () ->
+              Flatlang.Reconstruct_types.reconstruct clos_conved)
+        in
+        if debug_flat then begin
+          print_endline "types reconstructed 2 print ommitted"
+        end;
+        if debug_flat_small then
+          if not (Flatlang.Verify.verify true with_types_again2) then
+            print_endline "DID NOT VERIFY"
+          else
+            ();
 
-              if emit then begin
-                Flatlang.Javascript.emit with_types_again2 stdout
-              end;
+        if run then begin
+          let oc = open_out "output.js" in
+          Flatlang.Javascript.emit with_types_again2 oc;
+          Out_channel.flush oc;
+          let inp, outp = Unix.open_process "node output.js" in
+          let res = In_channel.input_all inp in
+          let _ = Unix.close_process (inp, outp) in
+          let _ = Printf.printf "%s\n" res in
+          ()
+        end;
 
-              ()
-        end
+        if emit then begin
+          Flatlang.Javascript.emit with_types_again2 stdout
+        end;
+
+        ()
+      end
     end;
   if debug_gc then begin
     let stat = Gc.stat () in
@@ -232,7 +222,6 @@ let main_sequence file
 
 let main () =
   let open Share.Log in
-    Frontend.Parser_2.test ();
   let anon_fun filename = input_files := filename :: !input_files in
 
   let speclist =
@@ -250,23 +239,23 @@ let main () =
       ("--jobs", Arg.Set_int Share.Par.num_domains, "Set jobs");
       ("--par", Arg.Set Share.Par.use_par, "Use parallelism (expr.)");
       ("--emit", Arg.Set emit, "Emit JS (expr.)");
-      ("--run", Arg.Set run, "Emit and run JS (expr.)")
+      ("--run", Arg.Set run, "Emit and run JS (expr.)");
     ]
   in
 
   let usage =
     "khasmc [--debug-parse[-verbose]] [--debug-flat[-verbose]] \
-     [--debug-gc] [--time] [--jobs n] [--par] [--emit] [--run] <filenames>"
+     [--debug-gc] [--time] [--jobs n] [--par] [--emit] [--run] \
+     <filenames>"
   in
 
   Arg.parse speclist anon_fun usage;
 
-  if (List.length !input_files = 0) then
+  if List.length !input_files = 0 then
     print_endline usage
   else begin
-    
     let file = List.hd !input_files in
-    
+
     main_sequence file !debug_parse_verbose !debug_flat_verbose
       !debug_flat !debug_gc !emit !run
   end

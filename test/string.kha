@@ -1,0 +1,5 @@
+extern print : 'a -> () 
+
+fun main (n : Int) : Int =
+    print "yo"
+    
