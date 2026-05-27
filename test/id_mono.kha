@@ -5,4 +5,4 @@ fun main (x : Int) : Int =
     x
 
 
-fun id {type 'a} (x : 'a) : 'a = x    
+fun id {type 'a} (x : 'a) : 'a = x

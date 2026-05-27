@@ -12,6 +12,8 @@ let debug_gc = ref false
 let emit = ref false
 let run = ref false
 let input_files : string list ref = ref []
+let parseff = ref false
+let menhir = ref false 
 let debug s = Printf.fprintf stderr "debug: %s" s
 
 module type WithDebug = sig

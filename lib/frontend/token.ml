@@ -1,6 +1,6 @@
 open Ast
 
-type t_TOKEN =
+type token =
   | LEFTP
   | RIGHTP
   | LEFTC
@@ -16,11 +16,13 @@ type t_TOKEN =
   | PLUS
   | MINUS
   | AND
+  | OR
   | PIPE
   | COMMA
   | SEMICOLON
   | COLON
   | EQUALS
+  | COLONEQ
   | FSLASH
   | BSLASH
   | TYPE
@@ -55,7 +57,9 @@ type t_TOKEN =
   | POLYID of string
   | INT of string
   | FLOAT of string
+  | CHAR of string
   | DONE
+  | DOT
   | OTHER of string
 [@@deriving show { with_path = false }]
 
@@ -71,7 +75,7 @@ let char = [%sedlex.regexp? Compl '"']
 let string = [%sedlex.regexp? '"', Star char, '"']
 let float = [%sedlex.regexp? num, '.', num]
 
-let rec lexer_ buf : (t_TOKEN, exn) Result.t =
+let rec lexer_ buf : (token, exn) Result.t =
   match
     begin
       match%sedlex buf with space -> () | _ -> ()
@@ -92,10 +96,12 @@ let rec lexer_ buf : (t_TOKEN, exn) Result.t =
       | '%' -> PERCENT
       | '+' -> PLUS
       | '-' -> MINUS
-      | '&' -> AND
+      | "&&" -> AND
+      | "||" -> OR
       | '|' -> PIPE
       | ',' -> COMMA
       | ';' -> SEMICOLON
+      | ":=" -> COLONEQ
       | ':' -> COLON
       | '/' -> FSLASH
       | '\\' -> BSLASH
@@ -112,7 +118,7 @@ let rec lexer_ buf : (t_TOKEN, exn) Result.t =
       | "Int" -> TYINT
       | "String" -> TYSTRING
       | "Char" -> TYCHAR
-      | "Float64" -> TYFLOAT
+      | "Double" -> TYFLOAT
       | "Bool" -> TYBOOL
       | "impl" -> IMPL
       | "module" -> MODULE
@@ -137,6 +143,7 @@ let rec lexer_ buf : (t_TOKEN, exn) Result.t =
       | num -> INT (Sedlexing.Utf8.lexeme buf)
       | float -> FLOAT (Sedlexing.Utf8.lexeme buf)
       | eof -> DONE
+      | '.' -> DOT
       | any -> failwith (Sedlexing.Utf8.lexeme buf)
       | _ -> failwith "IMPOSSIBLE"
     end
@@ -146,3 +153,7 @@ let rec lexer_ buf : (t_TOKEN, exn) Result.t =
       print_endline "ERROR!";
       print_endline (Printexc.to_string e);
       Error e
+
+let lexer_ignore e =
+  let Ok t = lexer_ e in
+  t

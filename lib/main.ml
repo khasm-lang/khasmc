@@ -24,16 +24,51 @@ let with_timer name thunk =
     print_newline ();
   res
 
+let do_parseff s = Frontend.Parser_2.toplevel s
+
+let print_position (l : Lexing.position) : unit =
+  Printf.printf "line %d, col %d\n" l.pos_lnum l.pos_cnum
+
+let do_menhir s =
+  let lexbuf = Sedlexing.Utf8.from_string s in
+  let lexer  = Sedlexing.with_tokenizer Frontend.Token.lexer_ignore lexbuf in
+  let parser = MenhirLib.Convert.Simplified.traditional2revised
+    Frontend.Parser_3.main in
+  try
+  let res = parser lexer in
+  res
+  with
+  | Frontend.Parser_3.Error ->
+    print_endline "parser error; context:";
+    let (tok, l, r) = lexer () in
+    print_endline @@ "next token: " ^ Frontend.Token.show_token tok;
+    print_position l;
+    print_position r;
+    failwith "bad"
+
+let old_parser s =
+  let lexbuf = Sedlexing.Utf8.from_string s in
+  begin
+    match toplevel lexbuf with
+    | Error s ->
+      print_endline "noooo it failed :despair:";
+      print_endline s;
+      failwith "bad"
+    | Ok e -> e
+  end
+
 let main_sequence file debug_parse debug_flat debug_flat_small
-    debug_gc emit run =
+    debug_gc emit run parseff menhir =
   with_timer "khasmc" begin fun () ->
       Printexc.record_backtrace true;
       let s = In_channel.with_open_bin file In_channel.input_all in
       begin
         let e =
-          with_timer "parser" (fun () -> Frontend.Parser_2.toplevel s)
+          with_timer "parser" (fun () ->
+            if parseff then do_parseff s else
+              if menhir then do_menhir s else old_parser s
+          )
         in
-
         if debug_parse then begin
           print_endline "parsed:";
           List.iter
@@ -240,12 +275,15 @@ let main () =
       ("--par", Arg.Set Share.Par.use_par, "Use parallelism (expr.)");
       ("--emit", Arg.Set emit, "Emit JS (expr.)");
       ("--run", Arg.Set run, "Emit and run JS (expr.)");
+      ("--parsereff", Arg.Set parseff, "Use Parseff parser");
+      ("--menhir", Arg.Set menhir, "Use Menhir parser");
     ]
   in
 
   let usage =
     "khasmc [--debug-parse[-verbose]] [--debug-flat[-verbose]] \
-     [--debug-gc] [--time] [--jobs n] [--par] [--emit] [--run] \
+    [--debug-gc] [--time] [--jobs n] [--par] [--emit] [--run] \
+    [--parseff] [--menhir]
      <filenames>"
   in
 
@@ -257,5 +295,5 @@ let main () =
     let file = List.hd !input_files in
 
     main_sequence file !debug_parse_verbose !debug_flat_verbose
-      !debug_flat !debug_gc !emit !run
+      !debug_flat !debug_gc !emit !run !parseff !menhir
   end

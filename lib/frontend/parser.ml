@@ -47,8 +47,8 @@ let expect tok buf =
   | s when s = tok -> ()
   | s ->
       print_endline "expect failed";
-      print_endline ("wanted: " ^ show_t_TOKEN tok);
-      print_endline ("got: " ^ show_t_TOKEN s);
+      print_endline ("wanted: " ^ show_token tok);
+      print_endline ("got: " ^ show_token s);
       raise ParseError
 
 let prec x =
@@ -337,7 +337,7 @@ module Expr = struct
                   expect FATARROW buf;
                   let (Some exp) = expr' 0 buf in
                   (case, exp) :: go ()
-              | x -> failwith ("got x instead: " ^ show_t_TOKEN x)
+              | x -> failwith ("got x instead: " ^ show_token x)
             in
             let total = go () in
             some @@ Match (data' (), main, total)
@@ -366,7 +366,7 @@ let definition_up_to_body buf =
               | POLYID t -> t :: go ()
               | RIGHTC -> []
               | t ->
-                  print_endline (show_t_TOKEN t);
+                  print_endline (show_token t);
                   failwith "parsing type list weird"
             in
             Some (go ())
@@ -475,13 +475,13 @@ let rec toplevel' buf =
       let curr = typdef buf in
       Typdef curr :: toplevel' buf
   | t ->
-      print_endline (show_t_TOKEN t);
+      print_endline (show_token t);
       failwith "anything other than definition"
 
 let toplevel buf : ((string, unit, unit) toplevel list, 'a) Result.t =
   let toks = ref (lexer buf) in
   (*
-  List.iter (fun x -> print_string (show_t_TOKEN x ^ " ")) !toks;
+  List.iter (fun x -> print_string (show_token x ^ " ")) !toks;
   print_newline ();
   *)
   try
@@ -491,6 +491,6 @@ let toplevel buf : ((string, unit, unit) toplevel list, 'a) Result.t =
     print_endline (Printexc.to_string exc);
     print_endline "next ten tokens:";
     for i = 0 to 10 do
-      print_string (show_t_TOKEN (next toks) ^ " ")
+      print_string (show_token (next toks) ^ " ")
     done;
     failwith "parser error"

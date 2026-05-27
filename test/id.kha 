@@ -1,0 +1,1 @@
+fun id {type 'a} (x : 'a) : 'a = x

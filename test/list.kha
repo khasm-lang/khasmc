@@ -2,7 +2,7 @@ extern print : 'a -> ()
 
 type List 'a =
     | Nil
-    | Cons 'a (List 'a)
+    | Cons of 'a (List 'a)
 end
 
 fun map {type 'a 'b} (f : 'a -> 'b) (xs : List 'a) : List 'b =
