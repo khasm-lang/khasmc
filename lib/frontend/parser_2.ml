@@ -6,12 +6,12 @@ let p_expr x = print_endline (show_expr pp_string pp_unit x)
 
 let lit s =
   ws ();
-  ignore @@ Parseff.consume s
+  Parseff.literal s
 
 let iflit b s =
   if b then begin
     ws ();
-    ignore @@ Parseff.consume s
+    Parseff.literal s
   end
 
 let d () =
@@ -36,22 +36,44 @@ let keywords =
 
 (* makes the assumption nobody is putting \b in their file *)
 let backtrack () : 'a =
-  ignore @@ Parseff.consume "\b";
+  Parseff.literal "\b";
   failwith "unreachable?"
 
-let num_re = Re.compile (Re.Posix.re "[0-9]+")
-let float_re = Re.compile (Re.Posix.re "[0-9]+\\.?[0-9]+")
-(* TODO: handle module paths *)
+let is_digit = function '0' .. '9' -> true | _ -> false
+let is_lower = function 'a' .. 'z' -> true | _ -> false
+let is_upper = function 'A' .. 'Z' -> true | _ -> false
 
-let any_re = "[_a-zA-Z0-9]*"
-let any_re_var_path = "[a-z]" ^ any_re
-let any_re_ctor_path = "[A-Z]" ^ any_re
-let pathless_upper_var = Re.compile (Re.Posix.re ("[A-Z]" ^ any_re))
-let pathless_var = Re.compile (Re.Posix.re ("[a-z]" ^ any_re))
-let lower_var = Re.compile (Re.Posix.re any_re_var_path)
-let upper_var = Re.compile (Re.Posix.re any_re_ctor_path)
-let poly_var = Re.compile (Re.Posix.re "'[a-z]+")
-let not_backslash = Re.compile (Re.Posix.re "[^\\]")
+let is_ident_rest = function
+  | '_' | 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' -> true
+  | _ -> false
+
+let num () = Parseff.take_while ~at_least:1 ~label:"number" is_digit
+
+(* longest match of [0-9]+\.?[0-9]+ *)
+let float () =
+  let whole = num () in
+  match
+    Parseff.optional (fun () ->
+        Parseff.literal ".";
+        num ())
+  with
+  | Some frac -> whole ^ "." ^ frac
+  | None when String.length whole >= 2 -> whole
+  | None -> Parseff.fail "expected float"
+
+(* TODO: handle module paths *)
+let ident first label () =
+  Parseff.recognize (fun () ->
+      let _ = Parseff.satisfy ~label first in
+      Parseff.skip_while is_ident_rest)
+
+let lower_ident = ident is_lower "identifier"
+let upper_ident = ident is_upper "constructor"
+
+let poly_ident () =
+  Parseff.recognize (fun () ->
+      let _ = Parseff.char '\'' in
+      Parseff.skip_while ~at_least:1 is_lower)
 
 (* doesn't handle function types properly lol *)
 let rec type' dop () =
@@ -79,13 +101,13 @@ let rec type' dop () =
               lit "Ref";
               type' true ());
             (fun () ->
-              let s = Parseff.match_regex poly_var in
+              let s = poly_ident () in
               TyPoly s);
             (fun () ->
               iflit dop "(";
-              let p = Parseff.match_regex upper_var in
+              let p = upper_ident () in
               let rest =
-                Parseff.sep_by (type' true) Parseff.whitespace ()
+                Parseff.sep_by (type' true) Parseff.whitespace
               in
               iflit dop ")";
               TyCustom (p, rest));
@@ -94,7 +116,6 @@ let rec type' dop () =
               let rest =
                 Parseff.sep_by (type' false)
                   (fun () -> ignore @@ Parseff.char ',')
-                  ()
               in
               lit ")";
               TyTuple rest);
@@ -104,11 +125,10 @@ let rec type' dop () =
               lit ")";
               res);
           ]
-          ()
       in
       ws ();
       match
-        Parseff.optional (fun () -> ignore @@ Parseff.consume "->") ()
+        Parseff.optional (fun () -> Parseff.literal "->")
       with
       | None -> lhs
       | Some _ ->
@@ -122,16 +142,15 @@ let rec case dop () =
       ignore @@ Parseff.whitespace ();
       Parseff.one_of
         [
-          (fun () -> CaseVar (Parseff.match_regex pathless_var));
+          (fun () -> CaseVar (lower_ident ()));
           (fun () ->
-            let s = Parseff.match_regex num_re in
+            let s = num () in
             CaseLit (LInt s));
           (fun () ->
             let s =
               Parseff.or_
-                (fun () -> Parseff.consume "true")
-                (fun () -> Parseff.consume "false")
-                ()
+                (fun () -> Parseff.literal "true"; "true")
+                (fun () -> Parseff.literal "false"; "false")
             in
             CaseLit (LBool (bool_of_string s)));
           (fun () ->
@@ -139,9 +158,9 @@ let rec case dop () =
             CaseWild);
           (fun () ->
             iflit dop "(";
-            let nm = Parseff.match_regex upper_var in
+            let nm = upper_ident () in
             let rest =
-              Parseff.sep_by (case true) Parseff.whitespace ()
+              Parseff.sep_by (case true) Parseff.whitespace
             in
             iflit dop ")";
             CaseCtor (nm, rest));
@@ -152,12 +171,10 @@ let rec case dop () =
                 (fun () ->
                   ws ();
                   Parseff.char ',')
-                ()
             in
             lit ")";
             CaseTuple tup);
-        ]
-        ())
+        ])
 
 let do_case = case false
 
@@ -165,7 +182,7 @@ let rec basic () =
   Parseff.one_of
     [
       (fun () ->
-        let s = Parseff.match_regex lower_var in
+        let s = lower_ident () in
         if List.mem s keywords then begin
           (* for some reason it doesn't like backtracking here
              also it would be miserable perf wise
@@ -181,10 +198,10 @@ let rec basic () =
         lit "false";
         Bool (d (), false));
       (fun () ->
-        let s = Parseff.match_regex num_re in
+        let s = num () in
         Int (d (), s));
       (fun () ->
-        let s = Parseff.match_regex float_re in
+        let s = float () in
         Float (d (), s));
       (fun () ->
         lit "\"";
@@ -202,23 +219,20 @@ let rec basic () =
                       backtrack ()
                     else
                       s)
-                  ()
               in
               k)
-            ()
         in
         let s = String.of_seq (List.to_seq s) in
         lit "\"";
         String (d (), s));
       (fun () ->
-        let s = Parseff.match_regex upper_var in
+        let s = upper_ident () in
         ignore
         @@ Parseff.look_ahead (fun () ->
             ws ();
             Parseff.satisfy (fun c -> c <> '{') ~label:"record");
         Constructor (d (), s));
     ]
-    ()
 
 let prec x =
   match x with
@@ -273,9 +287,8 @@ let rec expr_app sofar curr_prec () =
           let s =
             Parseff.one_of
               (List.map
-                 (fun x () -> Parseff.consume x)
+                 (fun x () -> Parseff.literal x; x)
                  [ "+"; "-"; "*"; "/"; "="; "&&"; "||" ])
-              ()
           in
           let rhs = expr true prec () in
           let sofar' = BinOp (d (), to_binop s, sofar, rhs) in
@@ -289,7 +302,7 @@ let rec expr_app sofar curr_prec () =
             let p = expr_paren true () in
             (* collect further app-es *)
             let rest =
-              Parseff.sep_by (expr_paren true) Parseff.whitespace ()
+              Parseff.sep_by (expr_paren true) Parseff.whitespace
             in
             let orig = Funccall (d (), sofar, p) in
             let app =
@@ -303,10 +316,8 @@ let rec expr_app sofar curr_prec () =
              you decide whether that's good or not
              *)
             expr_app app curr_prec ())
-          (fun () -> sofar)
-          ());
+          (fun () -> sofar));
     ]
-    ()
 
 (* parses "big" expressions, that must be paren wrapped (sometimes) *)
 and expr_paren dop () =
@@ -319,7 +330,6 @@ and expr_paren dop () =
         let res =
           Parseff.sep_by ~at_least:2 (expr false 0)
             (fun () -> ignore @@ Parseff.char ',')
-            ()
         in
         lit ")";
         Tuple (d (), res));
@@ -336,26 +346,25 @@ and expr_paren dop () =
       (fun () ->
         iflit dop "(";
         lit "fun";
-        let v = Parseff.match_regex pathless_var in
+        let v = lower_ident () in
         lit "=>";
         let e = expr false 0 () in
         iflit dop ")";
         Lambda (d (), v, None, e));
       (fun () ->
         iflit dop "(";
-        let r = Parseff.match_regex upper_var in
+        let r = upper_ident () in
         lit "{";
         let fields =
           Parseff.many
             (fun () ->
               ws ();
-              let nm = Parseff.match_regex lower_var in
+              let nm = lower_ident () in
               lit "=";
               ws ();
               let e = expr true 0 () in
               lit ";";
               (nm, e))
-            ()
         in
         lit "}";
         iflit dop ")";
@@ -386,7 +395,6 @@ and expr_paren dop () =
               lit "=>";
               let e = expr false 0 () in
               (c, e))
-            ()
         in
         lit "end";
         iflit dop ")";
@@ -397,7 +405,6 @@ and expr_paren dop () =
         lit ")";
         res);
     ]
-    ()
 
 (* "starting point" *)
 and expr (dop : bool) (curr_prec : int) () =
@@ -407,17 +414,12 @@ and expr (dop : bool) (curr_prec : int) () =
 
 let do_expr () = expr false 0 ()
 
-let print_error error =
-  match error with
-  | `Expected s -> print_endline s
-  | `Unexpected_end_of_input -> print_endline "Unexpected EOF"
-  | `Failure s -> print_endline s
-  | `Depth_limit_exceeded s -> print_endline s
+let print_error error = print_endline (Parseff.error_message error)
 
 let def_up_to_body () =
   lit "fun";
   ws ();
-  let nm = Parseff.match_regex pathless_var in
+  let nm = lower_ident () in
   let targs =
     Parseff.optional
       (fun () ->
@@ -427,12 +429,11 @@ let def_up_to_body () =
           Parseff.sep_by
             (fun () ->
               ws ();
-              Parseff.match_regex poly_var)
-            Parseff.whitespace ()
+              poly_ident ())
+            Parseff.whitespace
         in
         lit "}";
         polys)
-      ()
     |> function
     | None -> []
     | Some xs -> xs
@@ -442,13 +443,13 @@ let def_up_to_body () =
       (fun () ->
         lit "(";
         ws ();
-        let nm = Parseff.match_regex pathless_var in
+        let nm = lower_ident () in
         lit ":";
         ws ();
         let ty = do_type () in
         lit ")";
         (nm, ty))
-      Parseff.whitespace ()
+      Parseff.whitespace
   in
   lit ":";
   let ret = do_type () in
@@ -476,12 +477,12 @@ let do_def () =
 let do_typdef () =
   lit "type";
   ws ();
-  let s = Parseff.match_regex pathless_upper_var in
+  let s = upper_ident () in
   ws ();
   let polys =
     Parseff.sep_by
-      (fun () -> Parseff.match_regex poly_var)
-      Parseff.whitespace ()
+      poly_ident
+      Parseff.whitespace
   in
   lit "=";
   ws ();
@@ -493,17 +494,15 @@ let do_typdef () =
                (fun () ->
                  lit "|";
                  ws ();
-                 let name = Parseff.match_regex pathless_upper_var in
-                 ignore @@ Parseff.optional (fun () -> lit "of") ();
+                 let name = upper_ident () in
+                 ignore @@ Parseff.optional (fun () -> lit "of");
                  let typs =
                    Parseff.many
                      (fun () ->
                        ws ();
                        type' true ())
-                     ()
                  in
-                 (name, typs))
-               ())
+                 (name, typs)))
         in
         lit "end";
         s)
@@ -513,18 +512,15 @@ let do_typdef () =
         (Parseff.many ~at_least:1
            (fun () ->
              ws ();
-             let name = Parseff.match_regex pathless_var in
+             let name = lower_ident () in
              lit ":";
              ws ();
              let typ = do_type () in
              lit ";";
-             (name, typ))
-          ())
+             (name, typ)))
       in
       lit "}";
-      r
-    )
-      ()
+      r)
   in
 
   Typdef { data = d (); name = s; args = polys; content = inner }
@@ -532,7 +528,7 @@ let do_typdef () =
 let do_extern () =
   lit "extern";
   ws ();
-  let name = Parseff.match_regex pathless_var in
+  let name = lower_ident () in
   lit ":";
   ws ();
   let ty = do_type () in
@@ -541,12 +537,12 @@ let do_extern () =
 let do_open () =
   lit "open";
   ws ();
-  let nm = Parseff.match_regex upper_var in
+  let nm = upper_ident () in
   Open nm
 
 let rec do_module () =
   lit "module";
-  let name = Parseff.match_regex pathless_upper_var in
+  let name = upper_ident () in
   lit "=";
   let rest = do_toplevel () in
   Module (name, rest)
@@ -557,9 +553,7 @@ and do_toplevel () =
     (fun () ->
       ws ();
       Parseff.one_of
-        [ do_def; do_open; do_extern; do_open; do_module; do_typdef ]
-        ())
-    ()
+        [ do_def; do_open; do_extern; do_open; do_module; do_typdef ])
 
 let parser () =
   let res = do_toplevel () in
@@ -570,10 +564,11 @@ let parser () =
 let toplevel s =
   let open Share.Maybe in
   let src = Parseff.Source.of_string s in
-  let ret = Parseff.parse_source ~max_depth:Int.max_int src parser in
+  let ret = Parseff.Source.parse ~max_depth:Int.max_int src parser in
   match ret with
   | Ok ret -> ret
-  | Error { pos; error } ->
+  | Error error ->
+      let pos = error.range.start in
       print_error error;
       print_string "error at: ";
       print_int (pos - 1);
